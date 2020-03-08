@@ -48,8 +48,7 @@ cc.Class({
  
         cc.vv.http = require('http');
 
-        var Net = require('net');
-        cc.vv.net = new Net();
+        cc.vv.net = require('net');
 
 
         if (cc.vv.storage.getStorage('userId')){

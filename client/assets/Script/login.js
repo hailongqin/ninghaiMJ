@@ -43,13 +43,13 @@ cc.Class({
 
     onClickUser1Login(){
         cc.vv.userId = 1;
-        cc.sys.storage.setStorage('userId',1) 
+        cc.vv.storage.setStorage('userId',1)
         cc.director.loadScene(this.hallScen.name);
     },
 
     onClickUser2Login(){
         cc.vv.userId = 2
-        cc.sys.storage.setStorage('userId',2) 
+        cc.vv.storage.setStorage('userId',2)
         cc.director.loadScene(this.hallScen.name);
     },
 

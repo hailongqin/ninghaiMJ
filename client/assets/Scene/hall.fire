@@ -11994,7 +11994,9 @@
       "__id__": 163
     },
     "_enabled": true,
-    "roomSecen": null,
+    "roomSecen": {
+      "__uuid__": "8dcf6bcf-a3e3-42a4-a45b-66f59f6cbcee"
+    },
     "roomId": [],
     "_id": "ea4ATSvjtEYaW5C5CtgMPt"
   },
