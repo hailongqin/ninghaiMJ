@@ -50,7 +50,7 @@ class RoomInfo {
             callback(0,doc);
         })
     }
-    broacastInRoom(event,roomId,socket,data,sender,includingSender = false){
+    broacastInRoom(event,roomId,data,sender,includingSender = false){
 
         var roomInfo = this.roomInfo[roomId];
 

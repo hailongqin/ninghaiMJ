@@ -70,23 +70,23 @@ class Game {
 
         for (var i = 0;i< 3;i++){ //每个人拿4张牌，轮训三次，共12张牌
             for (var j = 0;j<len;j++){
-                seats[j].holds = (seats[j].holds).concat(getNextPai(mjLists,4))
+                seats[j].holds = (seats[j].holds).concat(this.getNextPai(mjLists,4))
             }
         }
 
             //每个人再拿一张牌
         for (var j = 0;j<len;j++){
-            seats[j].holds = (seats[j].holds).concat(getNextPai(mjLists))
+            seats[j].holds = (seats[j].holds).concat(this.getNextPai(mjLists))
         }
 
-        seats[zhuangIndex].holds = (seats[zhuangIndex].holds).concat(getNextPai(mjLists)); //庄家再拿一张牌
+        seats[zhuangIndex].holds = (seats[zhuangIndex].holds).concat(this.getNextPai(mjLists)); //庄家再拿一张牌
     
         for (var i = 0;i < seats.length;i++){
             //将花色拿出来
             for (var k = 0; k < seats[i].holds.length;k++){
                 while(seats[i].holds[k] >= 41 &&  seats[i].holds[k]<= 48){
                     seats[i].huas.push(seats[i].holds[k])
-                    var nextPai = (getNextPai(mjLists))[0];
+                    var nextPai = (this.getNextPai(mjLists))[0];
                     seats[i].holds[k] = nextPai;
                 }
 
@@ -111,10 +111,16 @@ class Game {
 
     
     }
+
+    getNextChuPaiIndex(seats,index){
+        if (index === seats.length -1) return 0;
+        else return index + 1;
+    }
+
+    getNextPai(mjLists,len = 1){
+        return mjLists.splice(0,len)
+    }
 }
 
-function getNextPai(mjLists,len = 1){
-    return mjLists.splice(0,len)
-}
 
 module.exports = new Game();

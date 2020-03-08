@@ -88,7 +88,7 @@ cc.Class({
             if ((this.gameInfo.turn !== this.gameInfo.myIndex) || this.gameInfo.hasChupai) return;
             this.gameInfo.hasChupai = true;
             var chupai = node.pai;
-            cc.vv.net.send('chupai',{userId:cc.vv.userId,pai:chupai});
+            cc.vv.net.send('chupai',{userId:cc.vv.userId,pai:chupai,roomId:this.gameInfo.roomId});
 
             var index = this.gameInfo.myHolds.indexOf(chupai);
 
@@ -228,7 +228,8 @@ cc.Class({
             var myIndex = userIds.indexOf(userId) ; //我的位置
 
            this.gameInfo = {
-               myFolds:[]
+               myFolds:[],
+               gameInfo:data.roomId
            };
             this.gameInfo.zhuangIndex = 0;
             this.gameInfo.turn = data.turn;
