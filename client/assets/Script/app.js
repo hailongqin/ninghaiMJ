@@ -5,6 +5,8 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
+var mexHoldLength = 14;
+
 cc.Class({
     extends: cc.Component,
 
@@ -80,6 +82,26 @@ cc.Class({
       },this.node);
     },
 
+    addTouchEvent(node){
+        node.on(cc.Node.EventType.TOUCH_START,()=>{
+            console.log(node,this.gameInfo);
+            if ((this.gameInfo.turn !== this.gameInfo.myIndex) || this.gameInfo.hasChupai) return;
+            this.gameInfo.hasChupai = true;
+            var chupai = node.pai;
+            cc.vv.net.send('chupai',{userId:cc.vv.userId,pai:chupai});
+
+            var index = this.gameInfo.myHolds.indexOf(chupai);
+
+
+            this.gameInfo.myHolds.splice(index,1);
+            this.gameInfo.myFolds.push(chupai);
+
+            this.setMyUiHolds(this.gameInfo.myHolds);
+            this.setMyFolds(chupai);
+
+        })
+    },
+
     initUiData(){
 
         var timeNode = this.node.getChildByName('time');
@@ -91,13 +113,18 @@ cc.Class({
         var myNode = this.node.getChildByName('my');
         var myHoldsNode  = this.myHoldsNode = myNode.getChildByName('holds');
         var myHuasNode = this.myHuasNode = myNode.getChildByName('huas');
+        var myFoldsNode = this.myFoldsNode = myNode.getChildByName('folds');
         for(var i = 0; i < myHoldsNode.children.length; ++i){
             var sprite = myHoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
+            this.addTouchEvent(myHoldsNode.children[i]);
         }
-
         for(var i = 0; i < myHuasNode.children.length; ++i){
             var sprite = myHuasNode.children[i].getComponent(cc.Sprite);
+            sprite.spriteFrame = null;
+        }
+        for(var i = 0; i < myFoldsNode.children.length; ++i){
+            var sprite = myFoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
 
@@ -108,15 +135,19 @@ cc.Class({
 
         // console.log(LeftNode.children)
         var leftHoldsNode  = this.leftHoldsNode = leftNode.getChildByName('holds');
-  
         var leftHuasNode = this.leftHuasNode = leftNode.getChildByName('huas');
+        var leftFoldsNode = this.leftFoldsNode = leftNode.getChildByName('folds');
         for(var i = 0; i < leftHoldsNode.children.length; ++i){
             var sprite = leftHoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
-
         for(var i = 0; i < leftHuasNode.children.length; ++i){
             var sprite = leftHuasNode.children[i].getComponent(cc.Sprite);
+            sprite.spriteFrame = null;
+        }
+
+        for(var i = 0; i < leftFoldsNode.children.length; ++i){
+            var sprite = leftFoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
 
@@ -124,17 +155,37 @@ cc.Class({
         var rightNode = this.node.getChildByName('right');
         var rightHoldsNode  = this.rightHoldsNode = rightNode.getChildByName('holds');
         var rightHuasNode = this.rightHuasNode = rightNode.getChildByName('huas');
+        var rightFoldsNode = this.rightFoldsNode = rightNode.getChildByName('folds');
         for(var i = 0; i < rightHoldsNode.children.length; ++i){
             var sprite = rightHoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
-
         for(var i = 0; i < rightHuasNode.children.length; ++i){
             var sprite = rightHuasNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
+        for(var i = 0; i < rightFoldsNode.children.length; ++i){
+            var sprite = rightFoldsNode.children[i].getComponent(cc.Sprite);
+            sprite.spriteFrame = null;
+        }
 
-
+        //初始化上方的牌
+        var upNode = this.node.getChildByName('up');
+        var upHoldsNode  = this.upHoldsNode = upNode.getChildByName('holds');
+        var upHuasNode = this.upHuasNode = upNode.getChildByName('huas');
+        var upFoldsNode = this.upFoldsNode = upNode.getChildByName('folds');
+        for(var i = 0; i < upHoldsNode.children.length; ++i){
+            var sprite = upHoldsNode.children[i].getComponent(cc.Sprite);
+            sprite.spriteFrame = null;
+        }
+        for(var i = 0; i < upHuasNode.children.length; ++i){
+            var sprite = upHuasNode.children[i].getComponent(cc.Sprite);
+            sprite.spriteFrame = null;
+        }
+        for(var i = 0; i < upFoldsNode.children.length; ++i){
+            var sprite = upFoldsNode.children[i].getComponent(cc.Sprite);
+            sprite.spriteFrame = null;
+        }
     },
 
     hideCircle(){
@@ -176,7 +227,9 @@ cc.Class({
             var userIds = seats.map((s)=>{return s.userId});
             var myIndex = userIds.indexOf(userId) ; //我的位置
 
-           this.gameInfo = {};
+           this.gameInfo = {
+               myFolds:[]
+           };
             this.gameInfo.zhuangIndex = 0;
             this.gameInfo.turn = data.turn;
 
@@ -185,6 +238,8 @@ cc.Class({
                 var huas = seats[i].huas;
                 if (i  === myIndex){
                     this.gameInfo.myIndex = i;
+                    this.gameInfo.myHolds = holds;
+                    this.gameInfo.myFolds = seats[i].folds;
                     this.setMyUiHolds(holds);
                     this.setMyUiHua(huas)
                 }else if ( i < myIndex && Math.abs(i-myIndex) === 1){ //左边的牌
@@ -204,6 +259,10 @@ cc.Class({
             }
 
             this.setTimeCircle();
+
+            if (data.zhuangIndex === this.gameInfo.myIndex){
+                this.gameInfo.hasChupai = false;
+            }
            
         })
 
@@ -217,11 +276,26 @@ cc.Class({
     },
 
     setMyUiHolds(holds){
-        for (var i = 0; i < holds.length;i++){
-            var pai = holds[i];
-            var spriteFrame = 'my-'+pai;
-            this.myHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame(spriteFrame)
+        var len = holds.length;
+        for (var i = 0; i < mexHoldLength;i++){
+            if (i < len){
+                var pai = holds[i];
+                var spriteFrame = 'my-'+pai;
+                this.myHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame(spriteFrame)
+                this.myHoldsNode.children[i].pai = pai;
+            }else{
+                this.myHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
+                this.myHoldsNode.children[i].pai = null;
+            }
+         
         }
+    },
+
+    setMyFolds(pai){
+        var len = this.gameInfo.myFolds.length;
+        var spriteFrame = 'my-bottom-'+pai;
+        this.myFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame(spriteFrame)
+        
     },
 
     setMyUiHua(huas){
