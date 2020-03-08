@@ -56,9 +56,12 @@ cc.Class({
             default:null,
             type:cc.SpriteAtlas
         },
+
+        gameInfo:null
     },
 
     // LIFE-CYCLE CALLBACKS:
+  
 
     init(){
         console.log(cc.vv);
@@ -78,6 +81,11 @@ cc.Class({
     },
 
     initUiData(){
+
+        var timeNode = this.node.getChildByName('time');
+        this.timeBackNode = timeNode.getChildByName('timeBack');
+        this.hideCircle();
+        console.log( this.timeBackNode)
 
         //初始化自己的牌
         var myNode = this.node.getChildByName('my');
@@ -129,6 +137,27 @@ cc.Class({
 
     },
 
+    hideCircle(){
+        for (var i = 0;i < this.timeBackNode.children.length;i++){
+            this.timeBackNode.children[i].active = false;
+        }
+    },
+
+    showOneCircle(turnIndex){
+        var index = 0;
+        if (turnIndex === this.gameInfo.leftIndex){
+            index = 3;
+        }else if (turnIndex === this.gameInfo.rightIndex){
+            index = 1;
+        }else if (turnIndex === this.gameInfo.upIndex){
+            index = 2;
+        }else if (turnIndex === this.gameInfo.myIndex){
+            index = 0;
+        }
+
+        this.timeBackNode.children[index].active = true;
+    },
+
     initHander(){
 
         /**
@@ -147,27 +176,43 @@ cc.Class({
             var userIds = seats.map((s)=>{return s.userId});
             var myIndex = userIds.indexOf(userId) ; //我的位置
 
+           this.gameInfo = {};
+            this.gameInfo.zhuangIndex = 0;
+            this.gameInfo.turn = data.turn;
+
             for (var i = 0; i < seats.length;i++){
                 var holds = seats[i].holds;
                 var huas = seats[i].huas;
                 if (i  === myIndex){
+                    this.gameInfo.myIndex = i;
                     this.setMyUiHolds(holds);
                     this.setMyUiHua(huas)
                 }else if ( i < myIndex && Math.abs(i-myIndex) === 1){ //左边的牌
+                    this.gameInfo.leftIndex = i;
                     this.setLeftHolds(holds);
                     this.setLeftHua(huas)
                 }else if (i > myIndex && Math.abs(i-myIndex) === 1){ //右边的牌
+                    this.gameInfo.rightIndex = i;
                     this.setRightHolds(holds);
                     this.setRightHua(huas)
                 }else if (i > myIndex && Math.abs(i-myIndex) === 2){ //对面的牌
+                    this.gameInfo.upIndex = i;
                     console.log('对面的牌')
                     // this.setLeftHolds(holds);
                     // this.setLeftHua(huas)
                 } 
             }
+
+            this.setTimeCircle();
            
-            console.log('game start here data is ',data,userId,mySeats);
         })
+
+    },
+
+    setTimeCircle(){
+        var turnIndex = this.gameInfo.turn;
+        this.hideCircle();
+        this.showOneCircle(turnIndex)
 
     },
 
