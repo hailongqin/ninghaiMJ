@@ -120,6 +120,27 @@ class Game {
     getNextPai(mjLists,len = 1){
         return mjLists.splice(0,len)
     }
+
+    getNextPaiIgnoreHua(mjLists){
+        var huas = [];
+        var pai = this.getNextPai(mjLists)
+
+        while(this.checkIsHua(pai)){
+            huas.push(pai);
+            pai = this.getNextPai(mjLists);
+        }
+
+        return {
+            huas,
+            pai
+        }
+    
+    }
+
+    checkIsHua(pai){
+        if (pai >= 41 && pai<= 48) return true;
+        return false;
+    }
 }
 
 

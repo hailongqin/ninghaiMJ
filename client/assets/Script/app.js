@@ -251,24 +251,28 @@ cc.Class({
                     this.gameInfo.myIndex = i;
                     this.gameInfo.myHolds = holds;
                     this.gameInfo.myFolds = seats[i].folds;
+                    this.gameInfo.myHuas = seats[i].huas;
                     this.setMyUiHolds(holds);
                     this.setMyUiHua(huas)
                 }else if ( i < myIndex && Math.abs(i-myIndex) === 1){ //左边的牌
                     this.gameInfo.leftIndex = i;
                     this.gameInfo.leftHolds = holds;
                     this.gameInfo.leftFolds = folds;
+                    this.gameInfo.leftHuas = seats[i].huas;
                     this.setLeftHolds(holds.length);
                     this.setLeftHua(huas)
                 }else if (i > myIndex && Math.abs(i-myIndex) === 1){ //右边的牌
                     this.gameInfo.rightIndex = i;
                     this.gameInfo.rightHolds = holds;
                     this.gameInfo.rightFolds = folds;
+                    this.gameInfo.rightHuas = seats[i].huas;
                     this.setRightHolds(holds.length);
                     this.setRightHua(huas)
                 }else if (i > myIndex && Math.abs(i-myIndex) === 2){ //对面的牌
                     this.gameInfo.upIndex = i;
                     this.gameInfo.upHolds = holds;
                     this.gameInfo.ipFolds = folds;
+                    this.gameInfo.rightHuas = seats[i].huas;
                     console.log('对面的牌')
                     // this.setLeftHolds(holds);
                     // this.setLeftHua(huas)
@@ -325,6 +329,37 @@ cc.Class({
                 this.gameInfo.myHolds.push(pai);
             }
 
+        })
+
+        /**
+         * {
+         *  huas,turn
+         * }
+         */
+        this.node.on('get_huas',(data)=>{
+            var turn = data.turn;
+            var huas = data.huas;
+            if (turn === this.gameInfo.leftIndex){
+                var len = this.gameInfo.leftHuas.length;
+                for (var hua of huas)
+                this.leftHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-'+hua);
+                this.gameInfo.leftHuas = this.gameInfo.leftHuas.concat(huas)
+            }else if (turn === this.gameInfo.rightIndex){
+                var len = this.gameInfo.rightHuas.length;
+                for (var hua of huas)
+                this.rightHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-'+hua);
+                this.gameInfo.rightHuas = this.gameInfo.rightHuas.concat(huas)
+            }else if (turn === this.gameInfo.upIndex){
+                var len = this.gameInfo.upHuas.length;
+                for (var hua of huas)
+                this.upHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.upAltas.getSpriteFrame('up-'+hua);
+                this.gameInfo.upHuas = this.gameInfo.upHuas.concat(huas)
+            }else if (turn === this.gameInfo.myIndex){
+                var len = this.gameInfo.myHuas.length;
+                for (var hua of huas)
+                this.myHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+hua);
+                this.gameInfo.myHuas = this.gameInfo.myHuas.concat(huas)
+            }
         })
 
     },

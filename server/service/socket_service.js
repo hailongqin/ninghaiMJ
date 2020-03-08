@@ -192,8 +192,13 @@ exports.start = function(){
 
                 var nextUserId = seats[nextIndex].userId;
                 var nextSocket = User.getSocketByUser(nextUserId);
-                var nextPai = (Game.getNextPai(roomInfo.mjLists))[0];
-                nextSocket.emit('zhuapai',{pai:nextPai,turn:nextIndex});
+                var list = Game.getNextPaiIgnoreHua(roomInfo.mjLists);
+
+                if (list.huas.length){
+                    nextSocket.emit('get_huas',{turn:nextIndex,huas:list.huas})
+                }
+
+                nextSocket.emit('zhuapai',{pai:list.pai,turn:nextIndex});
             })
         })
     })
