@@ -47,8 +47,14 @@ class Game {
         var len = data.length;
         var temp = ''
         for (var i = len - 1;i > 0;i-- ){
-            var index = Math.ceil(Math.random()*len);
+            var index = Math.ceil(Math.random()*i);
+            
             temp = data[index];
+            
+            if (!temp){
+                console.log('suiji is ',index,temp)
+            }
+            
             data[index] = data[i];
             data[i] = temp;
         }
@@ -81,8 +87,6 @@ class Game {
                 while(seats[i].holds[k] >= 41 &&  seats[i].holds[k]<= 48){
                     seats[i].huas.push(seats[i].holds[k])
                     var nextPai = (getNextPai(mjLists))[0];
-                    console.log(k,seats[i].holds[k],nextPai,seats[i].huas);
-
                     seats[i].holds[k] = nextPai;
                 }
 
@@ -94,6 +98,8 @@ class Game {
          seats[i].holds.sort((a,b)=>{
                 return a - b;
             })
+
+         console.log(seats[i]);
         }
 
         // 将花色排序

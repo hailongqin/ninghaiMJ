@@ -52,7 +52,7 @@ cc.Class({
 
 
         if (cc.vv.storage.getStorage('userId')){
-            cc.vv.userId = cc.vv.storage.getStorage('userId');
+            cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
             cc.director.loadScene(this.hallScen.name);
         }else{
             cc.director.loadScene(this.loginScen.name);

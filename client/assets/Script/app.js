@@ -95,24 +95,27 @@ cc.Class({
 
        
 
-        //初始化左边的牌
-        var LeftNode = this.node.getChildByName('left');
-        var LeftHoldsNode  = this.LeftHoldsNode = LeftNode.getChildByName('holds');
-        var LeftHuasNode = this.LeftHuasNode = LeftNode.getChildByName('huas');
-        for(var i = 0; i < LeftHoldsNode.children.length; ++i){
-            var sprite = LeftHoldsNode.children[i].getComponent(cc.Sprite);
+       // 初始化左边的牌
+        var leftNode = this.node.getChildByName('left');
+
+        // console.log(LeftNode.children)
+        var leftHoldsNode  = this.leftHoldsNode = leftNode.getChildByName('holds');
+  
+        var leftHuasNode = this.leftHuasNode = leftNode.getChildByName('huas');
+        for(var i = 0; i < leftHoldsNode.children.length; ++i){
+            var sprite = leftHoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
 
-        for(var i = 0; i < LeftHuasNode.children.length; ++i){
-            var sprite = LeftHuasNode.children[i].getComponent(cc.Sprite);
+        for(var i = 0; i < leftHuasNode.children.length; ++i){
+            var sprite = leftHuasNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
 
         //初始化右边的牌
-        var rightNode = this.node.getChildByName('left');
+        var rightNode = this.node.getChildByName('right');
         var rightHoldsNode  = this.rightHoldsNode = rightNode.getChildByName('holds');
-        var rightHuasNode = this.rightHuasNode = LeftNode.getChildByName('huas');
+        var rightHuasNode = this.rightHuasNode = rightNode.getChildByName('huas');
         for(var i = 0; i < rightHoldsNode.children.length; ++i){
             var sprite = rightHoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
@@ -122,6 +125,7 @@ cc.Class({
             var sprite = rightHuasNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
+
 
     },
 
@@ -184,30 +188,33 @@ cc.Class({
     },
 
     setLeftHolds(holds){
+        console.log('setLeftHolds',this.leftHoldsNode)
         for (var i = 0; i < holds.length;i++){
-            this.LeftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
+            var index = i <= 12?12-i:i
+            this.leftHoldsNode.children[index].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
         }   
     },
 
     setLeftHua(huas){
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
-            var spriteFrame = 'left-'+pai;
+            var spriteFrame = 'left-bottom-'+pai;
             this.leftHuasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame(spriteFrame)
         }   
     },
 
     setRightHolds(holds){
         for (var i = 0; i < holds.length;i++){
-            this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian2')
+            this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
         }  
     },
 
     setRightHua(huas){
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
-            var spriteFrame = 'right-'+pai;
-            this.rightHuasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame(spriteFrame)
+            var spriteFrame = 'right-bottom-'+pai;
+            var index = 7-i;
+            this.rightHuasNode.children[index].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame(spriteFrame)
         }   
     },
 

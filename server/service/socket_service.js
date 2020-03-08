@@ -38,12 +38,20 @@ exports.start = function(){
                     return;
                 }
 
+              
+
 
                 var seats = roomInfo.seats;//坐下的人
                 var seatUserIds = seats.map((s)=>{return s.userId});
+
                 if (seatUserIds.indexOf(userId) !== -1){ //已经是坐下的人
                     User.bindUserAndSocket(userId,socket);
                     socket.emit('login_result',{code:0,roomInfo});
+
+                    if (roomInfo.gameStart){ //游戏已经开始了
+                        socket.emit('game_start',roomInfo);
+                    }
+
                     return;
                 }
 
