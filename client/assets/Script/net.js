@@ -49,7 +49,8 @@ cc.Class({
 
 
             var events = [
-                'login_result','set_ready_result','game_start'
+                'login_result','set_ready_result','game_start','one_chupai','zhuapai','new_user_set_ready',
+                'new_user_login'
             ]
 
             events.map((e)=>{

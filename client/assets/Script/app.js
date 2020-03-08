@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-var mexHoldLength = 14;
+var maxHoldLength = 14;
 
 cc.Class({
     extends: cc.Component,
@@ -59,6 +59,11 @@ cc.Class({
             type:cc.SpriteAtlas
         },
 
+        upAltas:{
+            default:null,
+            type:cc.SpriteAtlas
+        },
+
         gameInfo:null
     },
 
@@ -90,16 +95,21 @@ cc.Class({
             var chupai = node.pai;
             cc.vv.net.send('chupai',{userId:cc.vv.userId,pai:chupai,roomId:this.gameInfo.roomId});
 
-            var index = this.gameInfo.myHolds.indexOf(chupai);
+            this.calcHoldsAndFolds(this.gameInfo.myHolds,this.gameInfo.myFolds,chupai);
 
-
-            this.gameInfo.myHolds.splice(index,1);
-            this.gameInfo.myFolds.push(chupai);
-
+            this.gameInfo.myHolds.sort((a,b)=>{
+                return a - b;
+            })
             this.setMyUiHolds(this.gameInfo.myHolds);
             this.setMyFolds(chupai);
 
         })
+    },
+
+    calcHoldsAndFolds(holds,folds,pai){
+        var index = holds.indexOf(pai);
+        holds.splice(index,1);
+        folds.push(pai);
     },
 
     initUiData(){
@@ -222,14 +232,14 @@ cc.Class({
 
             var userId = cc.vv.userId;
             var seats = data.seats;
-            var mySeats = '';
+         
 
             var userIds = seats.map((s)=>{return s.userId});
             var myIndex = userIds.indexOf(userId) ; //我的位置
 
            this.gameInfo = {
                myFolds:[],
-               gameInfo:data.roomId
+               roomId:data.roomId
            };
             this.gameInfo.zhuangIndex = 0;
             this.gameInfo.turn = data.turn;
@@ -245,14 +255,20 @@ cc.Class({
                     this.setMyUiHua(huas)
                 }else if ( i < myIndex && Math.abs(i-myIndex) === 1){ //左边的牌
                     this.gameInfo.leftIndex = i;
-                    this.setLeftHolds(holds);
+                    this.gameInfo.leftHolds = holds;
+                    this.gameInfo.leftFolds = folds;
+                    this.setLeftHolds(holds.length);
                     this.setLeftHua(huas)
                 }else if (i > myIndex && Math.abs(i-myIndex) === 1){ //右边的牌
                     this.gameInfo.rightIndex = i;
-                    this.setRightHolds(holds);
+                    this.gameInfo.rightHolds = holds;
+                    this.gameInfo.rightFolds = folds;
+                    this.setRightHolds(holds.length);
                     this.setRightHua(huas)
                 }else if (i > myIndex && Math.abs(i-myIndex) === 2){ //对面的牌
                     this.gameInfo.upIndex = i;
+                    this.gameInfo.upHolds = holds;
+                    this.gameInfo.ipFolds = folds;
                     console.log('对面的牌')
                     // this.setLeftHolds(holds);
                     // this.setLeftHua(huas)
@@ -267,6 +283,70 @@ cc.Class({
            
         })
 
+        /*chupaiIndex:seatIndex,pai*/ 
+        this.node.on('one_chupai',(data)=>{
+            var pai = data.pai;
+            var chupaiIndex = data.chupaiIndex;
+
+            if (chupaiIndex == this.gameInfo.leftIndex){
+                this.leftChupaiUi(pai);
+                this.calcHoldsAndFolds(this.gameInfo.leftHolds,this.gameInfo.leftFolds,pai);
+            }else if (chupaiIndex === this.gameInfo.rightIndex){
+                this.rightChupaiUi(pai);
+                this.calcHoldsAndFolds(this.gameInfo.leftHolds,this.gameInfo.leftFolds,pai);
+
+            }else if (chupaiIndex === this.gameInfo.upIndex){
+                this.upChupaiUi(pai);
+                this.calcHoldsAndFolds(this.gameInfo.leftHolds,this.gameInfo.leftFolds,pai);
+            }
+        })
+
+        /**
+         * {pai:nextPai,turn:nextIndex}
+         */
+
+        this.node.on('zhuapai',(data)=>{
+            var pai = data.pai;
+            var turn = data.turn;
+            this.gameInfo.turn = turn;
+
+            if (turn === this.gameInfo.leftIndex){
+                this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
+                this.leftHolds.push(pai);
+            }else if (turn === this.gameInfo.rightIndex){
+                this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
+                this.rightHolds.push(pai)
+            }else if (turn === this.gameInfo.upIndex){
+                this.upHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian3')
+                this.gameInfo.upHolds.pus(pai)
+            }else if (turn === this.gameInfo.myIndex){
+                this.gameInfo.hasChupai = false;
+                this.myHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame('my-'+pai)
+                this.gameInfo.myHolds.push(pai);
+            }
+
+        })
+
+    },
+
+    leftChupaiUi(pai){
+        var len = this.gameInfo.leftFolds.length;
+        this.leftFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-bottom-'+pai);
+        this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = null;
+    },
+
+  
+    
+    rightChupaiUi(pai){
+        var len = this.gameInfo.rightFolds.length;
+        this.rightFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-bottom-'+pai);
+        this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = null;
+    },
+    
+    upChupaiUi(pai){
+        var len = this.gameInfo.upFolds.length;
+        this.upFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.upAltas.getSpriteFrame('left-bottom-'+pai);
+        this.upHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = null;
     },
 
     setTimeCircle(){
@@ -278,7 +358,7 @@ cc.Class({
 
     setMyUiHolds(holds){
         var len = holds.length;
-        for (var i = 0; i < mexHoldLength;i++){
+        for (var i = 0; i < maxHoldLength;i++){
             if (i < len){
                 var pai = holds[i];
                 var spriteFrame = 'my-'+pai;
@@ -307,12 +387,21 @@ cc.Class({
         }
     },
 
-    setLeftHolds(holds){
-        console.log('setLeftHolds',this.leftHoldsNode)
-        for (var i = 0; i < holds.length;i++){
-            var index = i <= 12?12-i:i
-            this.leftHoldsNode.children[index].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
-        }   
+    setLeftHolds(len){
+        var isChupai = false;
+        let base = 0;
+        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
+            isChupai = true;
+            base = 1;
+        }
+        for (var i = maxHoldLength - 2; i > base ;i--){
+            this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
+        }
+
+        if (isChupai){
+            this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.LeftAltas.getSpriteFrame('cemian4')
+        }
+
     },
 
     setLeftHua(huas){
@@ -323,10 +412,21 @@ cc.Class({
         }   
     },
 
-    setRightHolds(holds){
-        for (var i = 0; i < holds.length;i++){
-            this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
-        }  
+    setRightHolds(len){
+        var isChupai = false;
+        let base = 0;
+        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
+            isChupai = true;
+            base = 1;
+        }
+        for (var i = maxHoldLength - 2; i > base ;i--){
+            this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
+        }
+
+        if (isChupai){
+            this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.rightAltas.getSpriteFrame('cemian2')
+        }
+
     },
 
     setRightHua(huas){

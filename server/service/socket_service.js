@@ -73,7 +73,7 @@ exports.start = function(){
 
                 socket.emit('login_result',{code:0,roomInfo});
 
-                Room.broacastInRoom('new_user_login',roomId,socket,roomInfo,userId); //新进来的人
+                Room.broacastInRoom('new_user_login',roomId,roomInfo,userId); //新进来的人
             })
             return;
         })
@@ -121,15 +121,14 @@ exports.start = function(){
                 })
 
 
-
                 // Room.addAndUpdateRoom(roomId,roomInfo);
                 socket.emit('set_ready_result',{code:0})
-                Room.broacastInRoom('new_user_set_ready',roomId,socket,roomInfo,userId);
+                Room.broacastInRoom('new_user_set_ready',roomId,roomInfo,userId);
 
                 if (conf.userCount === seats.length){
                     roomInfo.gameStart = true;
                     Game.begin(roomInfo);
-                    Room.broacastInRoom('game_start',roomId,socket,roomInfo,userId,true);
+                    Room.broacastInRoom('game_start',roomId,roomInfo,userId,true);
                 }
             });
 
@@ -156,6 +155,45 @@ exports.start = function(){
                 })
 
 
+            })
+        })
+
+        socket.on('chupai',function(data){
+            console.log('receive chupai',data)
+            var roomId = data.roomId;
+            var userId = data.userId;
+            var pai = data.pai;
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    socket.emit('chupai',err)
+                    return;
+                }
+
+                // 检查是否有人胡
+
+                // 检查是否有人杠
+
+                // 检查是否有人吃
+
+
+                var seats = roomInfo.seats;
+                var seatsUserId = seats.map((s)=>{return s.userId});
+                var seatIndex = seatsUserId.indexOf(userId);
+                var holds = seats[seatIndex].holds;
+                var folds = seats[seatIndex].folds;
+                var index = holds.indexOf(pai);
+                holds.splice(index,0);
+                folds.push(pai);
+
+                Room.broacastInRoom('one_chupai',roomId,{chupaiIndex:seatIndex,pai});
+
+                var nextIndex = Game.getNextChuPaiIndex(seats,seatIndex);
+                roomInfo.turn = nextIndex;
+
+                var nextUserId = seats[nextIndex].userId;
+                var nextSocket = User.getSocketByUser(nextUserId);
+                var nextPai = (Game.getNextPai(roomInfo.mjLists))[0];
+                nextSocket.emit('zhuapai',{pai:nextPai,turn:nextIndex});
             })
         })
     })

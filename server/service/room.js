@@ -57,9 +57,6 @@ class RoomInfo {
         if (!roomInfo)
             return;
         var players = roomInfo.players;
-
-        console.log('broadcast roominfo is ',roomInfo)
-
         for(var i = 0; i < roomInfo.seats.length; i++){
             var rs = roomInfo.seats[i];
             var userId =rs.userId
