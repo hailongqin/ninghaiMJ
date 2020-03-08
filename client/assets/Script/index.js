@@ -39,9 +39,18 @@ cc.Class({
 
      onLoad () {
         cc.vv = {};
-        cc.vv.storage = require('storage');
+        cc.vv.alertScript =  cc.find("alert").getComponent("alert");
+
+        cc.vv.Util = require('utils');
+
+        var Storage = require('storage');
+        cc.vv.storage = new Storage();
+ 
         cc.vv.http = require('http');
-        cc.vv.net = require('net');
+
+        var Net = require('net');
+        cc.vv.net = new Net();
+
 
         if (cc.vv.storage.getStorage('userId')){
             cc.vv.userId = cc.vv.storage.getStorage('userId');

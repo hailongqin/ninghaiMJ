@@ -46,26 +46,15 @@ cc.Class({
 
      onLoad () {
 
-        cc.vv.Util = require('utils');
-
         cc.vv.Util.setFitSreenMode();
 
-        console.log(cc.vv.Util)
-
         this.onCickConfirmCreateRoom = cc.vv.Util.throttle(this._onCickConfirmCreateRoom, 2000, { 'leading': true, 'trailing': false })
-
-        cc.vv.http = require('http');
-
-        var gameScript = require('game');
-        cc.vv.game = new gameScript();
 
         this.joinRoomNode = this.node.getChildByName('joinRoom');
         this.createRoomNode = this.node.getChildByName('createRoom');
         this.createRoomNode.on(cc.Node.EventType.TOUCH_START, (e) => {
             e.stopPropagation()
         })
-        console.log(this.createRoomNode)
-
      },
 
      onClickJoinRoom(){
@@ -88,7 +77,7 @@ cc.Class({
 
      _onCickConfirmCreateRoom(){
         cc.vv.http.sendRequest('/room/create_room',{conf:roomConf},(ret)=>{
-            cc.vv.game.roomId = ret.roomId
+            cc.vv.roomId = ret.roomId
             cc.director.loadScene(this.roomSecen.name);
         })
        

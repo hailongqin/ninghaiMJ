@@ -34,5 +34,13 @@ cc.Class({
 
     },
 
+    getStorage(key){
+       return cc.sys.localStorage.getItem(key)
+    },
+
+    setStorage(key,value){
+        cc.sys.localStorage.setItem(key,value);
+    }
+
     // update (dt) {},
 });

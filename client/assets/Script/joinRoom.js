@@ -49,13 +49,15 @@ cc.Class({
     checkRoomId(){
         console.log(this.roomId)
         if (this.roomId.length >= 6){
+            this.node.active = false;
             cc.vv.http.sendRequest('/room/check_room_exit',{roomId:this.roomId},()=>{
                 this.node.active = false;
                 cc.vv.roomId =  this.roomId;
                 cc.director.loadScene(this.roomSecen.name);
 
-            },()=>{
-
+            },(err)=>{
+                var message = err.message || '加入房间失败'
+                cc.vv.alertScript.alert(message)
             });
         }
     },
