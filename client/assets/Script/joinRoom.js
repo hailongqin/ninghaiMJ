@@ -38,10 +38,6 @@ cc.Class({
      onLoad () {
         
         console.log('onLoad')
-        this.node.on(cc.Node.EventType.TOUCH_START, (e) => {
-            e.stopPropagation()
-        })
-
         this.roomIdNode = this.node.getChildByName('roomId');
 
      },

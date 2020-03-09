@@ -52,9 +52,6 @@ cc.Class({
 
         this.joinRoomNode = this.node.getChildByName('joinRoom');
         this.createRoomNode = this.node.getChildByName('createRoom');
-        this.createRoomNode.on(cc.Node.EventType.TOUCH_START, (e) => {
-            e.stopPropagation()
-        })
      },
 
      onClickJoinRoom(){
