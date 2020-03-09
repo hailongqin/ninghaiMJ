@@ -22,7 +22,7 @@ var Schema = mongoose.Schema;
 
 var roomSchema = new Schema({
     creator:{type:Number},//房间创建者
-    roomId:{type:Number}, //房间id
+    roomId:{type:String}, //房间id
     conf:{type:Object}, //房间配置
     players:{type:Array},//进入房间的人
     seats:{type:Array}, //坐下的人
@@ -34,6 +34,26 @@ var roomSchema = new Schema({
 
 var roomModel = mongoose.model('room',roomSchema,'room');
 
+
+const userSchema = new Schema({
+    userId:{type:String}, //名称
+    userName:{type:String}, //用户名称
+    password:{type:String} ,// 密码
+    isFrom:{
+        type:String,
+        default:"self" // 来自自己创建
+    },
+
+    zuanshiCount:{
+        type:Number,
+        default:0 // 钻石数量
+    }
+
+}, {timestamps: {createdAt: 'created', updatedAt: 'updated'}})
+
+var userModel = mongoose.model('user',userSchema,'user');
+
 module.exports = {
-    roomModel
+    roomModel,
+    userModel
 }

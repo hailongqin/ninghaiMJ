@@ -1,7 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
-var Room  = require('./room')
+var Room  = require('./room');
+
+var Log = require('../utils/log')
 
 
 var {
@@ -20,6 +22,43 @@ router.post('/create_room', function(req, res, next){
     var body = req.body;
     var userId = body.userId;
     var conf = body.conf;
+
+    if (!userId){
+        Log.error('request create_room userid is null');
+        res.json({code:-1,message:"参数错误"});
+        return;
+    }
+
+    if (!conf){
+        Log.error('request create_room conf is null');
+        res.json({code:-1,message:"参数错误"});
+        return;
+    }
+
+    if (!conf.jushu){
+        Log.error('request create_room jushu is null');
+        res.json({code:-1,message:"参数错误"});
+        return;
+    }
+
+    if (conf.type === undefined || conf.type === null){
+        Log.error('request create_room type is null');
+        res.json({code:-1,message:"参数错误"});
+        return;
+    }
+
+    if (!conf.userCount){
+        Log.error('request create_room userCount is null');
+        res.json({code:-1,message:"参数错误"});
+        return;
+    }
+    if (conf.xie === undefined || conf.xie === null){
+        Log.error('request create_room xie is null');
+        res.json({code:-1,message:"参数错误"});
+        return;
+    }
+
+
     createRoom();
     function createRoom(){
         var roomId = Util.generateRoomId();

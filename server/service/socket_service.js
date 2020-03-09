@@ -15,6 +15,10 @@ var Game = require('./game')
 
 var User = require('./user')
 
+var Log = require('../utils/log');
+
+Log.error('测试log',123);
+
 exports.start = function(){
 
 
@@ -28,6 +32,7 @@ exports.start = function(){
             var roomId = data.roomId;
             var userId = data.userId;
             if (!userId || !roomId){
+                Log.error('socket login param is error',roomId,userId)
                 socket.emit('login_result',{code:-1,message:"参数错误"});
                 return;
             }

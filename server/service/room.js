@@ -2,17 +2,26 @@ var {
     roomModel
 } = require('../db/db');
 
-var User = require('./user')
+var User = require('./user');
+
+var Log = require('../utils/log')
 function setRoomInfofromDB(roomId, callback) {
+    if (!roomId){
+        Log.error('setRoomInfofromDB roomid is empty')
+        return;
+    }
+
     roomModel.findOne({
         roomId,
     }).select("-_id")
         .exec((err, ret) => {
             if (err) {
+                Log.error('setRoomInfofromDB find db err',err)
                 callback({code: -1, message: "读取数据库错误"});
                 return;
             } else {
                 if (!ret){
+                    Log.error('setRoomInfofromDB find find no room',roomId)
                     callback({code: -1, message: "未找到房间"});
                     return;
                 }
@@ -29,10 +38,15 @@ class RoomInfo {
 
 
     addAndUpdateRoom(roomId,info){
+        if (!roomId){
+            Log.error('addAndUpdateRoom roomid is empty')
+            return;
+        }
         this.roomInfo[roomId] = info;
     }
     getRoomInfo(roomId,callback){
         if (!roomId){
+            Log.error('getRoomInfo roomId is empty')
             callback({code:-1,message:"无效roomId"})
             return
         }
@@ -42,6 +56,7 @@ class RoomInfo {
         }
         setRoomInfofromDB(roomId,(err,doc)=>{
             if (err){
+                Log.error('setRoomInfofromDB callback is error',err)
                 callback(err);
                 return;
             }
@@ -52,17 +67,27 @@ class RoomInfo {
     }
     broacastInRoom(event,roomId,data,sender,includingSender = false){
 
+        if (!roomId){
+            return;
+        }
+
         var roomInfo = this.roomInfo[roomId];
 
-        if (!roomInfo)
+        if (!roomInfo){
             return;
+        }
+           
         var players = roomInfo.players;
         for(var i = 0; i < roomInfo.seats.length; i++){
             var rs = roomInfo.seats[i];
             var userId =rs.userId
             var socket = User.getSocketByUser(userId)
+            if (!socket){
+                Log.error('broacastInRoom get seat socket is null')
+                return;
+            }
 
-            if(socket != null && (userId !== sender || includingSender)){
+            if(socket && (userId !== sender || includingSender)){
                 socket.emit(event,data);
             }
         }
@@ -70,8 +95,12 @@ class RoomInfo {
         for(var i = 0; i < players.length; i++){
             var rs = players[i];
             var userId =rs.userId;
-            var socket = User.getSocketByUser(userId)
-            if(socket != null && (userId !== sender || includingSender)){
+            var socket = User.getSocketByUser(userId);
+            if (!socket){
+                Log.error('broacastInRoom get players socket is null')
+                return;
+            }
+            if(socket&& (userId !== sender || includingSender)){
                 socket.emit(event,data);
             }
         }
