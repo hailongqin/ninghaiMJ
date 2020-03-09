@@ -52,7 +52,7 @@ class Game {
             temp = data[index];
             
             if (!temp){
-                console.log('suiji is ',index,temp)
+                Log.error('shuffle is error,',temp,index)
             }
             
             data[index] = data[i];

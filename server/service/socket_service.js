@@ -86,9 +86,16 @@ exports.start = function(){
             console.log('data is ',data);
             var roomId = data.roomId;
             var userId = data.userId;
-            Room.getRoomInfo(roomId,(err,roomInfo)=>{
 
+            if (!userId || !roomId){
+                Log.error('socket set_ready param is error',roomId,userId)
+                socket.emit('set_ready',{code:-1,message:"参数错误"});
+                return;
+            }
+
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
+                    Log.error('socket set_ready get roominfo is error',err)
                     socket.emit('set_ready_result',err)
                     return;
                 }
@@ -100,7 +107,7 @@ exports.start = function(){
                 var players = roomInfo.players;
                 var seatUserIds = seats.map((s)=>{return s.userId});
                 if (seatUserIds.indexOf(userId) !== -1){ //已经坐着了
-                    socket.emit('set_ready_result',{code:-1,message:"已经坐着了"})
+                    socket.emit('set_ready_result',{code:0})
                     return;
                 }
 
@@ -144,22 +151,34 @@ exports.start = function(){
             console.log('data is ',data);
             var roomId = data.roomId;
             var userId = data.userId;
+
+            if (!userId || !roomId){
+                Log.error('socket cancel_ready param is error',roomId,userId)
+                socket.emit('set_ready',{code:-1,message:"参数错误"});
+                return;
+            }
+
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
+
+                if (err){
+                    Log.error('socket cancel_ready get roominfo is error',err)
+                    socket.emit('cancel_ready_result',err)
+                    return;
+                }
 
                 if (roomInfo.gameStart) return;
 
                 var seats = roomInfo.seats;//坐下的人
                 var players = roomInfo.players;
 
-                roomInfo.seats = players.filter((item) => {
-                    return seatUserIds.indexOf(item.userId) === -1;
+                roomInfo.seats = seats.filter((item) => {
+                    return item.userId !== userId
                 })
 
-                roomInfo.seats = players.filter((item) => {
-                    return seatUserIds.indexOf(item.userId) === -1;
-                })
+                players.push({userId})
 
-
+                socket.emit('cancel_ready_result',{code:0});
+                Room.broacastInRoom('one_cancel_ready',roomId,roomInfo);
             })
         })
 
