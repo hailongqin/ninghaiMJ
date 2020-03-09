@@ -131,13 +131,14 @@ cc.Class({
         this.myPengNode = myOpNode.getChildByName('peng');
         this.myGuoNode = myOpNode.getChildByName('guo');
         this.myChiNode = myOpNode.getChildByName('chi');
-        this.myChiListParentNode = myOpNode.getChildByName('chiList');
+        this.myChiListParentNode = myOpNode.getChildByName('chilist');
         this.myChiList1Node = this.myChiListParentNode.getChildByName('list1');
         this.myChiList2Node = this.myChiListParentNode.getChildByName('list2');
 
         this.myChiList3Node = this.myChiListParentNode.getChildByName('list3');
 
         this.hideOpNode();
+        this.hideChiList();
 
         for(var i = 0; i < myHoldsNode.children.length; ++i){
             var sprite = myHoldsNode.children[i].getComponent(cc.Sprite);
@@ -218,7 +219,7 @@ cc.Class({
         this.myGangNode.active = null;
         this.myGuoNode.active = null;
         this.myPengNode.active = null;
-        this.myGuoNode.active = null;
+        this.myHuNode.active = null;
     },
 
     hideChiList(){
@@ -350,11 +351,11 @@ cc.Class({
                 this.calcHoldsAndFolds(this.gameInfo.leftHolds,this.gameInfo.leftFolds,pai);
             }else if (chupaiIndex === this.gameInfo.rightIndex){
                 this.rightChupaiUi(pai);
-                this.calcHoldsAndFolds(this.gameInfo.leftHolds,this.gameInfo.leftFolds,pai);
+                this.calcHoldsAndFolds(this.gameInfo.rightHolds,this.gameInfo.rightFolds,pai);
 
             }else if (chupaiIndex === this.gameInfo.upIndex){
                 this.upChupaiUi(pai);
-                this.calcHoldsAndFolds(this.gameInfo.leftHolds,this.gameInfo.leftFolds,pai);
+                this.calcHoldsAndFolds(this.gameInfo.upHolds,this.gameInfo.upFolds,pai);
             }
         })
 
@@ -369,17 +370,19 @@ cc.Class({
             console.log('zhuapai data is ',data,this.gameInfo)
 
             if (turn === this.gameInfo.leftIndex){
-                this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
+                this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4');      
                 this.gameInfo.leftHolds.push(pai);
             }else if (turn === this.gameInfo.rightIndex){
                 this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
                 this.gameInfo.rightHolds.push(pai)
             }else if (turn === this.gameInfo.upIndex){
-                this.upHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian3')
-                this.gameInfo.upHolds.pus(pai)
+                this.upHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian3');
+                this.gameInfo.upHolds.push(pai)
             }else if (turn === this.gameInfo.myIndex){
                 this.gameInfo.hasChupai = false;
-                this.myHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame('my-'+pai)
+                this.myHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame('my-'+pai);
+                this.myHoldsNode.children[maxHoldLength - 1].pai = pai;
+                console.log(this.myHoldsNode.children[maxHoldLength - 1])
                 this.gameInfo.myHolds.push(pai);
             }
 
@@ -455,6 +458,8 @@ cc.Class({
         var list = this.gameInfo.op.chiList;
         var pai = this.gameInfo.op.pai;
 
+        console.log(this.gameInfo);
+
         this.hideChiList();
 
         for (var key in list){
@@ -490,8 +495,8 @@ cc.Class({
     },
 
     setMyUiHolds(holds){
-        var len = holds.length;
-        for (var i = 0; i < maxHoldLength;i++){
+        var len = holds.length; //13
+        for (var i = 0; i < maxHoldLength;i++){ //14
             if (i < len){
                 var pai = holds[i];
                 var spriteFrame = 'my-'+pai;

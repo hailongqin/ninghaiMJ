@@ -189,6 +189,12 @@ exports.start = function(){
             var roomId = data.roomId;
             var userId = data.userId;
             var pai = data.pai;
+
+            if (!userId || !roomId || !pai){
+                Log.error('socket chupai param is error',roomId,userId,pai)
+                socket.emit('chupai_result',{code:-1,message:"参数错误"});
+                return;
+            }
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     socket.emit('chupai',err)

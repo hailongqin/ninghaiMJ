@@ -1,5 +1,6 @@
 
 var User = require('./user')
+var Room = require('./room')
 
 class Game {
     constructor() {
@@ -78,17 +79,17 @@ class Game {
 
             //每个人再拿一张牌
         for (var j = 0;j<len;j++){
-            seats[j].holds = (seats[j].holds).concat(this.getNextPai(mjLists))
+            seats[j].holds = (seats[j].holds).concat([this.getNextPai(mjLists)])
         }
 
-        seats[zhuangIndex].holds = (seats[zhuangIndex].holds).concat(this.getNextPai(mjLists)); //庄家再拿一张牌
+        seats[zhuangIndex].holds = (seats[zhuangIndex].holds).concat([this.getNextPai(mjLists)]); //庄家再拿一张牌
     
         for (var i = 0;i < seats.length;i++){
             //将花色拿出来
             for (var k = 0; k < seats[i].holds.length;k++){
                 while(seats[i].holds[k] >= 41 &&  seats[i].holds[k]<= 48){
                     seats[i].huas.push(seats[i].holds[k])
-                    var nextPai = (this.getNextPai(mjLists))[0];
+                    var nextPai = this.getNextPai(mjLists);
                     seats[i].holds[k] = nextPai;
                 }
 
@@ -134,7 +135,9 @@ class Game {
     }
 
     getNextPai(mjLists,len = 1){
-        return mjLists.splice(0,len)
+        var list =  mjLists.splice(0,len);
+        if (len === 1) return list[0]
+        return list
     }
 
     getNextPaiIgnoreHua(mjLists){
@@ -245,7 +248,7 @@ class Game {
             return [21,31]
         }
 
-        if (pai >= 31 && pai <= 38){
+        if (pai >= 31 && pai <= 38){ //东南西北
             return [31,38]
         }
 
@@ -312,15 +315,15 @@ class Game {
         var turn = roomInfo.turn;
         var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,turn);
 
-        var nextUserId = seats[nextIndex].userId;
+        var nextUserId = roomInfo.seats[nextIndex].userId;
         var nextSocket = User.getSocketByUser(nextUserId);
-        var list = Game.getNextPaiIgnoreHua(roomInfo.mjLists);
+        var list = this.getNextPaiIgnoreHua(roomInfo.mjLists);
 
         if (list.huas.length){
             nextSocket.emit('get_huas',{turn:nextIndex,huas:list.huas})
         }
 
-        Room.broacastInRoom('zhuapai',roomId,{pai:list.pai,turn:nextIndex});
+        Room.broacastInRoom('zhuapai',roomInfo.roomId,{pai:list.pai,turn:nextIndex});
 
         roomInfo.turn = nextIndex;
     }

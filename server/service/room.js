@@ -31,9 +31,9 @@ function setRoomInfofromDB(roomId, callback) {
         })
 }
 
-class RoomInfo {
+class roomList {
     constructor() {
-        this.roomInfo = {}
+        this.roomList = {}
     }
 
 
@@ -42,7 +42,7 @@ class RoomInfo {
             Log.error('addAndUpdateRoom roomid is empty')
             return;
         }
-        this.roomInfo[roomId] = info;
+        this.roomList[roomId] = info;
     }
     getRoomInfo(roomId,callback){
         if (!roomId){
@@ -50,8 +50,8 @@ class RoomInfo {
             callback({code:-1,message:"无效roomId"})
             return
         }
-        if (this.roomInfo[roomId]){
-            callback(0,this.roomInfo[roomId]);
+        if (this.roomList[roomId]){
+            callback(0,this.roomList[roomId]);
             return;
         }
         setRoomInfofromDB(roomId,(err,doc)=>{
@@ -60,7 +60,7 @@ class RoomInfo {
                 callback(err);
                 return;
             }
-            this.roomInfo[roomId] = doc;
+            this.roomList[roomId] = doc;
 
             callback(0,doc);
         })
@@ -71,7 +71,7 @@ class RoomInfo {
             return;
         }
 
-        var roomInfo = this.roomInfo[roomId];
+        var roomInfo = this.roomList[roomId];
 
         if (!roomInfo){
             return;
@@ -109,4 +109,4 @@ class RoomInfo {
 
 }
 
-module.exports = new RoomInfo();
+module.exports = new roomList();
