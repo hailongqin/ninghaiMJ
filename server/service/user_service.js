@@ -32,7 +32,6 @@ router.post('/create_user', function(req, res, next){
         userModel.find({$or:[{ userName:userName},{userId:userId}]})
         .select("-_id")
         .exec((err,ret)=> {
-
             if (err){
                 res.json({code:-2,message:'读取数据库错误'})
                 delete  creatingUser[userName];

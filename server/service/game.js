@@ -141,6 +141,11 @@ class Game {
         if (pai >= 41 && pai<= 48) return true;
         return false;
     }
+
+    // 检查是否可以碰
+    checkCanPeng(roomInfo,exclude){
+
+    }
 }
 
 
