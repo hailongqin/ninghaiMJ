@@ -124,6 +124,21 @@ cc.Class({
         var myHoldsNode  = this.myHoldsNode = myNode.getChildByName('holds');
         var myHuasNode = this.myHuasNode = myNode.getChildByName('huas');
         var myFoldsNode = this.myFoldsNode = myNode.getChildByName('folds');
+        var myOpNode = this.node.getChildByName('op');
+
+        this.myHuNode = myOpNode.getChildByName('hu');
+        this.myGangNode = myOpNode.getChildByName('gang');
+        this.myPengNode = myOpNode.getChildByName('peng');
+        this.myGuoNode = myOpNode.getChildByName('guo');
+        this.myChiNode = myOpNode.getChildByName('chi');
+        this.myChiListParentNode = myOpNode.getChildByName('chiList');
+        this.myChiList1Node = this.myChiListParentNode.getChildByName('list1');
+        this.myChiList2Node = this.myChiListParentNode.getChildByName('list2');
+
+        this.myChiList3Node = this.myChiListParentNode.getChildByName('list3');
+
+        this.hideOpNode();
+
         for(var i = 0; i < myHoldsNode.children.length; ++i){
             var sprite = myHoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
@@ -196,6 +211,43 @@ cc.Class({
             var sprite = upFoldsNode.children[i].getComponent(cc.Sprite);
             sprite.spriteFrame = null;
         }
+    },
+
+    hideOpNode(){
+        this.myChiNode.active = null;
+        this.myGangNode.active = null;
+        this.myGuoNode.active = null;
+        this.myPengNode.active = null;
+        this.myGuoNode.active = null;
+    },
+
+    hideChiList(){
+        this.myChiListParentNode.active = null;
+        this.myChiList1Node.active = null;
+        this.myChiList2Node.active = null;
+        this.myChiList3Node.active = null;
+    },
+
+    setOneChiList(index,list,pai){
+        var key = '';
+        if (index == 0) key = 'myChiList1Node';
+        if (index == 1) key = 'myChiList2Node';
+        if (index == 2) key = 'myChiList3Node';
+
+
+        var node = this[key];
+
+        for (var i = 0; i < node.children.length;i++){
+            for (var j = 0;j < list.length;j++){
+                node.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+list[j]);
+                if (list[j] === pai){
+                    node.children[i].y +=10;
+                }
+            }
+        }
+
+        node.active = true;
+
     },
 
     hideCircle(){
@@ -364,6 +416,50 @@ cc.Class({
             }
         })
 
+        this.node.on('op_notify',(data)=>{
+            var op = data.op;
+            if (op.canHu){
+                this.myHuNode.active = true;
+            }
+
+            if (op.canGang){
+                this.myGangNode.active = true;
+            }
+            if (op.canPeng){
+                this.myPengNode.active = true;
+            }
+
+            if (op.canChi){
+                this.myChiNode.active = true;
+            }
+
+            this.gameInfo.op = op;
+
+        })
+
+    },
+
+    onHuClick(){
+
+    },
+
+    onPengClick(){
+
+    },
+
+    onGangClick(){
+
+    },
+
+    onChiClick(){
+        var list = this.gameInfo.op.chiList;
+        var pai = this.gameInfo.op.pai;
+
+        this.hideChiList();
+
+        for (var key in list){
+            this.setOneChiList(key,list[key],pai);
+        }
     },
 
     leftChupaiUi(pai){

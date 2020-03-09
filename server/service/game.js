@@ -162,22 +162,28 @@ class Game {
     
     checkCanGang(seatData,pai){
         var count = seatData.countMap[pai];
+        var op = seatData.op;
         if(count && count >= 3){
-            seatData.canGang = true;
-            seatData.canPeng = true
+            op.canGang = true;
+            op.canPeng = true;
+            op.pai = pai;
         }
     }
 
     checkCanPeng(seatData,pai){
         var count = seatData.countMap[pai];
+        var op = seatData.op;
         if(count && count >= 2){
-            seatData.canPeng = true
+            op.canPeng = true;
+            op.pai = pai;
         }
     }
 
     checkCanHu(seatData,pai){
+        var op = seatData.op;
         if (seatData.tingMap[pai]){
-            seatData.canHu = true;
+            op.canHu = true;
+            op.pai = pai;
         }
     }
 
@@ -199,18 +205,21 @@ class Game {
         //A-2 A-1 A
         if (this.checkPaiInRange(superPrev,range) && this.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
             op.canChi = true;
+            op.pai = pai;
             op.chiList.push([superPrev,prev,pai]);
         }
 
         //A-1 A A+1
         if (this.checkPaiInRange(prev,range) && this.checkPaiInRange(next,range) && countMap[prev] && countMap[next]){
             op.canChi = true;
+            op.pai = pai;
             op.chiList.push([prev,pai,next]);
         }
 
         //A A+1 A+2
         if (this.checkPaiInRange(superNext,range) && this.checkPaiInRange(next,range) && countMap[superNext] && countMap[next]){
             op.canChi = true;
+            op.pai = pai;
             op.chiList.push([pai,next,superNext]);
         }
         
@@ -251,7 +260,7 @@ class Game {
         }
     }
 
-    sendOperation(seats,pai){
+    sendOperation(seats){
         var ret = false;
         for (var item of seats){
             var userId = item.userId;
@@ -267,7 +276,6 @@ class Game {
                     return;
                 }
                 ret = true;
-                op.pai = pai; //操作的牌
                 socket.emit('op_notify',{op})
             }
         }
