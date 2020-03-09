@@ -72,6 +72,7 @@ router.post('/create_room', function(req, res, next){
             .select("-_id")
             .exec((err,ret)=> {
                 if (err){
+                    Log.error('post create_room read db is err',err)
                     res.json({code:-1,message:"读取数据错误"});
                     delete creatingRoom[roomId];
                     return;
@@ -92,6 +93,7 @@ router.post('/create_room', function(req, res, next){
                     roomModel.create(condition,  (err, doc) => {
                     
                         if (err) {
+                            Log.error('post create_room save db is err',err)
                             delete creatingRoom[roomId];
                             res.json({code:-2,message:"插入数据错误"});
                         } else {
@@ -115,12 +117,20 @@ router.post('/create_room', function(req, res, next){
 router.post('/check_room_exit', function(req, res, next){
     var body = req.body;
     var roomId = body.roomId;
+
+    if (!roomId){
+        Log.error('post check_room_exit roomid is null')
+        res.json({code:-1,message:"参数错误"});
+        return;
+    }
+
     roomModel.findOne({
         roomId,
     })
     .select("-_id players")
     .exec((err,ret)=>{
         if (err){
+            Log.error('post check_room_exit read db  is err',err)
             res.json({code:-1,message:"读取数据错误"});
             return;
         }

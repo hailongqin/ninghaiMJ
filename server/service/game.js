@@ -143,7 +143,9 @@ class Game {
     }
 
     // 检查是否可以碰
+    // exclude:{userId,pai}
     checkCanPeng(roomInfo,exclude){
+        
 
     }
 }
