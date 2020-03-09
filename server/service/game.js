@@ -1,4 +1,6 @@
 
+var User = require('./user')
+
 class Game {
     constructor() {
     }
@@ -95,11 +97,11 @@ class Game {
 
         // 将手牌排序
         for (var i = 0;i < seats.length;i++){
-         seats[i].holds.sort((a,b)=>{
-                return a - b;
+            seats[i].holds.sort((a,b)=>{
+                    return a - b;
             })
 
-         console.log(seats[i]);
+            seats[i].countMap = this.getCountMap(seats[i].holds);
         }
 
         // 将花色排序
@@ -107,9 +109,23 @@ class Game {
             seats[i].huas.sort((a,b)=>{
                    return a - b;
                })
-        }2
+        }
 
     
+    }
+
+    getCountMap(holds){
+        var countMap = {};
+        if (!holds || !holds.length){
+            Log.error('getCountMap holds is null',holds)
+            return;
+        }
+
+        holds.reduce((prev,next)=>{
+            countMap[next] = countMap[next]?countMap[next]+1:1
+        })
+
+        return countMap;
     }
 
     getNextChuPaiIndex(seats,index){
@@ -142,11 +158,163 @@ class Game {
         return false;
     }
 
-    // 检查是否可以碰
-    // exclude:{userId,pai}
-    checkCanPeng(roomInfo,exclude){
-        
+    // 检查是否可以杠
+    
+    checkCanGang(seatData,pai){
+        var count = seatData.countMap[pai];
+        if(count && count >= 3){
+            seatData.canGang = true;
+            seatData.canPeng = true
+        }
+    }
 
+    checkCanPeng(seatData,pai){
+        var count = seatData.countMap[pai];
+        if(count && count >= 2){
+            seatData.canPeng = true
+        }
+    }
+
+    checkCanHu(seatData,pai){
+        if (seatData.tingMap[pai]){
+            seatData.canHu = true;
+        }
+    }
+
+    checkCanChi(seatData,pai){
+
+        if (pai >= 31) return  //东南西北中无法吃
+        var countMap = seatData.countMap
+        var superPrev = pai - 2;
+        var prev = pai - 1;
+        var next = pai + 1;
+
+        var superNext = pai + 2;
+
+        var range = this.getMjRange(pai)
+
+        var op = seatData.op;
+        op.chiList = [];
+
+        //A-2 A-1 A
+        if (this.checkPaiInRange(superPrev,range) && this.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
+            op.canChi = true;
+            op.chiList.push([superPrev,prev,pai]);
+        }
+
+        //A-1 A A+1
+        if (this.checkPaiInRange(prev,range) && this.checkPaiInRange(next,range) && countMap[prev] && countMap[next]){
+            op.canChi = true;
+            op.chiList.push([prev,pai,next]);
+        }
+
+        //A A+1 A+2
+        if (this.checkPaiInRange(superNext,range) && this.checkPaiInRange(next,range) && countMap[superNext] && countMap[next]){
+            op.canChi = true;
+            op.chiList.push([pai,next,superNext]);
+        }
+        
+        
+        return;
+    }
+
+    checkPaiInRange(pai,range){
+        if (range[0] <= pai && range[1] >= pai) return true;
+        return false;
+    }
+
+    getMjRange(pai){
+        if (pai >= 1 && pai <= 9){
+            return [1,9]
+        }
+
+        if (pai >= 11 && pai <= 19){
+            return [11,19]
+        }
+
+        if (pai >= 21 && pai <= 31){
+            return [21,31]
+        }
+
+        if (pai >= 31 && pai <= 38){
+            return [31,38]
+        }
+
+        if (pai >= 41 && pai<= 48){
+            return [41,48]
+        }
+    }
+
+    clearOperation(seats){
+        for (var i = 0;i< seats.length;i++){
+            seats.op = {};
+        }
+    }
+
+    sendOperation(seats,pai){
+        var ret = false;
+        for (var item of seats){
+            var userId = item.userId;
+            var hasOp = false;
+            var op = item.op
+            if (op.canHu || op.canChi || op.canGang || op.canPeng){
+                hasOp = true;
+            }
+            if (hasOp){
+                var socket = User.getSocketByUser(userId)
+                if (!socket){
+                    Log.error('sendOperation get socket is null',userId);
+                    return;
+                }
+                ret = true;
+                op.pai = pai; //操作的牌
+                socket.emit('op_notify',{op})
+            }
+        }
+        return ret;
+
+    }
+
+    checkOtherSeatHasOp(seats,excludeIndex){
+       for (var i = 0; i< seats.length;i++){
+           if (i === excludeIndex) continue
+           var op = seats[i].op;
+           if (op.canHu || op.canGang || op.canPeng || op.canChi) return true
+       }
+       return false
+    }
+
+    getIndexByUserId(seats,userId){
+        var ids = seats.map((s)=>{return s.userId});
+
+        var index = ids.indexOf(userId);
+        if (index === -1){
+            Log.error('getIndexByUserId index is invalid')
+            return 
+        }
+
+        return index;
+    }
+
+    fapai(roomInfo){
+        if (!roomInfo){
+            Log.error('fapai roominfo is null')
+            return;
+        }
+        var turn = roomInfo.turn;
+        var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,turn);
+
+        var nextUserId = seats[nextIndex].userId;
+        var nextSocket = User.getSocketByUser(nextUserId);
+        var list = Game.getNextPaiIgnoreHua(roomInfo.mjLists);
+
+        if (list.huas.length){
+            nextSocket.emit('get_huas',{turn:nextIndex,huas:list.huas})
+        }
+
+        Room.broacastInRoom('zhuapai',roomId,{pai:list.pai,turn:nextIndex});
+
+        roomInfo.turn = nextIndex;
     }
 }
 

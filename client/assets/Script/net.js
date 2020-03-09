@@ -3,7 +3,7 @@ var io = require('socket-io')
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:"127.0.0.1:1000",
+        ip:"192.168.0.102:1000",
         sio:null,
         isPinging:false,
         fnDisconnect:null,
@@ -50,7 +50,7 @@ cc.Class({
 
             var events = [
                 'login_result','set_ready_result','game_start','one_chupai','zhuapai','new_user_set_ready',
-                'new_user_login','get_huas'
+                'new_user_login','get_huas','one_peng','one_chi','op_notify'
             ]
 
             events.map((e)=>{
