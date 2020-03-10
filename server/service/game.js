@@ -411,19 +411,90 @@ class Game {
             return
         }
    
-
-        for (var i = 1; i< 10;i++){
+        var tingMap = [];
+        for (var i = 1; i< 10;i++){ //1-9筒有没有胡的
             if (countMap[i]){
                 countMap[i]++;
             }else{
                 countMap[i] = 1;
             }
-            this.checkIsHu(seat)
+            ret = this.checkIsHu(seat);
+            if (ret){
+                tingMap.push({
+                    value:i
+                })
+            }
+
+            countMap[i]--;
         }
+
+        for (var i = 11; i< 20;i++){ //1-9 万有没有胡的
+            if (countMap[i]){
+                countMap[i]++;
+            }else{
+                countMap[i] = 1;
+            }
+            ret = this.checkIsHu(seat);
+            if (ret){
+                tingMap.push({
+                    value:i
+                })
+            }
+
+            countMap[i]--;
+        }
+
+        for (var i = 21; i< 30;i++){ //1-9条
+            if (countMap[i]){
+                countMap[i]++;
+            }else{
+                countMap[i] = 1;
+            }
+            ret = this.checkIsHu(seat);
+            if (ret){
+                tingMap.push({
+                    value:i
+                })
+            }
+
+            countMap[i]--;
+        }
+
+        for (var i = 41; i< 49;i++){ //东南西北风
+            if (countMap[i]){
+                countMap[i]++;
+            }else{
+                countMap[i] = 1;
+            }
+            ret = this.checkIsHu(seat);
+            if (ret){
+                tingMap.push({
+                    value:i
+                })
+            }
+
+            countMap[i]--;
+        }
+
+        seat.tingMap = tingMap;
     }
 
     checkIsHu(seat){
         var countMap = seat.countMap;
+
+        var jiangPaiCount = 0;
+
+        //如果将牌的数量超过1 则肯定不能胡
+        for (var key in countMap){
+            if (countMap[key] && countMap[key] === 2){
+                jiangPaiCount++;
+            }
+        }
+
+        if (jiangPaiCount !== 1){
+            return false;
+        }
+
         //先拿出将牌
         for (var key in countMap){
             var count = countMap[key];
@@ -432,9 +503,7 @@ class Game {
                 countMap[key] -=2;
                 var ret = this.checkSingleTingPai(countMap,11,19);
                 if (ret){
-                    seat.tingMap.push({
-                        value:key
-                    })
+                  return true;
                 }
 
                 countMap[key] = old;
@@ -442,13 +511,14 @@ class Game {
         }
     }
 
+
     //除去将牌后,每种类型的牌是否可以胡了
     checkSingleTingPai(countMap,start,end){
         var selected = -1;
         var cc = 0;
        for (var key in countMap){
            cc = countMap[key]
-            if (cc && start<=key && end>=key){
+            if (cc && this.checkPaiInRange(key,[start,end])){
                 selected = key;
                 break;
             }
@@ -473,7 +543,7 @@ class Game {
             //直接作为一坎
             countMap[selected] = 1;
   
-            var ret = this.checkSingleTingPai(seatData,start,end);
+            var ret = this.checkSingleTingPai(countMap,start,end);
             //立即恢复对数据的修改
             countMap[selected] = cc;
             //如果作为一坎能够把牌匹配完，直接返回TRUE。
@@ -482,60 +552,61 @@ class Game {
             }
         }
 
+        if (selected >= 31 && selected <= 38) { //如果是风牌，没法吃，直接返回匹配失败
+            return false;
+        }
+
         //接下来去除顺子
 
+        //分开匹配 A-2,A-1,A
         var matched = true;
-        var v = selected % 9;
-        if(v < 2){
+        var v = selected % 10;
+        
+        if(v < 3){
             matched = false;
         }
         else{
             for(var i = 0; i < 3; ++i){
                 var t = selected - 2 + i;
-                var cc = seatData.countMap[t];
-                if(cc == null){
+                var cc = null;
+                if (this.checkPaiInRange(t,[start,end]) && countMap[t]){
+                    cc =  countMap[t]
+                }
+                if(!cc){
                     matched = false;
                     break;
                 }
-                if(cc == 0){
-                    matched = false;
-                    break;
-                }
+                
             }		
         }
     
     
         //匹配成功，扣除相应数值
         if(matched){
-            seatData.countMap[selected - 2] --;
-            seatData.countMap[selected - 1] --;
-            seatData.countMap[selected] --;
-            var ret = checkSingle(seatData);
-            seatData.countMap[selected - 2] ++;
-            seatData.countMap[selected - 1] ++;
-            seatData.countMap[selected] ++;
-            if(ret == true){
-                debugRecord(selected - 2);
-                debugRecord(selected - 1);
-                debugRecord(selected);
+            countMap[selected - 2] --;
+            countMap[selected - 1] --;
+            countMap[selected] --;
+            var ret = this.checkSingleTingPai(countMap,start,end);
+            countMap[selected - 2] ++;
+            countMap[selected - 1] ++;
+            countMap[selected] ++;
+            if(ret){
                 return true;
             }		
         }
     
         //分开匹配 A-1,A,A + 1
         matched = true;
-        if(v < 1 || v > 7){
+        if(v < 2 || v > 8){
             matched = false;
         }
         else{
             for(var i = 0; i < 3; ++i){
                 var t = selected - 1 + i;
-                var cc = seatData.countMap[t];
-                if(cc == null){
-                    matched = false;
-                    break;
+                if (this.checkPaiInRange(t,[start,end]) && countMap[t]){
+                    cc =  countMap[t]
                 }
-                if(cc == 0){
+                if(!cc){
                     matched = false;
                     break;
                 }
@@ -544,17 +615,14 @@ class Game {
     
         //匹配成功，扣除相应数值
         if(matched){
-            seatData.countMap[selected - 1] --;
-            seatData.countMap[selected] --;
-            seatData.countMap[selected + 1] --;
-            var ret = checkSingle(seatData);
-            seatData.countMap[selected - 1] ++;
-            seatData.countMap[selected] ++;
-            seatData.countMap[selected + 1] ++;
-            if(ret == true){
-                debugRecord(selected - 1);
-                debugRecord(selected);
-                debugRecord(selected + 1);
+            countMap[selected - 1] --;
+            countMap[selected] --;
+            countMap[selected + 1] --;
+            var ret = this.checkSingleTingPai(countMap,start,end);
+            countMap[selected - 1] ++;
+            countMap[selected] ++;
+            countMap[selected + 1] ++;
+            if(ret){
                 return true;
             }		
         }
@@ -562,18 +630,16 @@ class Game {
         
         //分开匹配 A,A+1,A + 2
         matched = true;
-        if(v > 6){
+        if(v > 7){
             matched = false;
         }
         else{
             for(var i = 0; i < 3; ++i){
                 var t = selected + i;
-                var cc = seatData.countMap[t];
-                if(cc == null){
-                    matched = false;
-                    break;
+                if (this.checkPaiInRange(t,[start,end]) && countMap[t]){
+                    cc =  countMap[t]
                 }
-                if(cc == 0){
+                if(!cc){
                     matched = false;
                     break;
                 }
@@ -585,14 +651,11 @@ class Game {
             seatData.countMap[selected] --;
             seatData.countMap[selected + 1] --;
             seatData.countMap[selected + 2] --;
-            var ret = checkSingle(seatData);
+            var ret = this.checkSingleTingPai(countMap,start,end);
             seatData.countMap[selected] ++;
             seatData.countMap[selected + 1] ++;
             seatData.countMap[selected + 2] ++;
-            if(ret == true){
-                debugRecord(selected);
-                debugRecord(selected + 1);
-                debugRecord(selected + 2);
+            if(ret){
                 return true;
             }		
         }
