@@ -49,8 +49,8 @@ cc.Class({
 
 
             var events = [
-                'login_result','set_ready_result','game_start','one_chupai','zhuapai','new_user_set_ready',
-                'new_user_login','get_huas','one_peng','one_chi','op_notify'
+                'update_table','update_pepole_status','new_user_login_notify','new_user_ready_notify','op_notify','op_action_notify',
+                'chupai_action_notify'
             ]
 
             events.map((e)=>{

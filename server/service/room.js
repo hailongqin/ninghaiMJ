@@ -65,7 +65,7 @@ class roomList {
             callback(0,doc);
         })
     }
-    broacastInRoom(event,roomId,data,sender,includingSender = false){
+    broacastInRoom(event,roomId,data,excludeUsers = []){
 
         if (!roomId){
             return;
@@ -87,7 +87,7 @@ class roomList {
                 return;
             }
 
-            if(socket && (userId !== sender || includingSender)){
+            if(socket && (excludeUsers.indexOf(userId) === -1)){
                 socket.emit(event,data);
             }
         }
@@ -100,7 +100,7 @@ class roomList {
                 Log.error('broacastInRoom get players socket is null')
                 return;
             }
-            if(socket&& (userId !== sender || includingSender)){
+            if(socket&& (excludeUsers.indexOf(userId) === -1)){
                 socket.emit(event,data);
             }
         }

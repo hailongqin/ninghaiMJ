@@ -140,8 +140,16 @@ class Game {
         return list
     }
 
-    getNextPaiIgnoreHua(mjLists){
-        var huas = [];
+    getNextPaiIncludeHua(roomInfo){
+        if (!roomInfo){
+            Log.error('getNextPaiIncludeHua roominfo is null')
+            return;
+        }
+
+        var turn = roomInfo.turn;
+
+        var huas = seats[turn].huas;
+        var holds = seats[turn].holds;
         var pai = this.getNextPai(mjLists)
 
         while(this.checkIsHua(pai)){
@@ -149,10 +157,7 @@ class Game {
             pai = this.getNextPai(mjLists);
         }
 
-        return {
-            huas,
-            pai
-        }
+        holds.push(pai)
     
     }
 
@@ -263,29 +268,7 @@ class Game {
         }
     }
 
-    sendOperation(seats){
-        var ret = false;
-        for (var item of seats){
-            var userId = item.userId;
-            var hasOp = false;
-            var op = item.op
-            if (op.canHu || op.canChi || op.canGang || op.canPeng){
-                hasOp = true;
-            }
-            if (hasOp){
-                var socket = User.getSocketByUser(userId)
-                if (!socket){
-                    Log.error('sendOperation get socket is null',userId);
-                    return;
-                }
-                ret = true;
-                socket.emit('op_notify',{op})
-            }
-        }
-        return ret;
-
-    }
-
+    
     checkOtherSeatHasOp(seats,excludeIndex){
        for (var i = 0; i< seats.length;i++){
            if (i === excludeIndex) continue
@@ -307,26 +290,131 @@ class Game {
         return index;
     }
 
-    fapai(roomInfo){
+    fapai(roomId){
+        var roomInfo = Room.getRoomInfo(roomId)
         if (!roomInfo){
             Log.error('fapai roominfo is null')
             return;
         }
         var turn = roomInfo.turn;
         var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,turn);
+        roomInfo.turn = nextIndex;
+        this.getNextPaiIncludeHua(roomInfo);
+  
+       this.updateTable(roomId);
+    }
 
-        var nextUserId = roomInfo.seats[nextIndex].userId;
-        var nextSocket = User.getSocketByUser(nextUserId);
-        var list = this.getNextPaiIgnoreHua(roomInfo.mjLists);
+    //开始的时候 更新桌面的信息
+    updateTable(roomId){
+        var roomInfo = Room.getRoomInfo(roomId)
+        if (!roomInfo){
+            Log.error('no find roominfo in updateTable')
+            return 
+        }
+        Room.broacastInRoom('update_table',roomId,roomInfo)
+    }
 
-        if (list.huas.length){
-            nextSocket.emit('get_huas',{turn:nextIndex,huas:list.huas})
+    updateOneTable(roomId,userId){
+        if (!userId || !roomId){
+            Log.error('param is error',userId,roomId)
+            return;
         }
 
-        Room.broacastInRoom('zhuapai',roomInfo.roomId,{pai:list.pai,turn:nextIndex});
+        var roomInfo = Room.getRoomInfo(roomId)
+        if (!roomInfo){
+            Log.error('no find roominfo in updateOneTable')
+            return 
+        }    
 
-        roomInfo.turn = nextIndex;
+        var socket = User.getSocketByUser(userId)
+        if (!socket){
+            Log.error('no find socket in updateOneTable')
+            return 
+        }
+
+        socket.emit('update_table',roomInfo)
     }
+
+     //未开始的时候，更新人员状态
+    updatePepoleStatus(roomId){
+        var roomInfo = Room.getRoomInfo(roomId)
+        if (!roomInfo){
+            Log.error('no find roominfo in updateSeatStatus')
+            return 
+        }   
+
+        Room.broacastInRoom('update_pepole_status',roomId,roomInfo)
+    }
+
+
+    
+    //通知新的人进来了，只是要求出个提示语
+    notifyNewUserLogin(roomId,userId){
+        var roomInfo = Room.getRoomInfo(roomId)
+        if (!roomInfo){
+            Log.error('no find roominfo in updateSeatStatus')
+            return 
+        }   
+
+        Room.broacastInRoom('new_user_login_notify',roomId,userId,userId)
+    }
+
+    //通知新的人准备了，只是要求出个提示语
+    notifyNewUserReady(roomId,userId){
+        var roomInfo = Room.getRoomInfo(roomId)
+        if (!roomInfo){
+            Log.error('no find roominfo in updateSeatStatus')
+            return 
+        }   
+
+        Room.broacastInRoom('new_user_ready_notify',roomId,userId,userId)
+    }
+
+
+    //通知是否有操作
+    notifyOperation(seats){
+        var ret = false;
+        for (var item of seats){
+            var userId = item.userId;
+            var hasOp = false;
+            var op = item.op
+            if (op.canHu || op.canChi || op.canGang || op.canPeng){
+                hasOp = true;
+            }
+            if (hasOp){
+                var socket = User.getSocketByUser(userId)
+                if (!socket){
+                    Log.error('sendOperation get socket is null',userId);
+                    return;
+                }
+                ret = true;
+                socket.emit('op_notify',{op})
+            }
+        }
+        return ret;
+    }
+
+    //通知前端操作的结果，仅供特效自体和声音播放，不设计pai的排序
+    notifyOperationAction(roomId,operationResult,userId){
+        var roomInfo = Room.getRoomInfo(roomId)
+        if (!roomInfo){
+            Log.error('no find roominfo in updateSeatStatus')
+            return 
+        }   
+
+        Room.broacastInRoom('op_action_notify',roomId,operationResult,[userId])
+    }
+
+    notifyChupaiAction(roomId,operationResult,userId){
+        var roomInfo = Room.getRoomInfo(roomId)
+        if (!roomInfo){
+            Log.error('no find roominfo in updateSeatStatus')
+            return 
+        }   
+
+        Room.broacastInRoom('chupai_action_notify',roomId,operationResult,[userId])
+    }
+
 }
 
 

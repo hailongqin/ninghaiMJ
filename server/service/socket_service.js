@@ -42,29 +42,21 @@ exports.start = function(){
                     socket.emit('login_result',err);
                     return;
                 }
-
-              
-
-
                 var seats = roomInfo.seats;//坐下的人
                 var seatUserIds = seats.map((s)=>{return s.userId});
 
                 if (seatUserIds.indexOf(userId) !== -1){ //已经是坐下的人
                     User.bindUserAndSocket(userId,socket);
-                    socket.emit('login_result',{code:0,roomInfo});
-
                     if (roomInfo.gameStart){ //游戏已经开始了
-                        socket.emit('game_start',roomInfo);
+                       Game.updateTable(roomId)
                     }
-
                     return;
                 }
 
-                var players = roomInfo.players;//坐下的人
+                var players = roomInfo.players;//观看的人
                 var playersUserIds = players.map((s)=>{return s.userId});
-                if (playersUserIds.indexOf(userId) !== -1){ //已经
+                if (playersUserIds.indexOf(userId) !== -1){ //已经是看客
                     User.bindUserAndSocket(userId,socket);
-                    socket.emit('login_result',{code:0,roomInfo}); //已经是看客了
                     return;
                 }
 
@@ -75,28 +67,23 @@ exports.start = function(){
                 User.bindUserAndSocket(userId,socket);
                 Room.addAndUpdateRoom(roomId,roomInfo);
 
-
-                socket.emit('login_result',{code:0,roomInfo});
-
-                Room.broacastInRoom('new_user_login',roomId,roomInfo,userId); //新进来的人
+                Game.updatePepoleStatus(roomInfo)
+                Game.notifyNewUserLogin(roomId,userId)
             })
             return;
         })
         socket.on('set_ready', function (data) {
-            console.log('data is ',data);
             var roomId = data.roomId;
             var userId = data.userId;
 
             if (!userId || !roomId){
                 Log.error('socket set_ready param is error',roomId,userId)
-                socket.emit('set_ready',{code:-1,message:"参数错误"});
                 return;
             }
 
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket set_ready get roominfo is error',err)
-                    socket.emit('set_ready_result',err)
                     return;
                 }
 
@@ -107,12 +94,12 @@ exports.start = function(){
                 var players = roomInfo.players;
                 var seatUserIds = seats.map((s)=>{return s.userId});
                 if (seatUserIds.indexOf(userId) !== -1){ //已经坐着了
-                    socket.emit('set_ready_result',{code:0})
+                    Game.updatePepoleStatus();
                     return;
                 }
 
                 if (seats.length >= conf.userCount){
-                    socket.emit('set_ready_result',{code:-1,message:"人员已经满了"})
+                    Game.updatePepoleStatus();
                     return;
                 }
 
@@ -134,15 +121,13 @@ exports.start = function(){
                     return seatUserIds.indexOf(item.userId) === -1;
                 })
 
-
-                // Room.addAndUpdateRoom(roomId,roomInfo);
-                socket.emit('set_ready_result',{code:0})
-                Room.broacastInRoom('new_user_set_ready',roomId,roomInfo,userId);
+                Game.updatePepoleStatus(roomId);
+                Game.notifyNewUserReady(roomId,userId,userId)
 
                 if (conf.userCount === seats.length){
                     roomInfo.gameStart = true;
                     Game.begin(roomInfo);
-                    Room.broacastInRoom('game_start',roomId,roomInfo,userId,true);
+                    Game.updateTable(roomId);
                 }
             });
 
@@ -192,12 +177,11 @@ exports.start = function(){
 
             if (!userId || !roomId || !pai){
                 Log.error('socket chupai param is error',roomId,userId,pai)
-                socket.emit('chupai_result',{code:-1,message:"参数错误"});
                 return;
             }
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
-                    socket.emit('chupai',err)
+                    Log.error('getRoomInfo chupai  is error',err)
                     return;
                 }
 
@@ -211,11 +195,9 @@ exports.start = function(){
                 holds.splice(index,0);
                 folds.push(pai);
 
-                Room.broacastInRoom('one_chupai',roomId,{chupaiIndex:seatIndex,pai});
-
                 var nextIndex = Game.getNextChuPaiIndex(seats,seatIndex);
 
-                for (var i = 0;i < seats.length;i++){
+                for (var i = 0;i < seats.length;i++){       
                     if (userId === seats[i].userId) continue;
                     Game.checkCanHu(seats[i],pai)     // 检查是否有人胡
                     Game.checkCanGang(seats[i],pai)   // 检查是否有人杠
@@ -225,10 +207,13 @@ exports.start = function(){
                     }
                 }
 
-               var ret =  Game.sendOperation(seats);
+               var ret =  Game.notifyOperation(seats);
              
                 if (ret){ //如果有操作的，则等待他们操作
+                    Game.updateTable(roomId); // 更新桌面
                     return 
+                }else{ // 如果没有操作
+
                 }
                 Game.fapai(roomInfo);
             })

@@ -274,10 +274,47 @@ cc.Class({
 
     initHander(){
 
-        /**
-         *  var events = [
-                'login_result','set_ready_result','game_start'
-            ]*/
+       /*
+       *                 'update_table','update_pepole_status','new_user_login_notify','new_user_ready_notify','op_notify','op_action_notify',
+                'chupai_action_notify'
+       */ 
+
+       this.node.on('update_table',(data)=>{
+         // 更新table
+         var seats = data.seats;
+
+         for (var i = 0; i < seats.length;i++){
+             var seat = seats[i];
+             if (i === this.gameInfo.leftIndex){
+                 this.setLeftTable(seat);
+             }else if (i === this.gameInfo.rightIndex){
+                 this.setRightTable(seat);
+             }else if (i === this.gameInfo.upIndex){
+                 this.setMyTable(seat)
+             }
+         }
+       })
+
+       this.node.on('op_notify',(data)=>{
+        var op = data.op;
+        if (op.canHu){
+            this.myHuNode.active = true;
+        }
+
+        if (op.canGang){
+            this.myGangNode.active = true;
+        }
+        if (op.canPeng){
+            this.myPengNode.active = true;
+        }
+
+        if (op.canChi){
+            this.myChiNode.active = true;
+        }
+
+        this.gameInfo.op = op;
+
+       })
             
         this.node.on('game_start',(data) => {
             this.readyBtn.active = false;
@@ -298,35 +335,18 @@ cc.Class({
             this.gameInfo.turn = data.turn;
 
             for (var i = 0; i < seats.length;i++){
-                var holds = seats[i].holds;
-                var huas = seats[i].huas;
-                var folds = seats[i].folds;
                 if (i  === myIndex){
                     this.gameInfo.myIndex = i;
-                    this.gameInfo.myHolds = holds;
-                    this.gameInfo.myFolds = folds;
-                    this.gameInfo.myHuas = huas;
-                    this.setMyUiHolds(holds);
-                    this.setMyUiHua(huas)
+                    this.setMyTable(seats[i])
                 }else if ( i < myIndex && Math.abs(i-myIndex) === 1){ //左边的牌
                     this.gameInfo.leftIndex = i;
-                    this.gameInfo.leftHolds = holds;
-                    this.gameInfo.leftFolds = folds;
-                    this.gameInfo.leftHuas = huas;
-                    this.setLeftHolds(holds.length);
-                    this.setLeftHua(huas)
+                    this.setLeftTable(seats[i])
                 }else if (i > myIndex && Math.abs(i-myIndex) === 1){ //右边的牌
                     this.gameInfo.rightIndex = i;
-                    this.gameInfo.rightHolds = holds;
-                    this.gameInfo.rightFolds = folds;
-                    this.gameInfo.rightHuas = huas;
-                    this.setRightHolds(holds.length);
-                    this.setRightHua(huas)
+                    this.setRightTable(seats[i])
                 }else if (i > myIndex && Math.abs(i-myIndex) === 2){ //对面的牌
                     this.gameInfo.upIndex = i;
-                    this.gameInfo.upHolds = holds;
-                    this.gameInfo.ipFolds = folds;
-                    this.gameInfo.rightHuas = huas;
+                 
                     console.log('对面的牌')
                     // this.setLeftHolds(holds);
                     // this.setLeftHua(huas)
@@ -334,112 +354,37 @@ cc.Class({
             }
 
             this.setTimeCircle();
-
             if (data.zhuangIndex === this.gameInfo.myIndex){
                 this.gameInfo.hasChupai = false;
             }
-           
         })
 
-        /*chupaiIndex:seatIndex,pai*/ 
-        this.node.on('one_chupai',(data)=>{
-            var pai = data.pai;
-            var chupaiIndex = data.chupaiIndex;
+       
+    },
 
-            if (chupaiIndex == this.gameInfo.leftIndex){
-                this.leftChupaiUi(pai);
-                this.calcHoldsAndFolds(this.gameInfo.leftHolds,this.gameInfo.leftFolds,pai);
-            }else if (chupaiIndex === this.gameInfo.rightIndex){
-                this.rightChupaiUi(pai);
-                this.calcHoldsAndFolds(this.gameInfo.rightHolds,this.gameInfo.rightFolds,pai);
+    setLeftTable(seat){
+        var holds = seat.holds;
+        var folds = seat.folds;
+        var huas = seat.huas;
+        this.setLeftHolds(holds);
+        this.setLeftHua(huas);
+    },
 
-            }else if (chupaiIndex === this.gameInfo.upIndex){
-                this.upChupaiUi(pai);
-                this.calcHoldsAndFolds(this.gameInfo.upHolds,this.gameInfo.upFolds,pai);
-            }
-        })
+    setRightTable(seat){
+        var holds = seat.holds;
+        var folds = seat.folds;
+        var huas = seat.huas;
+        this.setRightHolds(holds);
+        this.setRightHua(huas); 
+    },
 
-        /**
-         * {pai:nextPai,turn:nextIndex}
-         */
+    setMyTable(seat){
+        var holds = seat.holds;
+        var folds = seat.folds;
+        var huas = seat.huas;
 
-        this.node.on('zhuapai',(data)=>{
-            var pai = data.pai;
-            var turn = data.turn;
-            this.gameInfo.turn = turn;
-            console.log('zhuapai data is ',data,this.gameInfo)
-
-            if (turn === this.gameInfo.leftIndex){
-                this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4');      
-                this.gameInfo.leftHolds.push(pai);
-            }else if (turn === this.gameInfo.rightIndex){
-                this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
-                this.gameInfo.rightHolds.push(pai)
-            }else if (turn === this.gameInfo.upIndex){
-                this.upHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian3');
-                this.gameInfo.upHolds.push(pai)
-            }else if (turn === this.gameInfo.myIndex){
-                this.gameInfo.hasChupai = false;
-                this.myHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame('my-'+pai);
-                this.myHoldsNode.children[maxHoldLength - 1].pai = pai;
-                console.log(this.myHoldsNode.children[maxHoldLength - 1])
-                this.gameInfo.myHolds.push(pai);
-            }
-
-        })
-
-        /**
-         * {
-         *  huas,turn
-         * }
-         */
-        this.node.on('get_huas',(data)=>{
-            var turn = data.turn;
-            var huas = data.huas;
-            if (turn === this.gameInfo.leftIndex){
-                var len = this.gameInfo.leftHuas.length;
-                for (var hua of huas)
-                this.leftHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-'+hua);
-                this.gameInfo.leftHuas = this.gameInfo.leftHuas.concat(huas)
-            }else if (turn === this.gameInfo.rightIndex){
-                var len = this.gameInfo.rightHuas.length;
-                for (var hua of huas)
-                this.rightHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-'+hua);
-                this.gameInfo.rightHuas = this.gameInfo.rightHuas.concat(huas)
-            }else if (turn === this.gameInfo.upIndex){
-                var len = this.gameInfo.upHuas.length;
-                for (var hua of huas)
-                this.upHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.upAltas.getSpriteFrame('up-'+hua);
-                this.gameInfo.upHuas = this.gameInfo.upHuas.concat(huas)
-            }else if (turn === this.gameInfo.myIndex){
-                var len = this.gameInfo.myHuas.length;
-                for (var hua of huas)
-                this.myHuasNode.children[len].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+hua);
-                this.gameInfo.myHuas = this.gameInfo.myHuas.concat(huas)
-            }
-        })
-
-        this.node.on('op_notify',(data)=>{
-            var op = data.op;
-            if (op.canHu){
-                this.myHuNode.active = true;
-            }
-
-            if (op.canGang){
-                this.myGangNode.active = true;
-            }
-            if (op.canPeng){
-                this.myPengNode.active = true;
-            }
-
-            if (op.canChi){
-                this.myChiNode.active = true;
-            }
-
-            this.gameInfo.op = op;
-
-        })
-
+        this.setMyUiHolds(holds);
+        this.setMyFolds(folds);
     },
 
     onHuClick(){
@@ -494,7 +439,9 @@ cc.Class({
 
     },
 
-    setMyUiHolds(holds){
+
+    
+    setMyHolds(holds){
         var len = holds.length; //13
         for (var i = 0; i < maxHoldLength;i++){ //14
             if (i < len){
@@ -508,16 +455,29 @@ cc.Class({
             }
          
         }
+
+        this.gameInfo.myHolds = holds;
     },
 
-    setMyFolds(pai){
+    // 只会增加，不会缩减，可以用追加的方式来布局
+    setMyFolds(folds){
         var len = this.gameInfo.myFolds.length;
-        var spriteFrame = 'my-bottom-'+pai;
-        this.myFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame(spriteFrame)
+        if (folds.length === len) return;
+        else{
+            startIndex = folds.length - len;
+
+            for (var i = startIndex;i < len;i++){
+                var pai = folds[i];
+                this.myFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+pai) 
+            }
+        }
+
+        this.gameInfo.folds = folds;
+
         
     },
 
-    setMyUiHua(huas){
+    setMyHuas(huas){
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
             var spriteFrame = 'my-bottom-'+pai;
@@ -525,7 +485,8 @@ cc.Class({
         }
     },
 
-    setLeftHolds(len){
+    setLeftHolds(holds){
+        var len = holds.length;
         var isChupai = false;
         let base = 0;
         if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
@@ -535,22 +496,35 @@ cc.Class({
         for (var i = maxHoldLength - 2; i > base ;i--){
             this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
         }
-
         if (isChupai){
             this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.LeftAltas.getSpriteFrame('cemian4')
         }
-
+        this.gameInfo.leftHolds = holds;
     },
 
-    setLeftHua(huas){
+    setLeftFolds(folds){
+
+        var len = this.gameInfo.leftFolds.length;
+        if (len === folds.length) return 
+        var startIndex = folds.length - len;
+        for (var i = startIndex; i < folds.length;i++){
+            this.leftFoldsNode.children[i].spriteFrame = this.LeftAltas.getSpriteFrame('left-'+folds[i])
+        }
+
+        this.gameInfo.leftFolds = folds;
+    },
+
+    setLeftHuas(huas){
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
             var spriteFrame = 'left-bottom-'+pai;
             this.leftHuasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame(spriteFrame)
         }   
+        this.gameInfo.leftHuas = huas;
     },
 
-    setRightHolds(len){
+    setRightHolds(holds){
+        var len = holds.length
         var isChupai = false;
         let base = 0;
         if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
@@ -565,15 +539,30 @@ cc.Class({
             this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.rightAltas.getSpriteFrame('cemian2')
         }
 
+        this.gameInfo.rightHolds = holds;
+
     },
 
-    setRightHua(huas){
+    setRightFolds(folds){
+        var len = this.gameInfo.rightFolds.length;
+        if (len === folds.length) return 
+        var startIndex = folds.length - len;
+        for (var i = startIndex; i < folds.length;i++){
+            this.rightFoldsNode.children[i].spriteFrame = this.rightAltas.getSpriteFrame('right-'+folds[i])
+        }
+
+        this.gameInfo.rightFolds = folds;
+    },
+
+    setRightHuas(huas){
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
             var spriteFrame = 'right-bottom-'+pai;
             var index = 7-i;
             this.rightHuasNode.children[index].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame(spriteFrame)
         }   
+
+        this.gameInfo.rightHuas = huas;
     },
 
     onClickReady(){
