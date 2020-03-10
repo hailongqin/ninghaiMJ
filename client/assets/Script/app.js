@@ -275,10 +275,30 @@ cc.Class({
     initHander(){
 
        /*
-       *                 'update_table','update_pepole_status','new_user_login_notify','new_user_ready_notify','op_notify','op_action_notify',
+       *                 'update_table','update_pepole_status','new_user_login_notify','op_notify','op_action_notify',
                 'chupai_action_notify'
        */ 
 
+       this.node.on('op_action_notify',(data)=>{
+
+       })
+
+       // 只给个声音
+       this.node.on('chupai_action_notify',(data)=>{
+
+       })
+
+       // 未开始的时候，更新各个用户的状态
+       this.node.on('update_pepole_status',(data)=>{
+
+       })
+
+       // 只给个提示
+       this.node.on('new_user_login_notify',(data)=>{
+
+       })
+
+       //更新手牌，出牌，花牌，持牌等
        this.node.on('update_table',(data)=>{
          // 更新table
          var seats = data.seats;
@@ -295,6 +315,7 @@ cc.Class({
          }
        })
 
+       // 操作通知
        this.node.on('op_notify',(data)=>{
         var op = data.op;
         if (op.canHu){
@@ -316,6 +337,7 @@ cc.Class({
 
        })
             
+       // 游戏开始
         this.node.on('game_start',(data) => {
             this.readyBtn.active = false;
             this.unReadyBtn.active = false;

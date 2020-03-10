@@ -122,12 +122,9 @@ exports.start = function(){
                 })
 
                 Game.updatePepoleStatus(roomId);
-                Game.notifyNewUserReady(roomId,userId,userId)
-
                 if (conf.userCount === seats.length){
                     roomInfo.gameStart = true;
                     Game.begin(roomInfo);
-                    Game.updateTable(roomId);
                 }
             });
 

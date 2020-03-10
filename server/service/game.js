@@ -10,7 +10,8 @@ class Game {
     begin(roomInfo){
         this.initMjList(roomInfo.mjLists);
         this.shuffle(roomInfo.mjLists)
-        this.initEveryOnePai(roomInfo)
+        this.initEveryOnePai(roomInfo);
+        Room.broacastInRoom('game_start',roomId,roomInfo)
     }
 
     //初始化麻将牌
@@ -357,17 +358,6 @@ class Game {
         }   
 
         Room.broacastInRoom('new_user_login_notify',roomId,userId,userId)
-    }
-
-    //通知新的人准备了，只是要求出个提示语
-    notifyNewUserReady(roomId,userId){
-        var roomInfo = Room.getRoomInfo(roomId)
-        if (!roomInfo){
-            Log.error('no find roominfo in updateSeatStatus')
-            return 
-        }   
-
-        Room.broacastInRoom('new_user_ready_notify',roomId,userId,userId)
     }
 
 
