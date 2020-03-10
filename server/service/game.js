@@ -119,7 +119,7 @@ class Game {
 
     sortPai(data){
         data.sort((a,b)=>{
-            return a - b;
+            return b -a;
         })
     }
 
@@ -375,7 +375,7 @@ class Game {
             return 
         }   
 
-        Room.broacastInRoom('new_user_login_notify',roomInfo.roomId,userId,userId)
+        Room.broacastInRoom('new_user_login_notify',roomInfo.roomId,userId,[userId])
     }
 
 

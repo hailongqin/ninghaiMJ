@@ -82,15 +82,15 @@ cc.Class({
 
      onJushuToggleClick(toggle,data){
         roomConf.jushu = parseInt(data);
-        console.log(roomConf)
+  
      },
      onTypeToggleClick(toggle,data){
         roomConf.type = parseInt(data);
-        console.log(roomConf)
+
      },
      onUserToggleClick(toggle,data){
         roomConf.userCount = parseInt(data);
-        console.log(roomConf)
+
      },
      onXieToggleClick(toggle,data){
          if (data === 'true'){
@@ -98,8 +98,6 @@ cc.Class({
          }else{
             roomConf.xie =  false
          }
-
-        console.log(roomConf)
      },
 
   

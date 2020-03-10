@@ -133,6 +133,8 @@ cc.Class({
         this.myGangNode = myOpNode.getChildByName('gang');
         this.myPengNode = myOpNode.getChildByName('peng');
         this.myGuoNode = myOpNode.getChildByName('guo');
+
+        //吃的选择
         this.myChiNode = myOpNode.getChildByName('chi');
         this.myChiListParentNode = myOpNode.getChildByName('chilist');
         this.myChiList1Node = this.myChiListParentNode.getChildByName('list1');
@@ -142,6 +144,9 @@ cc.Class({
 
         this.hideOpNode();
         this.hideChiList();
+
+        //吃的结果
+        this.myChiResultNode = myNode.getChildByName('chiresult');
 
         for(var i = 0; i < myHoldsNode.children.length; ++i){
             var sprite = myHoldsNode.children[i].getComponent(cc.Sprite);
@@ -311,7 +316,7 @@ cc.Class({
 
        // 只给个提示
        this.node.on('new_user_login_notify',(data)=>{
-        this.setTipConetnt(data)
+       // this.setTipConetnt(data)
        })
 
        //更新手牌，出牌，花牌，持牌等
@@ -382,6 +387,7 @@ cc.Class({
 
                roomId:data.roomId
            };
+           cc.vv.roomId = data.roomId;
             this.gameInfo.zhuangIndex = 0;
             this.gameInfo.turn = data.turn;
 
@@ -450,20 +456,27 @@ cc.Class({
 
     },
 
+
     onChiClick(){
         var list = this.gameInfo.op.chiList;
         var pai = this.gameInfo.op.pai;
         this.hideChiList();
         this.hideOpNode();
-        for (var key in list){
-            this.setOneChiList(key,list[key],pai);
+        if (list.length === 1){
+            cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0})
+        }else{
+            for (var key in list){
+                this.setOneChiList(key,list[key],pai);
+            }
         }
+     
     },
 
-    onClickChiItem(param){
+    onClickChiItem(btn,param){
+        console.log('clickchiitem',param);
+        this.hideChiList();
         var index = parseInt(param);
-
-        cc.vv.net.send('chi',{chiIndex:index})
+        cc.vv.net.send('chi',{userId:cc.vv.userId,roomId:this.gameInfo.roomId,chiIndex:index})
     },
 
     setTimeCircle(){
@@ -477,8 +490,14 @@ cc.Class({
     
     setMyHolds(holds){
         var len = holds.length; //13
+        var isChupai = false;
+        var endLen = len;
+        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
+            isChupai = true;
+            endLen -=1;
+        }
         for (var i = 0; i < maxHoldLength;i++){ //14
-            if (i < len){
+            if (i < endLen){
                 var pai = holds[i];
                 var spriteFrame = 'my-'+pai;
                 this.myHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame(spriteFrame)
@@ -487,7 +506,11 @@ cc.Class({
                 this.myHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
                 this.myHoldsNode.children[i].pai = null;
             }
-         
+        }
+
+        if (isChupai){
+            this.myHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.myHoldsAltas.getSpriteFrame('my-' + holds[len -1])
+            this.myHoldsNode.children[maxHoldLength - 1].pai = holds[len -1]
         }
 
         this.gameInfo.myHolds = holds;
@@ -516,15 +539,105 @@ cc.Class({
         }
     },
 
+    //吃碰杠的牌全部放chis数组里
+    setMyChis(chis){
+        // if (chis.length === this.gameInfo.myChis.length) return;
+        var chiList = chis.filter((c)=>{
+            return c.type === 'chi'
+        })
+
+        var pengList = chis.filter((c)=>{
+            return c.type === 'peng'
+        })
+
+        var gangList = chis.filter((c)=>{
+            return c.type === 'gang'
+        })
+
+        /*
+        [
+            {
+                pai,
+                list
+            },
+             {
+                pai,
+                list
+            }
+        ]
+        */ 
+        let baseWidth = 0;
+        const oneWidth = 40;
+
+        for (var index in chiList){
+            var item = chiList[index];
+            var node = new cc.Node();
+            node.x = (oneWidth * 4) *index;
+            console.log(node.x)
+
+            node.y = 0;
+            var list = item.list
+            for (var key in list){
+                var pai = list[key];
+                var subNode = this.createSpriteNode(this.myBottomAltas.getSpriteFrame('my-bottom-'+pai))
+                subNode.x = oneWidth*key;
+                subNode.y = 0
+                node.addChild(subNode)
+            }
+    
+            this.myChiResultNode.addChild(node);
+        }
+
+        baseWidth = oneWidth*3*chiList.length + oneWidth*chiList.length ;
+
+        for (var index in pengList){
+            var item = pengList[index];
+            var node = new cc.Node();
+            node.x = (oneWidth * 4) *index +baseWidth;
+            var pai = item.pai
+            console.log(node.x)
+
+            node.y = 0;
+            for (var key = 0;key < 3;key++){
+                var subNode = this.createSpriteNode(this.myBottomAltas.getSpriteFrame('my-bottom-'+pai))
+                subNode.x = oneWidth*key;
+                subNode.y = 0
+                node.addChild(subNode)
+            }
+    
+            this.myChiResultNode.addChild(node);
+        }
+    },
+
+    //创建一个精灵节点
+    createSpriteNode(spriteName){
+        var node = new cc.Node();
+        const sprite=node.addComponent(cc.Sprite)
+        //给sprite的spriteFrame属性 赋值
+        sprite.spriteFrame=spriteName;
+        return node;
+    },
+
     setLeftHolds(holds){
         var len = holds.length;
-        for (var i = maxHoldLength - 1; i > 0 ;i--){
-            if (i < len){
+        var endLen = len;
+        var isChupai = false;
+        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
+            isChupai = true;
+            endLen -=1;
+        }
+        for (var i = 0; i < maxHoldLength;i++){ //14
+            if (i < endLen){
                 this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
             }else{
                 this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
             }
         }
+
+        if (isChupai){
+            this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
+        }
+
        
         this.gameInfo.leftHolds = holds;
     },
@@ -551,17 +664,27 @@ cc.Class({
     },
 
     setRightHolds(holds){
-        var len = holds.length
-        for (var i = maxHoldLength - 1; i > 0 ;i--){
-            if (i < len){
+        var len = holds.length;
+        var endLen = len;
+        var isChupai = false;
+        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
+            isChupai = true;
+            endLen -=1;
+        }
+        for (var i = 0; i < maxHoldLength;i++){ //14
+            if (i < endLen){
                 this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
             }else{
                 this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
             }
-          
         }
 
-        this.gameInfo.rightHolds = holds;
+        if (isChupai){
+            this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
+        }
+
+       
+        this.gameInfo.leftHolds = holds;
 
     },
 
@@ -602,6 +725,32 @@ cc.Class({
 
      onLoad () {
         this.init();
+        this.setMyChis(
+            [
+                {
+                    type:'chi',
+                    pai:15,
+                    list:[13,14,15]
+                },
+                {
+                    type:'chi',
+                    pai:15,
+                    list:[13,14,15]
+                },
+                {
+                    type:'chi',
+                    pai:15,
+                    list:[13,14,15]
+                },{
+                    type:'peng',
+                    pai:14
+                },
+                {
+                    type:'peng',
+                    pai:14
+                }
+            ]
+        )
      },
 
     start () {

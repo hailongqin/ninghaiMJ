@@ -292,6 +292,8 @@ exports.start = function(){
         })
 
         socket.on('chi',(data)=>{
+
+            console.log('receive chi data ',data)
             var roomId = data.roomId;
             var userId = data.userId;
 
@@ -315,23 +317,28 @@ exports.start = function(){
                 }
 
                 var mySeat = seats[index];
-
-                if (!mySeat.op.canChi) { //有人胡碰杠了可能，没得碰
-                    return;
-                }
-
                 var opTag = true;
-                while(opTag){
-                    for (var index in seats){
-                        let op = seats[index].op;
-                        if (index === turn) continue;
-                        if (op.canHu || op.canPeng || op.canGang){
-                            opTag = true;
-                            break;
-                        }
-                        else opTag = false
+                console.log(seats);
+
+               var interval = setInterval(()=>{
+                for (var k in seats){
+                    let op = seats[k].op;
+                    if (k === roomInfo.turn) continue;
+                    if (op.canHu || op.canPeng || op.canGang){
+                        opTag = true;
+                        break;
                     }
+                    else opTag = false
                 }
+
+                if (!opTag){
+                    clearInterval(interval);
+                }
+               },50)
+
+               if (!mySeat.op.canChi) { //有人胡碰杠了可能，没得碰
+                return;
+            }
 
                 //没人操作，则我来吃
 
@@ -339,8 +346,9 @@ exports.start = function(){
                 Game.notifyOperationAction(roomInfo,{op:'chi',index:roomInfo.turn},userId) //通知有人吃了
                 var op = mySeat.op;
                 var myHolds = mySeat.holds;
-                var myChis = my.chis;
+                var myChis = mySeat.chis;
 
+                console.log(op)
                 var chipai = op.pai;
                 var chiIndex = data.chiIndex;
                 var chiList = op.chiList[chiIndex];
@@ -351,10 +359,10 @@ exports.start = function(){
 
                 //更新holds
                 for (var i = 0; i< myHolds.length;i++){
-                    var _cIndex = opChiList.indexOf(holds[i])
+                    var _cIndex = opChiList.indexOf(myHolds[i])
                     if (_cIndex !== -1){
-                        holds.splice(i,1);
-                        mySeat.countMap[holds[i]]--;
+                        myHolds.splice(i,1);
+                        mySeat.countMap[myHolds[i]]--;
                         i--;
                         opChiList.splice(_cIndex,1)
 
