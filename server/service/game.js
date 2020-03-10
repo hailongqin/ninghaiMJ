@@ -2,6 +2,9 @@
 var User = require('./user')
 var Room = require('./room')
 
+var Log = require('../utils/log');
+
+
 class Game {
     constructor() {
     }
@@ -11,7 +14,10 @@ class Game {
         this.initMjList(roomInfo.mjLists);
         this.shuffle(roomInfo.mjLists)
         this.initEveryOnePai(roomInfo);
-        Room.broacastInRoom('game_start',roomId,roomInfo)
+        Room.broacastInRoom('game_start',roomInfo.roomId,roomInfo);
+        var turn = roomInfo.turn;
+        var socket = User.getSocketByUser(roomInfo.seats[turn].userId);
+        this.notifyChupai(roomInfo)
     }
 
     //初始化麻将牌
@@ -99,21 +105,22 @@ class Game {
 
         // 将手牌排序
         for (var i = 0;i < seats.length;i++){
-            seats[i].holds.sort((a,b)=>{
-                    return a - b;
-            })
-
+            this.sortPai(seats[i].holds)
             seats[i].countMap = this.getCountMap(seats[i].holds);
         }
 
         // 将花色排序
         for (var i = 0;i < seats.length;i++){
-            seats[i].huas.sort((a,b)=>{
-                   return a - b;
-               })
+            this.sortPai(seats[i].huas)
         }
 
     
+    }
+
+    sortPai(data){
+        data.sort((a,b)=>{
+            return a - b;
+        })
     }
 
     getCountMap(holds){
@@ -148,18 +155,28 @@ class Game {
         }
 
         var turn = roomInfo.turn;
+        var seats = roomInfo.seats;
 
         var huas = seats[turn].huas;
         var holds = seats[turn].holds;
-        var pai = this.getNextPai(mjLists)
+        var pai = this.getNextPai(roomInfo.mjLists)
 
         while(this.checkIsHua(pai)){
             huas.push(pai);
-            pai = this.getNextPai(mjLists);
+            pai = this.getNextPai(roomInfo.mjLists);
         }
 
-        holds.push(pai)
+        holds.push(pai);
+        this.addCountMap(seats[turn].countMap,pai);
     
+    }
+
+    addCountMap(countMap,pai){
+        if (countMap[pai]){
+            countMap[pai]++
+        }else{
+            countMap[pai] = 1
+        }
     }
 
     checkIsHua(pai){
@@ -292,37 +309,39 @@ class Game {
         return index;
     }
 
-    fapai(roomId){
-        var roomInfo = Room.getRoomInfo(roomId)
+    moveToNextTurn(roomInfo){
         if (!roomInfo){
             Log.error('fapai roominfo is null')
             return;
         }
+        
         var turn = roomInfo.turn;
         var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,turn);
         roomInfo.turn = nextIndex;
+
+        return;
+    }
+
+    fapai(roomInfo){
+        if (!roomInfo){
+            Log.error('fapai roominfo is null')
+            return;
+        }
+
+        var turn = roomInfo.turn;
         this.getNextPaiIncludeHua(roomInfo);
-  
-       this.updateTable(roomId);
     }
 
     //开始的时候 更新桌面的信息
-    updateTable(roomId){
-        var roomInfo = Room.getRoomInfo(roomId)
+    updateTable(roomInfo){
         if (!roomInfo){
             Log.error('no find roominfo in updateTable')
             return 
         }
-        Room.broacastInRoom('update_table',roomId,roomInfo)
+        Room.broacastInRoom('update_table',roomInfo.roomId,roomInfo)
     }
 
-    updateOneTable(roomId,userId){
-        if (!userId || !roomId){
-            Log.error('param is error',userId,roomId)
-            return;
-        }
-
-        var roomInfo = Room.getRoomInfo(roomId)
+    updateOneTable(roomInfo,userId){
         if (!roomInfo){
             Log.error('no find roominfo in updateOneTable')
             return 
@@ -338,27 +357,25 @@ class Game {
     }
 
      //未开始的时候，更新人员状态
-    updatePepoleStatus(roomId){
-        var roomInfo = Room.getRoomInfo(roomId)
+    updatePepoleStatus(roomInfo){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
 
-        Room.broacastInRoom('update_pepole_status',roomId,roomInfo)
+        Room.broacastInRoom('update_pepole_status',roomInfo.roomId,roomInfo)
     }
 
 
     
     //通知新的人进来了，只是要求出个提示语
-    notifyNewUserLogin(roomId,userId){
-        var roomInfo = Room.getRoomInfo(roomId)
+    notifyNewUserLogin(roomInfo,userId){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
 
-        Room.broacastInRoom('new_user_login_notify',roomId,userId,userId)
+        Room.broacastInRoom('new_user_login_notify',roomInfo.roomId,userId,userId)
     }
 
 
@@ -386,32 +403,44 @@ class Game {
     }
 
     //通知前端操作的结果，仅供特效自体和声音播放，不设计pai的排序
-    notifyOperationAction(roomId,operationResult,userId){
-        var roomInfo = Room.getRoomInfo(roomId)
+    notifyOperationAction(roomInfo,operationResult,userId){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
 
-        Room.broacastInRoom('op_action_notify',roomId,operationResult,[userId])
+        Room.broacastInRoom('op_action_notify',roomInfo.roomId,operationResult,[userId])
     }
 
-    notifyChupaiAction(roomId,operationResult,userId){
-        var roomInfo = Room.getRoomInfo(roomId)
+    //通知前端出牌
+    notifyChupai(roomInfo){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
 
-        Room.broacastInRoom('chupai_action_notify',roomId,operationResult,[userId])
+        var seats = roomInfo.seats;
+        var turn = roomInfo.turn;
+        var socket = User.getSocketByUser(seats[turn].userId);
+        socket.emit('chupai_notify');
     }
 
-    checkCanTingPai(roomInfo,seat){
-        if (!roomInfo || seat){
+    //播放声音
+    notifyChupaiAction(roomInfo,operationResult,userId){
+        if (!roomInfo){
+            Log.error('no find roominfo in updateSeatStatus')
+            return 
+        }   
+
+        Room.broacastInRoom('chupai_action_notify',roomInfo.roomId,operationResult,[userId])
+    }
+
+    checkCanTingPai(seat){
+        if (!seat){
             Log.error('roomInfo is null in checkCanTingPai')
             return
         }
-   
+        var countMap = seat.countMap;
         var tingMap = [];
         for (var i = 1; i< 10;i++){ //1-9筒有没有胡的
             if (countMap[i]){
@@ -419,7 +448,7 @@ class Game {
             }else{
                 countMap[i] = 1;
             }
-            ret = this.checkIsHu(seat);
+            var ret = this.checkIsHu(seat);
             if (ret){
                 tingMap.push({
                     value:i
@@ -503,11 +532,13 @@ class Game {
                 var old = count;
                 countMap[key] -=2;
                 var ret = this.checkSingleTingPai(countMap,11,19);
+                ret &= this.checkSingleTingPai(countMap,21,29);
+                ret &= this.checkSingleTingPai(countMap,1,9);
+                ret &= this.checkSingleTingPai(countMap,31,38);
+                countMap[key] = old;
                 if (ret){
                   return true;
                 }
-
-                countMap[key] = old;
             }
         }
     }
@@ -519,6 +550,9 @@ class Game {
         var cc = 0;
        for (var key in countMap){
            cc = countMap[key]
+           if (cc === -1){
+               Log.error('here ',cc,key)
+           }
             if (cc && this.checkPaiInRange(key,[start,end])){
                 selected = key;
                 break;
@@ -535,7 +569,7 @@ class Game {
             countMap[selected] = 0;
             var ret = this.checkSingleTingPai(seatData,start,end);
             //立即恢复对数据的修改
-            countMap[selected] = c;
+            countMap[selected] = cc;
             if(ret){
                 return true;
             }
@@ -642,13 +676,13 @@ class Game {
     
         //匹配成功，扣除相应数值
         if(matched){
-            seatData.countMap[selected] --;
-            seatData.countMap[selected + 1] --;
-            seatData.countMap[selected + 2] --;
+            countMap[selected] --;
+            countMap[selected + 1] --;
+            countMap[selected + 2] --;
             var ret = this.checkSingleTingPai(countMap,start,end);
-            seatData.countMap[selected] ++;
-            seatData.countMap[selected + 1] ++;
-            seatData.countMap[selected + 2] ++;
+            countMap[selected] ++;
+            countMap[selected + 1] ++;
+            countMap[selected + 2] ++;
             if(ret){
                 return true;
             }		

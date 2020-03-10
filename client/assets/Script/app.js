@@ -89,19 +89,19 @@ cc.Class({
 
     addTouchEvent(node){
         node.on(cc.Node.EventType.TOUCH_START,()=>{
-            console.log(node,this.gameInfo);
-            if ((this.gameInfo.turn !== this.gameInfo.myIndex) || this.gameInfo.hasChupai) return;
-            this.gameInfo.hasChupai = true;
+            console.log(this.gameInfo.hasChupai); 
+            if (!this.gameInfo.hasChupai) return; //是否有出牌的权利
+            this.gameInfo.hasChupai = false;
             var chupai = node.pai;
             cc.vv.net.send('chupai',{userId:cc.vv.userId,pai:chupai,roomId:this.gameInfo.roomId});
 
-            this.calcHoldsAndFolds(this.gameInfo.myHolds,this.gameInfo.myFolds,chupai);
+            // this.calcHoldsAndFolds(this.gameInfo.myHolds,this.gameInfo.myFolds,chupai);
 
-            this.gameInfo.myHolds.sort((a,b)=>{
-                return a - b;
-            })
-            this.setMyUiHolds(this.gameInfo.myHolds);
-            this.setMyFolds(chupai);
+            // this.gameInfo.myHolds.sort((a,b)=>{
+            //     return a - b;
+            // })
+            // this.setMyUiHolds(this.gameInfo.myHolds);
+            // this.setMyFolds(chupai);
 
         })
     },
@@ -244,17 +244,18 @@ cc.Class({
 
 
         var node = this[key];
+        console.log(node,key)
 
         for (var i = 0; i < node.children.length;i++){
-            for (var j = 0;j < list.length;j++){
-                node.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+list[j]);
-                if (list[j] === pai){
-                    node.children[i].y +=10;
-                }
+            node.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+list[i]);
+            if (list[i] === pai){
+                node.children[i].y +=10;
             }
+            
         }
 
         node.active = true;
+        this.myChiListParentNode.active = true;
 
     },
 
@@ -286,8 +287,12 @@ cc.Class({
                 'chupai_action_notify','tingpai_notigy
        */ 
 
+       this.node.on('chupai_notify',()=>{
+           this.gameInfo.hasChupai = true
+       })
+
        this.node.on('tingpai_notigy',(data)=>{
-           
+
        })
 
        this.node.on('op_action_notify',(data)=>{
@@ -313,6 +318,7 @@ cc.Class({
        this.node.on('update_table',(data)=>{
          // 更新table
          var seats = data.seats;
+         console.log(this.gameInfo)
 
          for (var i = 0; i < seats.length;i++){
              var seat = seats[i];
@@ -322,6 +328,8 @@ cc.Class({
                  this.setRightTable(seat);
              }else if (i === this.gameInfo.upIndex){
                  this.setMyTable(seat)
+             }else if (i === this.gameInfo.myIndex){
+                 this.setMyTable(seat);
              }
          }
        })
@@ -362,6 +370,16 @@ cc.Class({
 
            this.gameInfo = {
                myFolds:[],
+               myHolds:[],
+               leftFolds:[],
+               leftHolds:[],
+               rightFolds:[],
+               rightHolds:[],
+               upFolds:[],
+               upHolds:[],
+
+
+
                roomId:data.roomId
            };
             this.gameInfo.zhuangIndex = 0;
@@ -387,9 +405,6 @@ cc.Class({
             }
 
             this.setTimeCircle();
-            if (data.zhuangIndex === this.gameInfo.myIndex){
-                this.gameInfo.hasChupai = false;
-            }
         })
 
        
@@ -400,7 +415,8 @@ cc.Class({
         var folds = seat.folds;
         var huas = seat.huas;
         this.setLeftHolds(holds);
-        this.setLeftHua(huas);
+        this.setLeftFolds(folds)
+        this.setLeftHuas(huas);
     },
 
     setRightTable(seat){
@@ -408,7 +424,8 @@ cc.Class({
         var folds = seat.folds;
         var huas = seat.huas;
         this.setRightHolds(holds);
-        this.setRightHua(huas); 
+        this.setRightFolds(folds);
+        this.setRightHuas(huas); 
     },
 
     setMyTable(seat){
@@ -416,8 +433,9 @@ cc.Class({
         var folds = seat.folds;
         var huas = seat.huas;
 
-        this.setMyUiHolds(holds);
+        this.setMyHolds(holds);
         this.setMyFolds(folds);
+        this.setMyHuas(huas);
     },
 
     onHuClick(){
@@ -435,34 +453,17 @@ cc.Class({
     onChiClick(){
         var list = this.gameInfo.op.chiList;
         var pai = this.gameInfo.op.pai;
-
-        console.log(this.gameInfo);
-
         this.hideChiList();
-
+        this.hideOpNode();
         for (var key in list){
             this.setOneChiList(key,list[key],pai);
         }
     },
 
-    leftChupaiUi(pai){
-        var len = this.gameInfo.leftFolds.length;
-        this.leftFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-bottom-'+pai);
-        this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = null;
-    },
+    onClickChiItem(param){
+        var index = parseInt(param);
 
-  
-    
-    rightChupaiUi(pai){
-        var len = this.gameInfo.rightFolds.length;
-        this.rightFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-bottom-'+pai);
-        this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = null;
-    },
-    
-    upChupaiUi(pai){
-        var len = this.gameInfo.upFolds.length;
-        this.upFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.upAltas.getSpriteFrame('left-bottom-'+pai);
-        this.upHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = null;
+        cc.vv.net.send('chi',{chiIndex:index})
     },
 
     setTimeCircle(){
@@ -495,19 +496,16 @@ cc.Class({
     // 只会增加，不会缩减，可以用追加的方式来布局
     setMyFolds(folds){
         var len = this.gameInfo.myFolds.length;
+ 
         if (folds.length === len) return;
         else{
-            startIndex = folds.length - len;
-
-            for (var i = startIndex;i < len;i++){
+            for (var i = len;i < folds.length;i++){
                 var pai = folds[i];
-                this.myFoldsNode.children[len].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+pai) 
+                this.myFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+pai) 
             }
         }
 
         this.gameInfo.folds = folds;
-
-        
     },
 
     setMyHuas(huas){
@@ -520,28 +518,24 @@ cc.Class({
 
     setLeftHolds(holds){
         var len = holds.length;
-        var isChupai = false;
-        let base = 0;
-        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
-            isChupai = true;
-            base = 1;
+        for (var i = maxHoldLength - 1; i > 0 ;i--){
+            if (i < len){
+                this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
+            }else{
+                this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
+            }
         }
-        for (var i = maxHoldLength - 2; i > base ;i--){
-            this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
-        }
-        if (isChupai){
-            this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.LeftAltas.getSpriteFrame('cemian4')
-        }
+       
         this.gameInfo.leftHolds = holds;
     },
 
     setLeftFolds(folds){
 
         var len = this.gameInfo.leftFolds.length;
+        console.log(len,folds)
         if (len === folds.length) return 
-        var startIndex = folds.length - len;
-        for (var i = startIndex; i < folds.length;i++){
-            this.leftFoldsNode.children[i].spriteFrame = this.LeftAltas.getSpriteFrame('left-'+folds[i])
+        for (var i = len; i < folds.length;i++){
+            this.leftFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-bottom-'+folds[i])
         }
 
         this.gameInfo.leftFolds = folds;
@@ -558,18 +552,13 @@ cc.Class({
 
     setRightHolds(holds){
         var len = holds.length
-        var isChupai = false;
-        let base = 0;
-        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
-            isChupai = true;
-            base = 1;
-        }
-        for (var i = maxHoldLength - 2; i > base ;i--){
-            this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
-        }
-
-        if (isChupai){
-            this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.rightAltas.getSpriteFrame('cemian2')
+        for (var i = maxHoldLength - 1; i > 0 ;i--){
+            if (i < len){
+                this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
+            }else{
+                this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
+            }
+          
         }
 
         this.gameInfo.rightHolds = holds;
@@ -578,10 +567,11 @@ cc.Class({
 
     setRightFolds(folds){
         var len = this.gameInfo.rightFolds.length;
+        console.log(len,folds)
         if (len === folds.length) return 
-        var startIndex = folds.length - len;
-        for (var i = startIndex; i < folds.length;i++){
-            this.rightFoldsNode.children[i].spriteFrame = this.rightAltas.getSpriteFrame('right-'+folds[i])
+        for (var i = len; i < folds.length;i++){
+            console.log(this.rightAltas.getSpriteFrame('right-bottom-'+folds[i]))
+            this.rightFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-bottom-'+folds[i])
         }
 
         this.gameInfo.rightFolds = folds;

@@ -44,7 +44,7 @@ exports.start = function(){
                 if (seatUserIds.indexOf(userId) !== -1){ //已经是坐下的人
                     User.bindUserAndSocket(userId,socket);
                     if (roomInfo.gameStart){ //游戏已经开始了
-                       Game.updateTable(roomId)
+                       Game.updateTable(roomInfo)
                     }
                     return;
                 }
@@ -63,8 +63,8 @@ exports.start = function(){
                 User.bindUserAndSocket(userId,socket);
                 Room.addAndUpdateRoom(roomId,roomInfo);
 
-                Game.updatePepoleStatus(roomInfo)
-                Game.notifyNewUserLogin(roomId,userId)
+                Game.updatePepoleStatus(roomInfo);
+                Game.notifyNewUserLogin(roomInfo,userId)
             })
             return;
         })
@@ -90,12 +90,12 @@ exports.start = function(){
                 var players = roomInfo.players;
                 var seatUserIds = seats.map((s)=>{return s.userId});
                 if (seatUserIds.indexOf(userId) !== -1){ //已经坐着了
-                    Game.updatePepoleStatus();
+                    Game.updatePepoleStatus(roomInfo);
                     return;
                 }
 
                 if (seats.length >= conf.userCount){
-                    Game.updatePepoleStatus();
+                    Game.updatePepoleStatus(roomInfo);
                     return;
                 }
 
@@ -108,7 +108,8 @@ exports.start = function(){
                     chis:[],//吃的牌
                     huas:[],//花色
                     op:{}, //操作的牌
-                    tingMap:[]
+                    tingMap:[],
+                    countMap:{}
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -117,7 +118,7 @@ exports.start = function(){
                     return seatUserIds.indexOf(item.userId) === -1;
                 })
 
-                Game.updatePepoleStatus(roomId);
+                Game.updatePepoleStatus(roomInfo);
                 if (conf.userCount === seats.length){
                     roomInfo.gameStart = true;
                     Game.begin(roomInfo);
@@ -185,9 +186,11 @@ exports.start = function(){
                 var holds = seats[seatIndex].holds;
                 var folds = seats[seatIndex].folds;
                 var index = holds.indexOf(pai);
-                holds.splice(index,0);
+                holds.splice(index,1);
                 folds.push(pai);
+
                 seats[seatIndex].countMap[pai]--;
+                Game.sortPai(holds);
 
                 Game.checkCanTingPai(seats[seatIndex]);//检查自己是否可以停牌了
 
@@ -207,12 +210,15 @@ exports.start = function(){
                var ret =  Game.notifyOperation(seats);
              
                 if (ret){ //如果有操作的，则等待他们操作
-                    Game.updateTable(roomId); // 更新桌面
+                    Game.updateTable(roomInfo); // 更新桌面
                     return 
                 }else{ // 如果没有操作
-
+                    Game.moveToNextTurn(roomInfo)
+                    Game.fapai(roomInfo);
+                    Game.updateTable(roomInfo);
+                    Game.notifyChupai(roomInfo)
                 }
-                Game.fapai(roomInfo);
+              
             })
         })
 
@@ -314,6 +320,23 @@ exports.start = function(){
                     return;
                 }
 
+                var opTag = true;
+                while(opTag){
+                    for (var index in seats){
+                        let op = seats[index].op;
+                        if (index === turn) continue;
+                        if (op.canHu || op.canPeng || op.canGang){
+                            opTag = true;
+                            break;
+                        }
+                        else opTag = false
+                    }
+                }
+
+                //没人操作，则我来吃
+
+                Game.moveToNextTurn(roomInfo); //轮到下一个人
+                Game.notifyOperationAction(roomInfo,{op:'chi',index:roomInfo.turn},userId) //通知有人吃了
                 var op = mySeat.op;
                 var myHolds = mySeat.holds;
                 var myChis = my.chis;
@@ -345,11 +368,8 @@ exports.start = function(){
                     pai:chipai
                 })
 
- 
-                roomInfo.turn = index; //轮到这里了
-                Room.broacastInRoom('one_chi',roomId,{targetIndex:index,pai});
-                Room.broacastInRoom('one_chupai',roomId,roomInfo,userId,true)
-
+                Game.updateTable(roomInfo); //通知更新桌面上的牌
+                Game.notifyChupai(roomInfo);
 
             })    
         })
@@ -383,6 +403,7 @@ exports.start = function(){
                 var ret = Game.checkOtherSeatHasOp(seats,index)
 
                 if (!ret){
+                    Game.moveToNextTurn(roomInfo)
                     Game.fapai(roomInfo)
                 }
 
