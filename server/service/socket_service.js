@@ -17,11 +17,7 @@ var User = require('./user')
 
 var Log = require('../utils/log');
 
-Log.error('测试log',123);
-
 exports.start = function(){
-
-
     const server = require('http').createServer(app);
     const io = require('socket.io')(server);
 
@@ -112,7 +108,7 @@ exports.start = function(){
                     chis:[],//吃的牌
                     huas:[],//花色
                     op:{}, //操作的牌
-                    tingMap:{}
+                    tingMap:[]
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -191,6 +187,10 @@ exports.start = function(){
                 var index = holds.indexOf(pai);
                 holds.splice(index,0);
                 folds.push(pai);
+                seats[seatIndex].countMap[pai]--;
+
+                Game.checkCanTingPai(seats[seatIndex]);//检查自己是否可以停牌了
+
 
                 var nextIndex = Game.getNextChuPaiIndex(seats,seatIndex);
 

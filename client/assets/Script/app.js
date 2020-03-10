@@ -114,10 +114,13 @@ cc.Class({
 
     initUiData(){
 
+        //初始化时间周圆
         var timeNode = this.node.getChildByName('time');
         this.timeBackNode = timeNode.getChildByName('timeBack');
         this.hideCircle();
-        console.log( this.timeBackNode)
+
+        //初始化tip提示
+        this.roomTipNode = this.node.getChildByName('tip');
 
         //初始化自己的牌
         var myNode = this.node.getChildByName('my');
@@ -214,6 +217,10 @@ cc.Class({
         }
     },
 
+    setTipConetnt(content){
+        this.roomTipNode.getComponent(cc.Label).string = content;
+    },
+
     hideOpNode(){
         this.myChiNode.active = null;
         this.myGangNode.active = null;
@@ -276,8 +283,12 @@ cc.Class({
 
        /*
        *                 'update_table','update_pepole_status','new_user_login_notify','op_notify','op_action_notify',
-                'chupai_action_notify'
+                'chupai_action_notify','tingpai_notigy
        */ 
+
+       this.node.on('tingpai_notigy',(data)=>{
+           
+       })
 
        this.node.on('op_action_notify',(data)=>{
 
@@ -295,7 +306,7 @@ cc.Class({
 
        // 只给个提示
        this.node.on('new_user_login_notify',(data)=>{
-
+        this.setTipConetnt(data)
        })
 
        //更新手牌，出牌，花牌，持牌等

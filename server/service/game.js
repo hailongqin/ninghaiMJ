@@ -405,6 +405,205 @@ class Game {
         Room.broacastInRoom('chupai_action_notify',roomId,operationResult,[userId])
     }
 
+    checkCanTingPai(roomInfo,seat){
+        if (!roomInfo || seat){
+            Log.error('roomInfo is null in checkCanTingPai')
+            return
+        }
+   
+
+        for (var i = 1; i< 10;i++){
+            if (countMap[i]){
+                countMap[i]++;
+            }else{
+                countMap[i] = 1;
+            }
+            this.checkIsHu(seat)
+        }
+    }
+
+    checkIsHu(seat){
+        var countMap = seat.countMap;
+        //先拿出将牌
+        for (var key in countMap){
+            var count = countMap[key];
+            if (count && count >= 2){
+                var old = count;
+                countMap[key] -=2;
+                var ret = this.checkSingleTingPai(countMap,11,19);
+                if (ret){
+                    seat.tingMap.push({
+                        value:key
+                    })
+                }
+
+                countMap[key] = old;
+            }
+        }
+    }
+
+    //除去将牌后,每种类型的牌是否可以胡了
+    checkSingleTingPai(countMap,start,end){
+        var selected = -1;
+        var cc = 0;
+       for (var key in countMap){
+           cc = countMap[key]
+            if (cc && start<=key && end>=key){
+                selected = key;
+                break;
+            }
+       } 
+
+       if (selected !== -1){
+           return true;
+       }
+
+        //否则，进行匹配
+        if(cc === 3){
+            //直接作为一坎
+            countMap[selected] = 0;
+            var ret = this.checkSingleTingPai(seatData,start,end);
+            //立即恢复对数据的修改
+            countMap[selected] = c;
+            if(ret){
+                return true;
+            }
+        }
+        else if(cc === 4){
+            //直接作为一坎
+            countMap[selected] = 1;
+  
+            var ret = this.checkSingleTingPai(seatData,start,end);
+            //立即恢复对数据的修改
+            countMap[selected] = cc;
+            //如果作为一坎能够把牌匹配完，直接返回TRUE。
+            if(ret){
+                return true;
+            }
+        }
+
+        //接下来去除顺子
+
+        var matched = true;
+        var v = selected % 9;
+        if(v < 2){
+            matched = false;
+        }
+        else{
+            for(var i = 0; i < 3; ++i){
+                var t = selected - 2 + i;
+                var cc = seatData.countMap[t];
+                if(cc == null){
+                    matched = false;
+                    break;
+                }
+                if(cc == 0){
+                    matched = false;
+                    break;
+                }
+            }		
+        }
+    
+    
+        //匹配成功，扣除相应数值
+        if(matched){
+            seatData.countMap[selected - 2] --;
+            seatData.countMap[selected - 1] --;
+            seatData.countMap[selected] --;
+            var ret = checkSingle(seatData);
+            seatData.countMap[selected - 2] ++;
+            seatData.countMap[selected - 1] ++;
+            seatData.countMap[selected] ++;
+            if(ret == true){
+                debugRecord(selected - 2);
+                debugRecord(selected - 1);
+                debugRecord(selected);
+                return true;
+            }		
+        }
+    
+        //分开匹配 A-1,A,A + 1
+        matched = true;
+        if(v < 1 || v > 7){
+            matched = false;
+        }
+        else{
+            for(var i = 0; i < 3; ++i){
+                var t = selected - 1 + i;
+                var cc = seatData.countMap[t];
+                if(cc == null){
+                    matched = false;
+                    break;
+                }
+                if(cc == 0){
+                    matched = false;
+                    break;
+                }
+            }		
+        }
+    
+        //匹配成功，扣除相应数值
+        if(matched){
+            seatData.countMap[selected - 1] --;
+            seatData.countMap[selected] --;
+            seatData.countMap[selected + 1] --;
+            var ret = checkSingle(seatData);
+            seatData.countMap[selected - 1] ++;
+            seatData.countMap[selected] ++;
+            seatData.countMap[selected + 1] ++;
+            if(ret == true){
+                debugRecord(selected - 1);
+                debugRecord(selected);
+                debugRecord(selected + 1);
+                return true;
+            }		
+        }
+        
+        
+        //分开匹配 A,A+1,A + 2
+        matched = true;
+        if(v > 6){
+            matched = false;
+        }
+        else{
+            for(var i = 0; i < 3; ++i){
+                var t = selected + i;
+                var cc = seatData.countMap[t];
+                if(cc == null){
+                    matched = false;
+                    break;
+                }
+                if(cc == 0){
+                    matched = false;
+                    break;
+                }
+            }		
+        }
+    
+        //匹配成功，扣除相应数值
+        if(matched){
+            seatData.countMap[selected] --;
+            seatData.countMap[selected + 1] --;
+            seatData.countMap[selected + 2] --;
+            var ret = checkSingle(seatData);
+            seatData.countMap[selected] ++;
+            seatData.countMap[selected + 1] ++;
+            seatData.countMap[selected + 2] ++;
+            if(ret == true){
+                debugRecord(selected);
+                debugRecord(selected + 1);
+                debugRecord(selected + 2);
+                return true;
+            }		
+        }
+
+
+
+        return false;
+
+
+    }
+
 }
 
 
