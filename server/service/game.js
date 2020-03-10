@@ -211,6 +211,7 @@ class Game {
         var op = seatData.op;
         op.chiList = [];
 
+
         //A-2 A-1 A
         if (this.checkPaiInRange(superPrev,range) && this.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
             op.canChi = true;
@@ -568,10 +569,7 @@ class Game {
         else{
             for(var i = 0; i < 3; ++i){
                 var t = selected - 2 + i;
-                var cc = null;
-                if (this.checkPaiInRange(t,[start,end]) && countMap[t]){
-                    cc =  countMap[t]
-                }
+                var cc = countMap[t]
                 if(!cc){
                     matched = false;
                     break;
@@ -603,9 +601,7 @@ class Game {
         else{
             for(var i = 0; i < 3; ++i){
                 var t = selected - 1 + i;
-                if (this.checkPaiInRange(t,[start,end]) && countMap[t]){
-                    cc =  countMap[t]
-                }
+                var cc =  countMap[t]
                 if(!cc){
                     matched = false;
                     break;
@@ -636,9 +632,7 @@ class Game {
         else{
             for(var i = 0; i < 3; ++i){
                 var t = selected + i;
-                if (this.checkPaiInRange(t,[start,end]) && countMap[t]){
-                    cc =  countMap[t]
-                }
+                var cc =  countMap[t]
                 if(!cc){
                     matched = false;
                     break;
