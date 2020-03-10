@@ -50,7 +50,7 @@ cc.Class({
 
             var events = [
                 'update_table','update_pepole_status','new_user_login_notify','new_user_ready_notify','op_notify','op_action_notify',
-                'chupai_action_notify'
+                'chupai_action_notify','tingpai_notigy'
             ]
 
             events.map((e)=>{
