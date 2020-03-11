@@ -220,6 +220,8 @@ cc.Class({
 
         //初始化上方的牌
         var upNode = this.node.getChildByName('up');
+        this.upChiResultNode = upNode.getChildByName('chiresult');
+
         var upHoldsNode  = this.upHoldsNode = upNode.getChildByName('holds');
         var upHuasNode = this.upHuasNode = upNode.getChildByName('huas');
         var upFoldsNode = this.upFoldsNode = upNode.getChildByName('folds');
@@ -374,19 +376,7 @@ cc.Class({
          // 更新table
          var seats = data.seats;
          console.log(this.gameInfo)
-
-         for (var i = 0; i < seats.length;i++){
-             var seat = seats[i];
-             if (i === this.gameInfo.leftIndex){
-                 this.setLeftTable(seat);
-             }else if (i === this.gameInfo.rightIndex){
-                 this.setRightTable(seat);
-             }else if (i === this.gameInfo.upIndex){
-                 this.setMyTable(seat)
-             }else if (i === this.gameInfo.myIndex){
-                 this.setMyTable(seat);
-             }
-         }
+        this.setTables(seats);
        })
 
        this.node.on('clear_op_notify',(data)=>{
@@ -433,12 +423,20 @@ cc.Class({
            this.gameInfo = {
                myFolds:[],
                myHolds:[],
+               myHuas:[],
+               myChiResult:[],
                leftFolds:[],
                leftHolds:[],
+               leftHuas:[],
+               leftChiResultNode:[],
                rightFolds:[],
                rightHolds:[],
+               rightHuas:[],
+               rightChiResult:[],
                upFolds:[],
                upHolds:[],
+               uphuas:[],
+               upChiResult:[],
 
                op:{},
 
@@ -451,21 +449,16 @@ cc.Class({
             for (var i = 0; i < seats.length;i++){
                 if (i  === myIndex){
                     this.gameInfo.myIndex = i;
-                    this.setMyTable(seats[i])
                 }else if ( i < myIndex && Math.abs(i-myIndex) === 1){ //左边的牌
                     this.gameInfo.leftIndex = i;
-                    this.setLeftTable(seats[i])
                 }else if (i > myIndex && Math.abs(i-myIndex) === 1){ //右边的牌
                     this.gameInfo.rightIndex = i;
-                    this.setRightTable(seats[i])
                 }else if (i > myIndex && Math.abs(i-myIndex) === 2){ //对面的牌
                     this.gameInfo.upIndex = i;
-                 
-                    console.log('对面的牌')
-                    // this.setLeftHolds(holds);
-                    // this.setLeftHua(huas)
                 } 
             }
+
+            this.setTables(seats);
 
             this.setTimeCircle();
         })
@@ -473,53 +466,21 @@ cc.Class({
        
     },
 
-    setLeftTable(seat){
-        var holds = seat.holds;
-        var folds = seat.folds;
-        var huas = seat.huas;
-        var chis = seat.chis;
-
-        this.setUpHolds(holds);
-        this.setUpFolds(folds)
-        this.setUpHuas(huas);
-        this.setUpChis(chis);
+    setTables(seats){
+        for (var i = 0; i < seats.length;i++){
+            var seat = seats[i]
+            var holds = seat.holds;
+            var folds = seat.folds;
+            var huas = seat.huas;
+            var chis = seat.chis;
+            this.setCommonHolds(holds,index);
+            this.setCommonFolds(folds,index);
+            this.setCommonHuas(huas,index);
+            this.setCommonChiResults(chis,index);
+        }
     },
 
-    setLeftTable(seat){
-        var holds = seat.holds;
-        var folds = seat.folds;
-        var huas = seat.huas;
-        var chis = seat.chis;
-
-        this.setLeftHolds(holds);
-        this.setLeftFolds(folds)
-        this.setLeftHuas(huas);
-        this.setLeftChis(chis);
-    },
-
-    setRightTable(seat){
-        var holds = seat.holds;
-        var folds = seat.folds;
-        var huas = seat.huas;
-        var chis = seat.chis;
-
-        this.setRightHolds(holds);
-        this.setRightFolds(folds);
-        this.setRightHuas(huas); 
-        this.setRightChis(chis)
-    },
-
-    setMyTable(seat){
-        var holds = seat.holds;
-        var folds = seat.folds;
-        var huas = seat.huas;
-        var chis = seat.chis;
-
-        this.setMyHolds(holds);
-        this.setMyFolds(folds);
-        this.setMyHuas(huas);
-        this.setMyChis(chis)
-    },
+   
 
     onHuClick(){
 
@@ -533,21 +494,6 @@ cc.Class({
 
     },
 
-
-    // onChiClick(){
-    //     var list = this.gameInfo.op.chiList;
-    //     var pai = this.gameInfo.op.pai;
-    //     this.hideChiList();
-    //     this.hideOpNode();
-    //     if (list.length === 1){
-    //         cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0})
-    //     }else{
-    //         for (var key in list){
-    //             this.setOneChiList(key,list[key],pai);
-    //         }
-    //     }
-     
-    // },
 
     onClickChiItem(btn,param){
         console.log('clickchiitem',param);
@@ -566,258 +512,190 @@ cc.Class({
     },
 
 
-    
-    setMyHolds(holds){
-        var len = holds.length; //13
-        var isChupai = false;
-        var endLen = len;
-        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
-            isChupai = true;
-            endLen -=1;
-        }
-        for (var i = 0; i < maxHoldLength;i++){ //14
-            if (i < endLen){
-                var pai = holds[i];
-                var spriteFrame = 'my-'+pai;
-                this.myHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.myHoldsAltas.getSpriteFrame(spriteFrame)
-                this.myHoldsNode.children[i].pai = pai;
-            }else{
-                this.myHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
-                this.myHoldsNode.children[i].pai = null;
-            }
-        }
-
-        if (isChupai){
-            this.myHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame =  this.myHoldsAltas.getSpriteFrame('my-' + holds[len -1])
-            this.myHoldsNode.children[maxHoldLength - 1].pai = holds[len -1]
-        }
-
-        this.gameInfo.myHolds = holds;
+    getHoldsNodeByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return this.myHoldsNode
+        if (index === gameInfo.leftIndex) return this.leftHoldsNode
+        if (index === gameInfo.rightIndex) return this.rightHoldsNode
+        if (index === gameInfo.upIndex) return this.upHoldsNode
     },
 
-    // 只会增加，不会缩减，可以用追加的方式来布局
-    setMyFolds(folds){
-        var len = this.gameInfo.myFolds.length;
+    getFoldsNodeByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return this.myFoldsNode
+        if (index === gameInfo.leftIndex) return this.leftFoldsNode
+        if (index === gameInfo.rightIndex) return this.rightFolds
+        if (index === gameInfo.upIndex) return this.upFoldsNode
+    },
+
+    getHuasNodeByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return this.myHuasNode
+        if (index === gameInfo.leftIndex) return this.leftHuasNode
+        if (index === gameInfo.rightIndex) return this.rightHuasNode
+        if (index === gameInfo.upIndex) return this.upHuasNode
+    },
+
+    getChiResultNodeByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return this.myChiResultNode
+        if (index === gameInfo.leftIndex) return this.leftChiResultNode
+        if (index === gameInfo.rightIndex) return this.rightChiResultNode
+        if (index === gameInfo.upIndex) return this.upChiResultNode
+    },
+
+
+    getHoldsAltasByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return this.myHoldsAltas
+        if (index === gameInfo.leftIndex) return this.LeftAltas
+        if (index === gameInfo.rightIndex) return this.rightAltas
+        if (index === gameInfo.upIndex) return this.upAltas
+    },
+
+    getBottomSpriteFrameByIndex(index,pai){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return this.myHoldsAltas.getSpriteFrame('my-'+pai)
+        if (index === gameInfo.leftIndex) return this.LeftAltas.getSpriteFrame('cemian4')
+        if (index === gameInfo.rightIndex) return this.rightAltas.getSpriteFrame('cemian2');
+        if (index === gameInfo.upIndex) return this.upAltas.getSpriteFrame('cemian1')
+    },
+
+    getFoldSpriteFrameByIndex(index,pai){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return this.myBottomAltas.getSpriteFrame('my-bottom-'+pai)
+        if (index === gameInfo.leftIndex) return this.LeftAltas.getSpriteFrame('left-'+pai)
+        if (index === gameInfo.rightIndex) return this.rightAltas.getSpriteFrame('right-'+pai);
+        if (index === gameInfo.upIndex) return this.upAltas.getSpriteFrame('ip-'+pai)
+    },
+
+
+    //
+    setGameInfoHoldsByIndex(holds,index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) gameInfo.myHolds = holds;
+        if (index === gameInfo.leftIndex) gameInfo.leftHolds = holds;
+        if (index === gameInfo.rightIndex) gameInfo.rightHolds = holds;
+        if (index === gameInfo.upIndex) gameInfo.upHolds = holds;
+    },
+    getGameInfoHoldsByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return gameInfo.myHolds
+        if (index === gameInfo.leftIndex) return gameInfo.leftHolds 
+        if (index === gameInfo.rightIndex) return gameInfo.rightHolds 
+        if (index === gameInfo.upIndex) return gameInfo.upHolds
+    },
+
+
+
+    //
+    setGameInfoFoldsByIndex(holds,index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) gameInfo.myFolds = holds;
+        if (index === gameInfo.leftIndex) gameInfo.leftFolds = holds;
+        if (index === gameInfo.rightIndex) gameInfo.rightFolds = holds;
+        if (index === gameInfo.upIndex) gameInfo.upFolds = holds;
+    },
+
+    getGameInfoFoldsByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return gameInfo.myFolds 
+        if (index === gameInfo.leftIndex) return gameInfo.leftFolds 
+        if (index === gameInfo.rightIndex) return gameInfo.rightFolds 
+        if (index === gameInfo.upIndex) return gameInfo.upFolds 
+    },
+
+
+    setGameInfoHuasByIndex(huas,index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) gameInfo.myHuas = huas;
+        if (index === gameInfo.leftIndex) gameInfo.lefHuas = huas;
+        if (index === gameInfo.rightIndex) gameInfo.rightHuas = huas;
+        if (index === gameInfo.upIndex) gameInfo.upHuas = huas;
+    },
+
+    getGameInfoHuasByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return gameInfo.myHuas 
+        if (index === gameInfo.leftIndex) return gameInfo.lefHuas 
+        if (index === gameInfo.rightIndex) return gameInfo.rightHuas 
+        if (index === gameInfo.upIndex) return gameInfo.upHuas 
+    },
+
+    setGameInfoChiResultsByIndex(result,index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) gameInfo.myChiResult = result;
+        if (index === gameInfo.leftIndex) gameInfo.leftChiResult = result;
+        if (index === gameInfo.rightIndex) gameInfo.rightChiResult = result;
+        if (index === gameInfo.upIndex) gameInfo.upChiResult = result;
+    },
+
+    getGameInfoChiResultsByIndex(index){
+        var gameInfo = this.gameInfo;
+        if (index === gameInfo.myIndex) return gameInfo.myChiResult 
+        if (index === gameInfo.leftIndex) return gameInfo.leftChiResult 
+        if (index === gameInfo.rightIndex) return gameInfo.rightChiResult 
+        if (index === gameInfo.upIndex) return gameInfo.upChiResult 
+    },
+
+
+    setCommonHolds(holds,index){
+        var holdsNode = this.getHoldsNodeByIndex(index)
+        function setPositionPai(i,pai){
+            holdsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getHoldSpriteFrameByIndex(index,pai)
+            holdsNode.children[i].pai = pai;
+        }
+        var len = holds.length; //13
+        var start = 1;
+        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
+           start = 0;
+           setPositionPai(0,holds[0])
+        }
+        for (var i = start; i < maxHoldLength;i++){ //14
+            if (i < len){
+                var pai = holds[i];
+                setPositionPai(i,pai)
+            }else{
+                holdsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
+                holdsNode.children[i].pai = null;
+            }
+        }
+        this.setGameInfoHoldsByIndex(holds,index)
+
+    },
+
+    setCommonFolds(folds,index){
+        var gameInfoFolds = this.getGameInfoFoldsByIndex(index);
+        var folsNode = this.getFoldsNodeByIndex(index);
+        var len = gameInfoHolds.length;
         
         if (folds.length === len) return;
         else if (folds.length < len){ //被吃了 
-            this.myFoldsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
+            folsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
         }
         else{
             for (var i = len;i < folds.length;i++){
                 var pai = folds[i];
-                this.myFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+pai) 
+                folsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
             }
         }
-
-        this.gameInfo.myFolds = folds;
+        this.setGameInfoFoldsByIndex(index)
     },
-
-    setMyHuas(huas){
+    setCommonHuas(huas,index){
+        var gameInfoHuas = this.getGameInfoHuasByIndex(index);
+        var huasNode = this.getHuasNodeByIndex(index);
+        if (huas.length === gameInfoHuas.length) return;
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
-            var spriteFrame = 'my-bottom-'+pai;
-            this.myHuasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame(spriteFrame)
+            huasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
         }
     },
 
-    //吃碰杠的牌全部放chis数组里
-    setMyChis(chis){
-        this.setChisPai(this.myChiResultNode,chis)
-    },
 
-    setLeftChis(chis){
-        this.setChisPai(this.leftChiResultNode,chis)
-    },
-
-    setRightChis(chis){
-        this.setChisPai(this.rightChiResultNode,chis)
-    },
-
-
-    setChisPai(ownerNode,chis){
-   // if (chis.length === this.gameInfo.myChis.length) return;
-      var chiList = chis.filter((c)=>{
-            return c.type === 'chi'
-        })
-
-        var pengList = chis.filter((c)=>{
-            return c.type === 'peng'
-        })
-
-        var gangList = chis.filter((c)=>{
-            return c.type === 'gang'
-        })
-
-        /*
-        [
-            {
-                pai,
-                list
-            },
-            {
-                pai,
-                list
-            }
-        ]
-        */ 
-        let baseWidth = 0;
-        const oneWidth = 40;
-
-        for (var index in chiList){
-            var item = chiList[index];
-            var node = new cc.Node();
-            node.x = (oneWidth * 4) *index;
-            console.log(node.x)
-
-            node.y = 0;
-            var list = item.list
-            for (var key in list){
-                var pai = list[key];
-                var subNode = this.createSpriteNode(this.myBottomAltas.getSpriteFrame('my-bottom-'+pai))
-                subNode.x = oneWidth*key;
-                subNode.y = 0
-                node.addChild(subNode)
-            }
-
-            ownerNode.addChild(node);
-        }
-
-        baseWidth = oneWidth*3*chiList.length + oneWidth*chiList.length ;
-
-        for (var index in pengList){
-            var item = pengList[index];
-            var node = new cc.Node();
-            node.x = (oneWidth * 4) *index +baseWidth;
-            var pai = item.pai
-            console.log(node.x)
-
-            node.y = 0;
-            for (var key = 0;key < 3;key++){
-                var subNode = this.createSpriteNode(this.myBottomAltas.getSpriteFrame('my-bottom-'+pai))
-                subNode.x = oneWidth*key;
-                subNode.y = 0
-                node.addChild(subNode)
-            }
-
-            ownerNode.addChild(node);
-        }
-    },
-
-    //创建一个精灵节点
-    createSpriteNode(spriteName){
-        var node = new cc.Node();
-        const sprite=node.addComponent(cc.Sprite)
-        //给sprite的spriteFrame属性 赋值
-        sprite.spriteFrame=spriteName;
-        return node;
-    },
-
-    setLeftHolds(holds){
-        var len = holds.length;
-        var endLen = len;
-        var isChupai = false;
-        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
-            isChupai = true;
-            endLen -=1;
-        }
-        for (var i = 0; i < maxHoldLength;i++){ //14
-            if (i < endLen){
-                this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
-            }else{
-                this.leftHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
-            }
-        }
-
-        if (isChupai){
-            this.leftHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('cemian4')
-        }
-
-       
-        this.gameInfo.leftHolds = holds;
-    },
-
-    setLeftFolds(folds){
-
-        var len = this.gameInfo.leftFolds.length;
-        console.log(len,folds)
-        if (len === folds.length) return 
-        else if (folds.length < len){ //被吃了
-            this.leftFoldsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
-        }
-        else{
-            for (var i = len; i < folds.length;i++){
-                this.leftFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-bottom-'+folds[i])
-            }
-        }
-     
-
-        this.gameInfo.leftFolds = folds;
-    },
-
-    setLeftHuas(huas){
-        for (var i = 0; i < huas.length;i++){
-            var pai = huas[i];
-            var spriteFrame = 'left-bottom-'+pai;
-            this.leftHuasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame(spriteFrame)
-        }   
-        this.gameInfo.leftHuas = huas;
-    },
-
-    setRightHolds(holds){
-        var len = holds.length;
-        var endLen = len;
-        var isChupai = false;
-        if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
-            isChupai = true;
-            endLen -=1;
-        }
-        for (var i = 0; i < maxHoldLength;i++){ //14
-            if (i < endLen){
-                this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
-            }else{
-                this.rightHoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = null;
-            }
-        }
-
-        if (isChupai){
-            this.rightHoldsNode.children[maxHoldLength - 1].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('cemian2')
-        }
-
-       
-        this.gameInfo.rightHolds = holds;
+    setCommonChiResults(chis,index){
 
     },
-
-    setRightFolds(folds){
-        var len = this.gameInfo.rightFolds.length;
-        console.log(len,folds)
-        if (len === folds.length) return 
-        else if (folds.length < len){ //被吃了
-            this.rightFoldsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
-        }
-        else{
-            for (var i = len; i < folds.length;i++){
-                console.log(this.rightAltas.getSpriteFrame('right-bottom-'+folds[i]))
-                this.rightFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-bottom-'+folds[i])
-            }
-    
-        }
- 
-        this.gameInfo.rightFolds = folds;
-    },
-
-    setRightHuas(huas){
-        for (var i = 0; i < huas.length;i++){
-            var pai = huas[i];
-            var spriteFrame = 'right-bottom-'+pai;
-            var index = 7-i;
-            this.rightHuasNode.children[index].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame(spriteFrame)
-        }   
-
-        this.gameInfo.rightHuas = huas;
-    },
-
+   
     onClickReady(){
        cc.vv.net.send('set_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId});
       this.readyBtn.active = false;
@@ -832,32 +710,6 @@ cc.Class({
 
      onLoad () {
         this.init();
-        // this.setMyChis(
-        //     [
-        //         {
-        //             type:'chi',
-        //             pai:15,
-        //             list:[13,14,15]
-        //         },
-        //         {
-        //             type:'chi',
-        //             pai:15,
-        //             list:[13,14,15]
-        //         },
-        //         {
-        //             type:'chi',
-        //             pai:15,
-        //             list:[13,14,15]
-        //         },{
-        //             type:'peng',
-        //             pai:14
-        //         },
-        //         {
-        //             type:'peng',
-        //             pai:14
-        //         }
-        //     ]
-        // )
      },
 
     start () {

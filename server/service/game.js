@@ -199,7 +199,7 @@ class Game {
             pai = this.getNextPai(roomInfo.mjLists);
         }
 
-        holds.push(pai);
+        holds.unshift(pai);
         this.addCountMap(seats[turn].countMap,pai);
     
     }
