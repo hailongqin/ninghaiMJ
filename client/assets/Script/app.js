@@ -64,6 +64,11 @@ cc.Class({
             type:cc.SpriteAtlas
         },
 
+        actionAltas:{
+            default:null,
+            type:cc.SpriteAtlas
+        },
+
         gameInfo:null
     },
 
@@ -237,7 +242,8 @@ cc.Class({
     },
 
     initOpNodeHandler(node){
-        node.addTouchEvent(cc.Event.TOUCH_START,()=>{
+        node.on(cc.Node.EventType.TOUCH_START,()=>{
+            console.log(this.gameInfo.op,node)
             var op = this.gameInfo.op;
             if (!node.opType){
                 console.log('error')
@@ -245,17 +251,18 @@ cc.Class({
             }
 
             if (node.opType === 'guo'){
-                cc.vv.net.send('guo',{roomId:this.gameInfo.roomId,userId:cc.vv.userId})
+                cc.vv.net.send('guo',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,fromTurn:op.fromTurn})
             }
 
             if (node.opType === 'chi'){
                 if (!op.canChi) return;
-                if (op.chiList.length >= 1){
-                    for (var key in list){
-                        this.setOneChiList(key,list[key],pai);
+                var pai = op.pai;
+                if (op.chiList.length > 1){
+                    for (var key in op.chiList){
+                        this.setOneChiList(key,op.chiList[key],pai);
                     }
                 }else{
-                    cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0,fromTurn:op.fromTurn})
+                    cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0})
                 }
 
                 return;
@@ -403,6 +410,7 @@ cc.Class({
             if (op[k.action]){
                 this['myOpNode'+ index].active = true;   
                 this['myOpNode'+ index].opType = k.type
+                this['myOpNode'+ index].getComponent(cc.Sprite).spriteFrame = this.actionAltas.getSpriteFrame(k.action);
                 index++;
             }
         })
@@ -544,6 +552,7 @@ cc.Class({
     onClickChiItem(btn,param){
         console.log('clickchiitem',param);
         this.hideChiList();
+        this.hideOpNode();
         if (!this.gameInfo.op.canChi) return
         var index = parseInt(param);
         cc.vv.net.send('chi',{userId:cc.vv.userId,roomId:this.gameInfo.roomId,chiIndex:index})
@@ -589,8 +598,11 @@ cc.Class({
     // 只会增加，不会缩减，可以用追加的方式来布局
     setMyFolds(folds){
         var len = this.gameInfo.myFolds.length;
- 
+        
         if (folds.length === len) return;
+        else if (folds.length < len){ //被吃了 
+            this.myFoldsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
+        }
         else{
             for (var i = len;i < folds.length;i++){
                 var pai = folds[i];
@@ -598,7 +610,7 @@ cc.Class({
             }
         }
 
-        this.gameInfo.folds = folds;
+        this.gameInfo.myFolds = folds;
     },
 
     setMyHuas(huas){
@@ -615,11 +627,11 @@ cc.Class({
     },
 
     setLeftChis(chis){
-        this.setChisPai(this.leftChiNode,chis)
+        this.setChisPai(this.leftChiResultNode,chis)
     },
 
     setRightChis(chis){
-        this.setChisPai(this.rightChiNode,chis)
+        this.setChisPai(this.rightChiResultNode,chis)
     },
 
 
@@ -730,9 +742,15 @@ cc.Class({
         var len = this.gameInfo.leftFolds.length;
         console.log(len,folds)
         if (len === folds.length) return 
-        for (var i = len; i < folds.length;i++){
-            this.leftFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-bottom-'+folds[i])
+        else if (folds.length < len){ //被吃了
+            this.leftFoldsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
         }
+        else{
+            for (var i = len; i < folds.length;i++){
+                this.leftFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.LeftAltas.getSpriteFrame('left-bottom-'+folds[i])
+            }
+        }
+     
 
         this.gameInfo.leftFolds = folds;
     },
@@ -767,7 +785,7 @@ cc.Class({
         }
 
        
-        this.gameInfo.leftHolds = holds;
+        this.gameInfo.rightHolds = holds;
 
     },
 
@@ -775,11 +793,17 @@ cc.Class({
         var len = this.gameInfo.rightFolds.length;
         console.log(len,folds)
         if (len === folds.length) return 
-        for (var i = len; i < folds.length;i++){
-            console.log(this.rightAltas.getSpriteFrame('right-bottom-'+folds[i]))
-            this.rightFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-bottom-'+folds[i])
+        else if (folds.length < len){ //被吃了
+            this.rightFoldsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
         }
-
+        else{
+            for (var i = len; i < folds.length;i++){
+                console.log(this.rightAltas.getSpriteFrame('right-bottom-'+folds[i]))
+                this.rightFoldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.rightAltas.getSpriteFrame('right-bottom-'+folds[i])
+            }
+    
+        }
+ 
         this.gameInfo.rightFolds = folds;
     },
 
@@ -808,32 +832,32 @@ cc.Class({
 
      onLoad () {
         this.init();
-        this.setMyChis(
-            [
-                {
-                    type:'chi',
-                    pai:15,
-                    list:[13,14,15]
-                },
-                {
-                    type:'chi',
-                    pai:15,
-                    list:[13,14,15]
-                },
-                {
-                    type:'chi',
-                    pai:15,
-                    list:[13,14,15]
-                },{
-                    type:'peng',
-                    pai:14
-                },
-                {
-                    type:'peng',
-                    pai:14
-                }
-            ]
-        )
+        // this.setMyChis(
+        //     [
+        //         {
+        //             type:'chi',
+        //             pai:15,
+        //             list:[13,14,15]
+        //         },
+        //         {
+        //             type:'chi',
+        //             pai:15,
+        //             list:[13,14,15]
+        //         },
+        //         {
+        //             type:'chi',
+        //             pai:15,
+        //             list:[13,14,15]
+        //         },{
+        //             type:'peng',
+        //             pai:14
+        //         },
+        //         {
+        //             type:'peng',
+        //             pai:14
+        //         }
+        //     ]
+        // )
      },
 
     start () {
