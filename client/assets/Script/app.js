@@ -129,10 +129,17 @@ cc.Class({
         var myFoldsNode = this.myFoldsNode = myNode.getChildByName('folds');
         var myOpNode = this.node.getChildByName('op');
 
-        this.myHuNode = myOpNode.getChildByName('hu');
-        this.myGangNode = myOpNode.getChildByName('gang');
-        this.myPengNode = myOpNode.getChildByName('peng');
-        this.myGuoNode = myOpNode.getChildByName('guo');
+        this.myOpNode1 = myOpNode.getChildByName('op1');
+        this.myOpNode1.opType = 'guo'
+        this.initOpNodeHandler(this.myOpNode1)
+        this.myOpNode2 = myOpNode.getChildByName('op2');
+        this.initOpNodeHandler(this.myOpNode2)
+        this.myOpNode3 = myOpNode.getChildByName('op3');
+        this.initOpNodeHandler(this.myOpNode3)
+        this.myOpNode4 = myOpNode.getChildByName('op4');
+        this.initOpNodeHandler(this.myOpNode4)
+        this.myOpNode5 = myOpNode.getChildByName('op5');
+        this.initOpNodeHandler(this.myOpNode5)
 
         //吃的选择
         this.myChiNode = myOpNode.getChildByName('chi');
@@ -226,12 +233,45 @@ cc.Class({
         this.roomTipNode.getComponent(cc.Label).string = content;
     },
 
+    initOpNodeHandler(node){
+        node.addTouchEvent(cc.Event.TOUCH_START,()=>{
+            var op = this.gameInfo.op;
+            if (!node.opType){
+                console.log('error')
+                return;
+            }
+
+            if (node.opType === 'guo'){
+                cc.vv.net.send('guo',{roomId:this.gameInfo.roomId,userId:cc.vv.userId})
+            }
+
+            if (node.opType === 'chi'){
+                if (!op.canChi) return;
+                if (op.chiList.length >= 1){
+                    for (var key in list){
+                        this.setOneChiList(key,list[key],pai);
+                    }
+                }else{
+                    cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0,fromTurn:op.fromTurn})
+                }
+
+                return;
+            }
+
+            if (!op.canHu || !op.canChi || !op.canPeng || !op.canGang) return;
+            cc.vv.net.send(node.opType,{roomId:this.gameInfo.roomId,userId:cc.vv.userId,fromTurn:op.fromTurn})
+
+            this.hideOpNode();
+
+        })
+    },
+
     hideOpNode(){
-        this.myChiNode.active = null;
-        this.myGangNode.active = null;
-        this.myGuoNode.active = null;
-        this.myPengNode.active = null;
-        this.myHuNode.active = null;
+        this.myOpNode1.active = null;
+        this.myOpNode2.active = null;
+        this.myOpNode3.active = null;
+        this.myOpNode4.active = null;
+        this.myOpNode5.active = null;
     },
 
     hideChiList(){
@@ -339,24 +379,30 @@ cc.Class({
          }
        })
 
+       this.node.on('clear_op_notify',(data)=>{
+            this.gameInfo.op = {};
+            this.hideOpNode();
+            this.hideChiList();
+       })
        // 操作通知
        this.node.on('op_notify',(data)=>{
         var op = data.op;
-        if (op.canHu){
-            this.myHuNode.active = true;
-        }
+        this.myOpNode1.active = true;
+        var index = 2;
 
-        if (op.canGang){
-            this.myGangNode.active = true;
-        }
-        if (op.canPeng){
-            this.myPengNode.active = true;
-        }
+        var keys = [
+            {
+                action:'canChi',
+                type:'chi'
+            },{action:'canPeng',type:'peng'},{action:'canGang',type:'gang'},{action:"canHu",type:'hu'}];
 
-        if (op.canChi){
-            this.myChiNode.active = true;
-        }
-
+        keys.forEach((k)=>{
+            if (op[k.action]){
+                this['myOpNode'+ index].active = true;   
+                this['myOpNode'+ index].opType = k.type
+                index++;
+            }
+        })
         this.gameInfo.op = op;
 
        })
@@ -383,7 +429,7 @@ cc.Class({
                upFolds:[],
                upHolds:[],
 
-
+               op:{},
 
                roomId:data.roomId
            };
@@ -457,24 +503,25 @@ cc.Class({
     },
 
 
-    onChiClick(){
-        var list = this.gameInfo.op.chiList;
-        var pai = this.gameInfo.op.pai;
-        this.hideChiList();
-        this.hideOpNode();
-        if (list.length === 1){
-            cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0})
-        }else{
-            for (var key in list){
-                this.setOneChiList(key,list[key],pai);
-            }
-        }
+    // onChiClick(){
+    //     var list = this.gameInfo.op.chiList;
+    //     var pai = this.gameInfo.op.pai;
+    //     this.hideChiList();
+    //     this.hideOpNode();
+    //     if (list.length === 1){
+    //         cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0})
+    //     }else{
+    //         for (var key in list){
+    //             this.setOneChiList(key,list[key],pai);
+    //         }
+    //     }
      
-    },
+    // },
 
     onClickChiItem(btn,param){
         console.log('clickchiitem',param);
         this.hideChiList();
+        if (!this.gameInfo.op.canChi) return
         var index = parseInt(param);
         cc.vv.net.send('chi',{userId:cc.vv.userId,roomId:this.gameInfo.roomId,chiIndex:index})
     },
