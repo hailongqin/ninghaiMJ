@@ -172,8 +172,9 @@ cc.Class({
        
 
        // 初始化左边的牌
+     
         var leftNode = this.node.getChildByName('left');
-
+        this.leftChiResultNode = leftNode.getChildByName('chiresult');
         // console.log(LeftNode.children)
         var leftHoldsNode  = this.leftHoldsNode = leftNode.getChildByName('holds');
         var leftHuasNode = this.leftHuasNode = leftNode.getChildByName('huas');
@@ -194,6 +195,8 @@ cc.Class({
 
         //初始化右边的牌
         var rightNode = this.node.getChildByName('right');
+        this.rightChiResultNode = rightNode.getChildByName('chiresult');
+
         var rightHoldsNode  = this.rightHoldsNode = rightNode.getChildByName('holds');
         var rightHuasNode = this.rightHuasNode = rightNode.getChildByName('huas');
         var rightFoldsNode = this.rightFoldsNode = rightNode.getChildByName('folds');
@@ -258,7 +261,7 @@ cc.Class({
                 return;
             }
 
-            if (!op.canHu || !op.canChi || !op.canPeng || !op.canGang) return;
+            if (!op.canHu && !op.canChi && !op.canPeng && !op.canGang) return;
             cc.vv.net.send(node.opType,{roomId:this.gameInfo.roomId,userId:cc.vv.userId,fromTurn:op.fromTurn})
 
             this.hideOpNode();
@@ -466,28 +469,48 @@ cc.Class({
         var holds = seat.holds;
         var folds = seat.folds;
         var huas = seat.huas;
+        var chis = seat.chis;
+
+        this.setUpHolds(holds);
+        this.setUpFolds(folds)
+        this.setUpHuas(huas);
+        this.setUpChis(chis);
+    },
+
+    setLeftTable(seat){
+        var holds = seat.holds;
+        var folds = seat.folds;
+        var huas = seat.huas;
+        var chis = seat.chis;
+
         this.setLeftHolds(holds);
         this.setLeftFolds(folds)
         this.setLeftHuas(huas);
+        this.setLeftChis(chis);
     },
 
     setRightTable(seat){
         var holds = seat.holds;
         var folds = seat.folds;
         var huas = seat.huas;
+        var chis = seat.chis;
+
         this.setRightHolds(holds);
         this.setRightFolds(folds);
         this.setRightHuas(huas); 
+        this.setRightChis(chis)
     },
 
     setMyTable(seat){
         var holds = seat.holds;
         var folds = seat.folds;
         var huas = seat.huas;
+        var chis = seat.chis;
 
         this.setMyHolds(holds);
         this.setMyFolds(folds);
         this.setMyHuas(huas);
+        this.setMyChis(chis)
     },
 
     onHuClick(){
@@ -588,8 +611,21 @@ cc.Class({
 
     //吃碰杠的牌全部放chis数组里
     setMyChis(chis){
-        // if (chis.length === this.gameInfo.myChis.length) return;
-        var chiList = chis.filter((c)=>{
+        this.setChisPai(this.myChiResultNode,chis)
+    },
+
+    setLeftChis(chis){
+        this.setChisPai(this.leftChiNode,chis)
+    },
+
+    setRightChis(chis){
+        this.setChisPai(this.rightChiNode,chis)
+    },
+
+
+    setChisPai(ownerNode,chis){
+   // if (chis.length === this.gameInfo.myChis.length) return;
+      var chiList = chis.filter((c)=>{
             return c.type === 'chi'
         })
 
@@ -607,7 +643,7 @@ cc.Class({
                 pai,
                 list
             },
-             {
+            {
                 pai,
                 list
             }
@@ -631,8 +667,8 @@ cc.Class({
                 subNode.y = 0
                 node.addChild(subNode)
             }
-    
-            this.myChiResultNode.addChild(node);
+
+            ownerNode.addChild(node);
         }
 
         baseWidth = oneWidth*3*chiList.length + oneWidth*chiList.length ;
@@ -651,8 +687,8 @@ cc.Class({
                 subNode.y = 0
                 node.addChild(subNode)
             }
-    
-            this.myChiResultNode.addChild(node);
+
+            ownerNode.addChild(node);
         }
     },
 
