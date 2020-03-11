@@ -19,21 +19,23 @@ class Game {
         }
        
         roomInfo.turn = roomInfo.zhuangIndex;
-        this.initSeats();
+        this.initSeats(roomInfo);
+        roomInfo.mjLists = [];
         this.initMjList(roomInfo.mjLists);
         this.shuffle(roomInfo.mjLists)
         this.initEveryOnePai(roomInfo);
-        
+ 
         roomInfo.count++;
         Room.broacastInRoom('game_start',roomInfo.roomId,roomInfo);
         this.notifyChupai(roomInfo);
         
     }
 
-    initSeats(roominfo){
-        for (var i = 0; i<roomInfo.seats;i++){
-          roominfo.seats[i] = {
-              ...roominfo.seats[i],
+    initSeats(roomInfo){
+        for (var i = 0; i<roomInfo.seats.length;i++){
+            var seat = roomInfo.seats[i]
+            roomInfo.seats[i] = {
+              userId:seat.userId,
               holds:[],//手上持有的牌
               folds:[],//打出的牌
               chis:[],//吃的牌
@@ -48,7 +50,6 @@ class Game {
 
     //初始化麻将牌
     initMjList(data){
-        data = [];
         for (var i = 0; i < 4;i++){
             for (var j = 1; j < 10;j++){ //1-9表示筒子
                 data.push(j)
@@ -76,6 +77,8 @@ class Game {
         for (var j = 41; j < 49;j++){ //41-48代表春夏秋冬梅兰菊竹
             data.push(j)
         }
+
+        console.log(data);
 
     }
 
@@ -157,9 +160,12 @@ class Game {
             return;
         }
 
-        holds.reduce((prev,next)=>{
-            countMap[next] = countMap[next]?countMap[next]+1:1
-        })
+        countMap =  holds.reduce(function(map, word) {
+            map[word] = ++map[word] || 1 // increment or initialize to 1
+            return map
+          }, {}) 
+
+
 
         return countMap;
     }
@@ -236,7 +242,10 @@ class Game {
 
     checkCanHu(seatData,pai,fromTurn){
         var op = seatData.op;
-        if (seatData.tingMap[pai]){
+        var map = seat.tingMap.map((t)=>{
+            return t.value
+        })
+        if (map.indexOf(pai) !== -1){
             op.canHu = true;
             op.pai = pai;
             op.fromTurn = fromTurn;
@@ -315,7 +324,7 @@ class Game {
 
     clearOperation(roomInfo){
         for (var i = 0;i< roomInfo.seats.length;i++){
-            seats.op = {};
+            roomInfo.seats[i].op = {};
         }
         Room.broacastInRoom('clear_op_notify',roomInfo.roomId,{})
     }
@@ -484,6 +493,16 @@ class Game {
         Room.broacastInRoom('chupai_action_notify',roomInfo.roomId,operationResult,[userId])
     }
 
+    notifyTingPai(seat){
+        var socket = User.getSocketByUser(seat.userId);
+        if (!socket){
+            Log.error('tingpai socket is null')
+            return
+        }
+
+        socket.emit('tingpai_notigy',seat.tingMap)
+    }
+
     checkCanTingPai(seat){
         if (!seat){
             Log.error('roomInfo is null in checkCanTingPai')
@@ -493,7 +512,7 @@ class Game {
         var tingMap = [];
 
         var lists = [
-            [1,10],[11,20],[31,39]
+            [1,10],[11,20],[21,30],[31,39]
         ]
 
         lists.forEach((l)=>{
@@ -518,7 +537,12 @@ class Game {
             }
         })
         seat.tingMap = tingMap;
+        if (tingMap.length){
+           this.notifyTingPai(seat)
+        }
     }
+
+
 
     checkIsHu(countMap){
       
@@ -572,7 +596,7 @@ class Game {
         if(cc === 3){
             //直接作为一坎
             countMap[selected] = 0;
-            var ret = this.checkSingleTingPai(seat,start,end);
+            var ret = this.checkSingleTingPai(countMap,start,end);
             //立即恢复对数据的修改
             countMap[selected] = cc;
             if(ret){
@@ -583,7 +607,7 @@ class Game {
             //直接作为一坎
             countMap[selected] = 1;
   
-            var ret = this.checkSingleTingPai(seat,start,end);
+            var ret = this.checkSingleTingPai(countMap,start,end);
             //立即恢复对数据的修改
             countMap[selected] = cc;
             //如果作为一坎能够把牌匹配完，直接返回TRUE。
@@ -626,7 +650,7 @@ class Game {
             countMap[selected - 2] --;
             countMap[selected - 1] --;
             countMap[selected] --;
-            var ret = this.checkSingleTingPai(seat,start,end);
+            var ret = this.checkSingleTingPai(countMap,start,end);
             countMap[selected - 2] ++;
             countMap[selected - 1] ++;
             countMap[selected] ++;
@@ -656,7 +680,7 @@ class Game {
             countMap[selected - 1] --;
             countMap[selected] --;
             countMap[selected + 1] --;
-            var ret = this.checkSingleTingPai(seat,start,end);
+            var ret = this.checkSingleTingPai(countMap,start,end);
             countMap[selected - 1] ++;
             countMap[selected] ++;
             countMap[selected + 1] ++;
@@ -687,7 +711,7 @@ class Game {
             countMap[selected] --;
             countMap[selected + 1] --;
             countMap[selected + 2] --;
-            var ret = this.checkSingleTingPai(seat,start,end);
+            var ret = this.checkSingleTingPai(countMap,start,end);
             countMap[selected] ++;
             countMap[selected + 1] ++;
             countMap[selected + 2] ++;

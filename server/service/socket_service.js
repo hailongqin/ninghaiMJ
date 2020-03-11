@@ -24,7 +24,6 @@ exports.start = function(){
 
     io.on('connection',function(socket) {
         socket.on('login',function(data){
-            console.log('data is ',data);
             var roomId = data.roomId;
             var userId = data.userId;
             if (!userId || !roomId){
@@ -120,7 +119,6 @@ exports.start = function(){
         });
 
         socket.on('cancel_ready', function (data) {
-            console.log('data is ',data);
             var roomId = data.roomId;
             var userId = data.userId;
 
@@ -190,11 +188,11 @@ exports.start = function(){
 
                 for (var i = 0;i < seats.length;i++){       
                     if (userId === seats[i].userId) continue;
-                    Game.checkCanHu(seats[i],pai)     // 检查是否有人胡
-                    Game.checkCanGang(seats[i],pai)   // 检查是否有人杠
-                    Game.checkCanPeng(seats[i],pai);
+                    Game.checkCanHu(seats[i],pai,seatIndex)     // 检查是否有人胡
+                    Game.checkCanGang(seats[i],pai,seatIndex)   // 检查是否有人杠
+                    Game.checkCanPeng(seats[i],pai,seatIndex);
                     if (i === nextIndex){
-                        Game.checkCanChi(seats[i],pai)   // 检查是否有人吃
+                        Game.checkCanChi(seats[i],pai,seatIndex)   // 检查是否有人吃
                     }
                 }
 
@@ -217,6 +215,7 @@ exports.start = function(){
         socket.on('hu',(data)=>{
             var roomId = data.roomId;
             var userId = data.userId;
+            var fromTurn = data.fromTurn;
 
             if (!userId || !roomId){
                 Log.error('socket gang param is error',roomId,userId)
@@ -247,7 +246,6 @@ exports.start = function(){
         socket.on('gang',(data)=>{
             var roomId = data.roomId;
             var userId = data.userId;
-
             if (!userId || !roomId){
                 Log.error('socket gang param is error',roomId,userId)
                 socket.emit('chi_result',{code:-1,message:"参数错误"});
@@ -367,7 +365,7 @@ exports.start = function(){
                     return;
                 }
                 Game.clearOperation(roomInfo);
-                Game.moveToNextTurn(index);
+                Game.moveToNextTurn(roomInfo);
                 //每人可以胡，就开始碰
                 var myOp = mySeat.op;
 
@@ -446,17 +444,22 @@ exports.start = function(){
             }
 
                 //没人操作，则我来吃
-                Game.clearOperation(roomInfo);
-                Game.moveToNextTurn(roomInfo); //轮到下一个人
-                Game.notifyOperationAction(roomInfo,{type:'chi',index:roomInfo.turn},userId) //通知有人吃了
+                
                 var op = mySeat.op;
-                var myHolds = mySeat.holds;
-                var myChis = mySeat.chis;
-
                 console.log(op)
                 var chipai = op.pai;
                 var chiIndex = data.chiIndex;
                 var chiList = op.chiList[chiIndex];
+                var fromTurn = op.fromTurn;
+             
+
+                Game.clearOperation(roomInfo);
+                Game.moveToNextTurn(roomInfo); //轮到下一个人
+                Game.notifyOperationAction(roomInfo,{type:'chi',index:roomInfo.turn},userId) //通知有人吃了
+              
+                var myHolds = mySeat.holds;
+                var myChis = mySeat.chis;
+
 
                 var opChiList = chiList.filter((c)=>{
                     return c !== chipai
@@ -466,8 +469,8 @@ exports.start = function(){
                 for (var i = 0; i< myHolds.length;i++){
                     var _cIndex = opChiList.indexOf(myHolds[i])
                     if (_cIndex !== -1){
-                        myHolds.splice(i,1);
                         mySeat.countMap[myHolds[i]]--;
+                        myHolds.splice(i,1);
                         i--;
                         opChiList.splice(_cIndex,1)
 
@@ -482,6 +485,9 @@ exports.start = function(){
                     pai:chipai
                 })
 
+                var fromFolds = roomInfo.seats[fromTurn].folds
+                fromFolds.splice(fromFolds.length - 1,1)
+
                 Game.updateTable(roomInfo); //通知更新桌面上的牌
                 Game.notifyChupai(roomInfo);
 
@@ -491,6 +497,7 @@ exports.start = function(){
         socket.on('guo',(data)=>{
             var roomId = data.roomId;
             var userId = data.userId;
+            var fromTurn = data.fromTurn;
 
             if (!userId || !roomId || (fromTurn === undefined || fromTurn === null)){
                 Log.error('socket guo param is error',roomId,userId,fromTurn)
@@ -521,6 +528,7 @@ exports.start = function(){
                      if (roomInfo.turn === fromTurn){
                         Game.moveToNextTurn(roomInfo)
                         Game.fapai(roomInfo);
+                        Game.updateTable(roomInfo);
                         Game.notifyChupai(roomInfo)
                      }
                   
