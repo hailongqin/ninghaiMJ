@@ -101,15 +101,6 @@ exports.start = function(){
 
                 var seatOne = {
                     userId:userId,
-                    holds:[],//手上持有的牌
-                    folds:[],//打出的牌
-                    anGangs:[],//暗杠的牌
-                    diangangs:[],//别人打出来的杠
-                    chis:[],//吃的牌
-                    huas:[],//花色
-                    op:{}, //操作的牌
-                    tingMap:[],
-                    countMap:{}
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -222,6 +213,116 @@ exports.start = function(){
             })
         })
 
+         
+        socket.on('hu',(data)=>{
+            var roomId = data.roomId;
+            var userId = data.userId;
+
+            if (!userId || !roomId){
+                Log.error('socket gang param is error',roomId,userId)
+                socket.emit('chi_result',{code:-1,message:"参数错误"});
+                return;
+            }   
+
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket hu get roominfo is error',err)
+                    socket.emit('chi_result',err)
+                    return;
+                }
+            })
+
+            var seats = roomInfo.seats;
+            var index = Game.getIndexByUserId(seats,userId);
+            Game.moveToNextTurn(index);
+            Game.clearOperation();
+            Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo});
+
+            setTimeout(() => {
+                Game.begin(roomInfo);
+            }, 10*1000);
+        })
+
+        
+        socket.on('gang',(data)=>{
+            var roomId = data.roomId;
+            var userId = data.userId;
+
+            if (!userId || !roomId){
+                Log.error('socket gang param is error',roomId,userId)
+                socket.emit('chi_result',{code:-1,message:"参数错误"});
+                return;
+            }   
+
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket gang get roominfo is error',err)
+                    socket.emit('chi_result',err)
+                    return;
+                }
+                
+                var seats = roomInfo.seats;
+                var index = Game.getIndexByUserId(seats,userId);
+                if (index === undefined || index === null){
+                    Log.error('socket penf getIndexByUserId is error',index)
+                    return;
+                }
+
+                var mySeat = seats[index];
+                var interval = setInterval(()=>{
+                    for (var k in seats){
+                        let op = seats[k].op;
+                        if (op.canHu){
+                            opTag = true;
+                            break;
+                        }
+                        else opTag = false
+                    }
+    
+                    if (!opTag){
+                        clearInterval(interval);
+                    }
+                   },50)
+
+                if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
+                    return;
+                }
+                var myOp = mySeat.op;
+                var gangPai = myOp.pai;
+                var fromTurn = myOp.fromTurn;
+
+                Game.clearOperation(roomInfo);
+                Game.moveToNextTurn(index);
+                //每人可以胡，就开始碰
+               
+                var myHolds = mySeat.holds;
+
+                var count = 0;
+                for (var i = 0; i < myHolds.length;i++){
+                    if (myHolds[i] === gangPai){
+                        myHolds.splice(i,1);
+                        i--;
+                        count++
+                        if (count === 3){
+                            break;
+                        }
+                    }
+                }
+                // 更新countMap
+                mySeat.chis.push({
+                    type:'gang',
+                    pai:gangPai,
+                    fromTurn
+                });
+                mySeat.countMap[gangPai] -=3;
+             
+                Game.fapai(roomInfo);
+                Game.updateTable(roomInfo);
+                Game.notifyChupai(roomInfo)
+            })
+        })
+            
+
         socket.on('peng',(data)=>{
             var roomId = data.roomId;
             var userId = data.userId;
@@ -247,23 +348,26 @@ exports.start = function(){
                 }
 
                 var mySeat = seats[index];
-
-                if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
-                    return;
-                }
-
-                var opTag = true;
-                while(opTag){
-                    for (var index in seats){
-                        let op = seats[index].op;
-                        if (index === turn) 
+                var interval = setInterval(()=>{
+                    for (var k in seats){
+                        let op = seats[k].op;
                         if (op.canHu){
                             opTag = true;
                             break;
                         }
                         else opTag = false
                     }
+    
+                    if (!opTag){
+                        clearInterval(interval);
+                    }
+                   },50)
+
+                if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
+                    return;
                 }
+                Game.clearOperation(roomInfo);
+                Game.moveToNextTurn(index);
                 //每人可以胡，就开始碰
                 var myOp = mySeat.op;
 
@@ -282,12 +386,14 @@ exports.start = function(){
                     }
                 }
                 // 更新countMap
-                mySeat.peng.push(pengPai);
+                mySeat.chis.push({
+                    type:'peng',
+                    pai:pengPai
+                });
                 mySeat.countMap[pengPai] -=2;
-                Game.clearOperation(seats);
-                roomInfo.turn = index; //转换到当前出牌方
-                Room.broacastInRoom('one_peng',roomId,{targetIndex:index,pai});
-                Room.broacastInRoom('one_chupai',roomId,roomInfo,userId,true)
+
+                Game.updateTable(roomInfo);
+                Game.notifyChupai(roomInfo)
             })
         })
 
@@ -323,7 +429,6 @@ exports.start = function(){
                var interval = setInterval(()=>{
                 for (var k in seats){
                     let op = seats[k].op;
-                    if (k === roomInfo.turn) continue;
                     if (op.canHu || op.canPeng || op.canGang){
                         opTag = true;
                         break;
@@ -341,9 +446,9 @@ exports.start = function(){
             }
 
                 //没人操作，则我来吃
-
+                Game.clearOperation(roomInfo);
                 Game.moveToNextTurn(roomInfo); //轮到下一个人
-                Game.notifyOperationAction(roomInfo,{op:'chi',index:roomInfo.turn},userId) //通知有人吃了
+                Game.notifyOperationAction(roomInfo,{type:'chi',index:roomInfo.turn},userId) //通知有人吃了
                 var op = mySeat.op;
                 var myHolds = mySeat.holds;
                 var myChis = mySeat.chis;
@@ -372,6 +477,7 @@ exports.start = function(){
 
                 //更新chis
                 myChis.push({
+                    type:'chi',
                     list:chiList,
                     pai:chipai
                 })
@@ -386,8 +492,8 @@ exports.start = function(){
             var roomId = data.roomId;
             var userId = data.userId;
 
-            if (!userId || !roomId){
-                Log.error('socket guo param is error',roomId,userId)
+            if (!userId || !roomId || (fromTurn === undefined || fromTurn === null)){
+                Log.error('socket guo param is error',roomId,userId,fromTurn)
                 socket.emit('guo_result',{code:-1,message:"参数错误"});
                 return;
             }   
@@ -409,10 +515,15 @@ exports.start = function(){
                 seats[index].op = {};
 
                 var ret = Game.checkOtherSeatHasOp(seats,index)
-
+                // 所有人都没有操作
                 if (!ret){
-                    Game.moveToNextTurn(roomInfo)
-                    Game.fapai(roomInfo)
+                     // 可能已经被其他人操作了
+                     if (roomInfo.turn === fromTurn){
+                        Game.moveToNextTurn(roomInfo)
+                        Game.fapai(roomInfo);
+                        Game.notifyChupai(roomInfo)
+                     }
+                  
                 }
 
             }) 

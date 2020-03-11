@@ -9,19 +9,46 @@ class Game {
     constructor() {
     }
 
+
     //开始一局新的
     begin(roomInfo){
+        if (roomInfo.count === 0){ //如果是第一局
+            roomInfo.zhuangIndex = 0;
+        }else{
+            roomInfo.zhuangIndex = this.moveToNextZhuang(roomInfo);
+        }
+       
+        roomInfo.turn = roomInfo.zhuangIndex;
+        this.initSeats();
         this.initMjList(roomInfo.mjLists);
         this.shuffle(roomInfo.mjLists)
         this.initEveryOnePai(roomInfo);
+        
+        roomInfo.count++;
         Room.broacastInRoom('game_start',roomInfo.roomId,roomInfo);
-        var turn = roomInfo.turn;
-        var socket = User.getSocketByUser(roomInfo.seats[turn].userId);
-        this.notifyChupai(roomInfo)
+        this.notifyChupai(roomInfo);
+        
+    }
+
+    initSeats(roominfo){
+        for (var i = 0; i<roomInfo.seats;i++){
+          roominfo.seats[i] = {
+              ...roominfo.seats[i],
+              holds:[],//手上持有的牌
+              folds:[],//打出的牌
+              chis:[],//吃的牌
+              huas:[],//花色
+              op:{}, //操作的牌
+              tingMap:[],
+              countMap:{}
+          }
+
+        }
     }
 
     //初始化麻将牌
     initMjList(data){
+        data = [];
         for (var i = 0; i < 4;i++){
             for (var j = 1; j < 10;j++){ //1-9表示筒子
                 data.push(j)
@@ -186,34 +213,37 @@ class Game {
 
     // 检查是否可以杠
     
-    checkCanGang(seatData,pai){
+    checkCanGang(seatData,pai,fromTurn){
         var count = seatData.countMap[pai];
         var op = seatData.op;
         if(count && count >= 3){
             op.canGang = true;
             op.canPeng = true;
             op.pai = pai;
+            op.fromTurn = fromTurn;
         }
     }
 
-    checkCanPeng(seatData,pai){
+    checkCanPeng(seatData,pai,fromTurn){
         var count = seatData.countMap[pai];
         var op = seatData.op;
         if(count && count >= 2){
             op.canPeng = true;
             op.pai = pai;
+            op.fromTurn = fromTurn;
         }
     }
 
-    checkCanHu(seatData,pai){
+    checkCanHu(seatData,pai,fromTurn){
         var op = seatData.op;
         if (seatData.tingMap[pai]){
             op.canHu = true;
             op.pai = pai;
+            op.fromTurn = fromTurn;
         }
     }
 
-    checkCanChi(seatData,pai){
+    checkCanChi(seatData,pai,fromTurn){
 
         if (pai >= 31) return  //东南西北中无法吃
         var countMap = seatData.countMap
@@ -232,22 +262,24 @@ class Game {
         //A-2 A-1 A
         if (this.checkPaiInRange(superPrev,range) && this.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
             op.canChi = true;
-            op.pai = pai;
-            op.chiList.push([superPrev,prev,pai]);
+            op.chiList.push([superPrev,prev,pai]); 
         }
 
         //A-1 A A+1
         if (this.checkPaiInRange(prev,range) && this.checkPaiInRange(next,range) && countMap[prev] && countMap[next]){
             op.canChi = true;
-            op.pai = pai;
             op.chiList.push([prev,pai,next]);
         }
 
         //A A+1 A+2
         if (this.checkPaiInRange(superNext,range) && this.checkPaiInRange(next,range) && countMap[superNext] && countMap[next]){
             op.canChi = true;
-            op.pai = pai;
             op.chiList.push([pai,next,superNext]);
+        }
+
+        if (op.canChi){
+            op.fromTurn = fromTurn;
+            op.pai = pai;
         }
         
         
@@ -276,15 +308,16 @@ class Game {
             return [31,38]
         }
 
-        if (pai >= 41 && pai<= 48){
+        if (pai >= 41 && pai<= 48){ //花色
             return [41,48]
         }
     }
 
-    clearOperation(seats){
-        for (var i = 0;i< seats.length;i++){
+    clearOperation(roomInfo){
+        for (var i = 0;i< roomInfo.seats.length;i++){
             seats.op = {};
         }
+        Room.broacastInRoom('clear_op_notify',roomInfo.roomId,{})
     }
 
     
@@ -309,16 +342,33 @@ class Game {
         return index;
     }
 
-    moveToNextTurn(roomInfo){
+    moveToNextTurn(roomInfo,turnIndex = null){
         if (!roomInfo){
             Log.error('fapai roominfo is null')
             return;
         }
         
-        var turn = roomInfo.turn;
-        var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,turn);
-        roomInfo.turn = nextIndex;
+        if (turnIndex){
+            roomInfo.turn = turnIndex
+        }else{
+            var turn = roomInfo.turn;
+            var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,turn);
+            roomInfo.turn = nextIndex;
+        }
+        return;
+    }
 
+    moveToNextZhuang(roomInfo){
+        if (!roomInfo){
+            Log.error('fapai roominfo is null')
+            return;
+        }
+        
+    
+        var zhuangIndex = roomInfo.zhuangIndex;
+        var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,zhuangIndex);
+        roomInfo.zhuangIndex = nextIndex;
+      
         return;
     }
 
@@ -328,7 +378,6 @@ class Game {
             return;
         }
 
-        var turn = roomInfo.turn;
         this.getNextPaiIncludeHua(roomInfo);
     }
 
@@ -403,13 +452,13 @@ class Game {
     }
 
     //通知前端操作的结果，仅供特效自体和声音播放，不设计pai的排序
-    notifyOperationAction(roomInfo,operationResult,userId){
+    notifyOperationAction(roomInfo,data,userId){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
 
-        Room.broacastInRoom('op_action_notify',roomInfo.roomId,operationResult,[userId])
+        Room.broacastInRoom('op_action_notify',roomInfo.roomId,data,[userId])
     }
 
     //通知前端出牌
@@ -442,98 +491,47 @@ class Game {
         }
         var countMap = seat.countMap;
         var tingMap = [];
-        for (var i = 1; i< 10;i++){ //1-9筒有没有胡的
-            if (countMap[i]){
-                countMap[i]++;
-            }else{
-                countMap[i] = 1;
-            }
-            var ret = this.checkIsHu(seat);
-            if (ret){
-                tingMap.push({
-                    value:i
-                })
-            }
 
-            countMap[i]--;
-        }
+        var lists = [
+            [1,10],[11,20],[31,39]
+        ]
 
-        for (var i = 11; i< 20;i++){ //1-9 万有没有胡的
-            if (countMap[i]){
-                countMap[i]++;
-            }else{
-                countMap[i] = 1;
+        lists.forEach((l)=>{
+            for (var i = l[0]; i< l[1];i++){ 
+                if (countMap[i]){
+                    countMap[i]++;
+                }else{
+                    countMap[i] = 1;
+                }
+                var ret = this.checkIsHu(countMap);
+                if (ret){
+                    tingMap.push({
+                        value:i
+                    })
+                }
+                if (countMap[i] === 1){
+                    delete countMap[i]
+                }else{
+                    countMap[i]--;
+                }
+     
             }
-            ret = this.checkIsHu(seat);
-            if (ret){
-                tingMap.push({
-                    value:i
-                })
-            }
-
-            countMap[i]--;
-        }
-
-        for (var i = 21; i< 30;i++){ //1-9条
-            if (countMap[i]){
-                countMap[i]++;
-            }else{
-                countMap[i] = 1;
-            }
-            ret = this.checkIsHu(seat);
-            if (ret){
-                tingMap.push({
-                    value:i
-                })
-            }
-
-            countMap[i]--;
-        }
-
-        for (var i = 41; i< 49;i++){ //东南西北风
-            if (countMap[i]){
-                countMap[i]++;
-            }else{
-                countMap[i] = 1;
-            }
-            ret = this.checkIsHu(seat);
-            if (ret){
-                tingMap.push({
-                    value:i
-                })
-            }
-
-            countMap[i]--;
-        }
-
+        })
         seat.tingMap = tingMap;
     }
 
-    checkIsHu(seat){
-        var countMap = seat.countMap;
-
-        var jiangPaiCount = 0;
-
-        //如果将牌的数量超过1 则肯定不能胡
-        for (var key in countMap){
-            if (countMap[key] && countMap[key] === 2){
-                jiangPaiCount++;
-            }
-        }
-
-        if (jiangPaiCount !== 1){
-            return false;
-        }
-
+    checkIsHu(countMap){
+      
         //先拿出将牌
-        for (var key in countMap){
+        for (var _key in countMap){
+            var key = parseInt(_key);
             var count = countMap[key];
             if (count && count >= 2){
                 var old = count;
                 countMap[key] -=2;
-                var ret = this.checkSingleTingPai(countMap,11,19);
+                var ret = this.checkSingleTingPai(countMap,1,9);
+                ret &= this.checkSingleTingPai(countMap,11,19);
                 ret &= this.checkSingleTingPai(countMap,21,29);
-                ret &= this.checkSingleTingPai(countMap,1,9);
                 ret &= this.checkSingleTingPai(countMap,31,38);
                 countMap[key] = old;
                 if (ret){
@@ -543,15 +541,20 @@ class Game {
         }
     }
 
+    checkPaiInRange(pai,range){
+        if (range[0] <= pai && range[1] >= pai) return true;
+        return false;
+    }
 
-    //除去将牌后,每种类型的牌是否可以胡了
+  
     checkSingleTingPai(countMap,start,end){
         var selected = -1;
         var cc = 0;
-       for (var key in countMap){
-           cc = countMap[key]
+       for (var _key in countMap){
+           var key = parseInt(_key);
+           cc = countMap[key];
            if (cc === -1){
-               Log.error('here ',cc,key)
+               console.log('here ',cc,key)
            }
             if (cc && this.checkPaiInRange(key,[start,end])){
                 selected = key;
@@ -559,15 +562,17 @@ class Game {
             }
        } 
 
-       if (selected !== -1){
+       if (selected === -1){
            return true;
        }
+
+      
 
         //否则，进行匹配
         if(cc === 3){
             //直接作为一坎
             countMap[selected] = 0;
-            var ret = this.checkSingleTingPai(seatData,start,end);
+            var ret = this.checkSingleTingPai(seat,start,end);
             //立即恢复对数据的修改
             countMap[selected] = cc;
             if(ret){
@@ -578,7 +583,7 @@ class Game {
             //直接作为一坎
             countMap[selected] = 1;
   
-            var ret = this.checkSingleTingPai(countMap,start,end);
+            var ret = this.checkSingleTingPai(seat,start,end);
             //立即恢复对数据的修改
             countMap[selected] = cc;
             //如果作为一坎能够把牌匹配完，直接返回TRUE。
@@ -591,11 +596,14 @@ class Game {
             return false;
         }
 
+
         //接下来去除顺子
 
         //分开匹配 A-2,A-1,A
         var matched = true;
         var v = selected % 10;
+
+        //   console.log(v,countMap);
         
         if(v < 3){
             matched = false;
@@ -611,14 +619,14 @@ class Game {
                 
             }		
         }
-    
-    
+
+
         //匹配成功，扣除相应数值
         if(matched){
             countMap[selected - 2] --;
             countMap[selected - 1] --;
             countMap[selected] --;
-            var ret = this.checkSingleTingPai(countMap,start,end);
+            var ret = this.checkSingleTingPai(seat,start,end);
             countMap[selected - 2] ++;
             countMap[selected - 1] ++;
             countMap[selected] ++;
@@ -648,7 +656,7 @@ class Game {
             countMap[selected - 1] --;
             countMap[selected] --;
             countMap[selected + 1] --;
-            var ret = this.checkSingleTingPai(countMap,start,end);
+            var ret = this.checkSingleTingPai(seat,start,end);
             countMap[selected - 1] ++;
             countMap[selected] ++;
             countMap[selected + 1] ++;
@@ -657,7 +665,7 @@ class Game {
             }		
         }
         
-        
+  
         //分开匹配 A,A+1,A + 2
         matched = true;
         if(v > 7){
@@ -667,19 +675,19 @@ class Game {
             for(var i = 0; i < 3; ++i){
                 var t = selected + i;
                 var cc =  countMap[t]
+                // console.log(t,cc)
                 if(!cc){
                     matched = false;
                     break;
                 }
             }		
         }
-    
         //匹配成功，扣除相应数值
         if(matched){
             countMap[selected] --;
             countMap[selected + 1] --;
             countMap[selected + 2] --;
-            var ret = this.checkSingleTingPai(countMap,start,end);
+            var ret = this.checkSingleTingPai(seat,start,end);
             countMap[selected] ++;
             countMap[selected + 1] ++;
             countMap[selected + 2] ++;
@@ -688,11 +696,7 @@ class Game {
             }		
         }
 
-
-
         return false;
-
-
     }
 
 }

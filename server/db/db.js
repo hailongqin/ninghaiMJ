@@ -29,6 +29,7 @@ var roomSchema = new Schema({
     mjLists:{type:Array}, //麻将牌
     zhuangIndex:{type:Number}, //庄家
     turn:{type:Number}, //轮到第几个出牌
+    count:{type:Number}, //第几局了
 }, {timestamps: {createdAt: 'created', updatedAt: 'updated'}});
 
 
