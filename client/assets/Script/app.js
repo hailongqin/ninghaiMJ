@@ -362,10 +362,12 @@ cc.Class({
            this.gameInfo.canChupai = true
        })
 
+       //显示tingpai 的节点
        this.node.on('tingpai_notigy',(data)=>{
-
+        
        })
 
+       //值给个声音
        this.node.on('op_action_notify',(data)=>{
 
        })
