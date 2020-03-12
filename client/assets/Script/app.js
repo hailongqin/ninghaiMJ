@@ -434,9 +434,9 @@ cc.Class({
 
        //值给个声音
        this.node.on('op_action_notify',(data)=>{
-            if (data.type === 'hu'){
-               this.clearTable();
-            }
+            // if (data.type === 'hu'){
+            //    this.clearTable();
+            // }
        })
 
        // 只给个声音
@@ -802,9 +802,11 @@ cc.Class({
         console.log('chis',gameInfoChiResult,chiRootResultNode)
 
         for (var i = base;i < chis.length;i++){
+
             var type = chis[i].type;
             var pai = chis[i].pai;
             var resultNode = chiRootResultNode.children[i];
+            console.log(base,i,chis,resultNode)
             if (type === 'chi'){
                 var list = chis[i].list;
                 for (var j = 0; j < list.length;j++){
