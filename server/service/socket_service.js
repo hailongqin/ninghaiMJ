@@ -218,14 +218,6 @@ exports.start = function(){
                 }else{ // 如果没有操作
                     Game.moveToNextTurn(roomInfo)
                     Game.fapai(roomInfo);
-                    var nextZhuaPai = seats[turn].holds[0]
-                    Game.checkCanHu(seats[turn],pai,roomInfo.nextZhuaPai)     // 检查下个人是否可以胡
-                    Game.checkCanGang(seats[turn],pai,roomInfo.nextZhuaPai)   //检查下个人是否可以杠
-                    var nextRet =  Game.notifyOperation(seats);
-                    Game.updateTable(roomInfo);
-                    
-                    if (!nextRet)
-                        Game.notifyChupai(roomInfo)
                 }
               
             })
@@ -335,8 +327,6 @@ exports.start = function(){
                 mySeat.countMap[gangPai] -=3;
              
                 Game.fapai(roomInfo);
-                Game.updateTable(roomInfo);
-                Game.notifyChupai(roomInfo)
             })
         })
             
@@ -551,8 +541,6 @@ exports.start = function(){
                     if (roomInfo.turn === fromTurn){ //这个通知不是自己的，来自其他人
                         Game.moveToNextTurn(roomInfo)
                         Game.fapai(roomInfo);
-                        Game.updateTable(roomInfo);
-                        Game.notifyChupai(roomInfo)
                      }
                   
                 }

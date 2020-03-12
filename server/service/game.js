@@ -389,6 +389,19 @@ class Game {
         }
 
         this.getNextPaiIncludeHua(roomInfo);
+
+        var turn = roomInfo.turn;
+        var seat = roomInfo.seats[turn]
+        var pai = seat.holds[0];
+
+        this.checkCanHu(seat,pai,turn);
+        this.checkCanGang(seat,pai,turn);
+        this.updateTable(roomInfo);
+        var ret = this.notifyOneSeatOperation(seat);
+        if (!ret){
+            this.notifyChupai(roomInfo)
+        }
+        
     }
 
     //开始的时候 更新桌面的信息
@@ -462,9 +475,11 @@ class Game {
                 Log.error('sendOperation get socket is null',userId);
                 return;
             }
-            ret = true;
+
             socket.emit('op_notify',{op})
         }
+
+        return hasOp;
     }
 
     //通知前端操作的结果，仅供特效自体和声音播放，不设计pai的排序
