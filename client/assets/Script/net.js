@@ -5,9 +5,7 @@ cc.Class({
     statics: {
         ip:"192.168.0.100:1000",
         sio:null,
-        isPinging:false,
-        fnDisconnect:null,
-        handlers:{},
+        pingTimer:null,
         handlerNode:null,
         setHandlerNode(node){
             this.handlerNode = node;
@@ -59,63 +57,21 @@ cc.Class({
                     this.dispatchEvent(e,data)
                 }); 
             })
-
-            // this.sio.on('login_result',function(data){
-            //     console.log('login result event ',data)
-            // });
-
-            // this.sio.on('set_ready_result',function(data){
-            //     console.log('set_ready_result event ',data)
-            // });
-
-            // this.sio.on('game_start',function(data){
-            //     console.log('game_start event ',data)
-            // })
-
-            // for(var key in this.handlers){
-            //     var value = this.handlers[key];
-            //     if(typeof(value) == "function"){
-            //         if(key == 'disconnect'){
-            //             this.fnDisconnect = value;
-            //         }
-            //         else{
-            //             console.log("register:function " + key);
-            //             this.sio.on(key,value);
-            //         }
-            //     }
-            // }
-
-            //this.startHearbeat();
         },
 
         startHearbeat:function(){
-            this.sio.on('game_pong',function(){
-                console.log('game_pong');
-                self.lastRecieveTime = Date.now();
-                self.delayMS = self.lastRecieveTime - self.lastSendTime;
-                console.log(self.delayMS);
-            });
-            this.lastRecieveTime = Date.now();
-            var self = this;
-            console.log(1);
-            if(!self.isPinging){
-                self.isPinging = true;
-                cc.game.on(cc.game.EVENT_HIDE,function(){
-                    self.ping();
-                });
-                setInterval(function(){
-                    if(self.sio){
-                        self.ping();
-                    }
-                }.bind(this),5000);
-                setInterval(function(){
-                    if(self.sio){
-                        if(Date.now() - self.lastRecieveTime > 10000){
-                            self.close();
-                        }
-                    }
-                }.bind(this),500);
-            }
+            var lastSendTime = '';
+            var lastReceiveTime = '';
+            var delayMs = 0;
+            this.sig.on('ping_result',()=>{
+                lastReceiveTime = Date.now();
+                delayMs = lastReceiveTime - lastSendTime;
+                this.dispatchEvent('delay_ms',delayMs)
+            })
+            this.pingTimer = setInterval(()=>{
+                lastSendTime = Date.now();
+                this.send('ping',{userId:cc.vv.userId});
+            },5000)
         },
         send:function(event,data){
             if(this.sio.connected){
@@ -136,19 +92,14 @@ cc.Class({
             if(this.sio && this.sio.connected){
                 this.sio.connected = false;
                 this.sio.disconnect();
+                this.sio = null;
             }
-            this.sio = null;
-            if(this.fnDisconnect){
-                this.fnDisconnect();
-                this.fnDisconnect = null;
-            }
-        },
 
-        test:function(fnResult){
-            var fn = function(ret){
-                fnResult(ret.errcode == 0);
+            if (this.pingTimer){
+                clearInterval(this.pingTimer);
+                this.pingTimer = null;
             }
-            cc.vv.http.sendRequest("/hi",null,fn,'http://' + this.ip);
-        }
+          
+        },
     },
 });

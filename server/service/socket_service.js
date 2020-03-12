@@ -39,11 +39,20 @@ exports.start = function(){
                 }
                 var seats = roomInfo.seats;//坐下的人
                 var seatUserIds = seats.map((s)=>{return s.userId});
+                var seatIndex = seatUserIds.indexOf(userId) 
 
-                if (seatUserIds.indexOf(userId) !== -1){ //已经是坐下的人
+                if (seatIndex !== -1){ //已经是坐下的人
                     User.bindUserAndSocket(userId,socket);
                     if (roomInfo.gameStart){ //游戏已经开始了
-                       Game.updateTable(roomInfo)
+                        var mySeat = seats[seatIndex]
+                       Game.updateTable(roomInfo);
+                       if (Game.checkMyselfHasOp(mySeat)){
+                           Game.notifyOneSeatOperation(mySeat);
+                       }
+
+                       if (roomInfo.turn === seatIndex && seat.hasChupai === false){
+                           Game.notifyChupai(roomInfo);
+                       }
                     }
                     return;
                 }
@@ -100,6 +109,8 @@ exports.start = function(){
 
                 var seatOne = {
                     userId:userId,
+                    onLine:true,
+                    hasChupai:true ,//初始化已经出牌
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -177,6 +188,7 @@ exports.start = function(){
                 var index = holds.indexOf(pai);
                 holds.splice(index,1);
                 folds.push(pai);
+                seats[seatIndex].hasChupai = true;
 
                 seats[seatIndex].countMap[pai]--;
                 Game.sortPai(holds);
@@ -535,6 +547,27 @@ exports.start = function(){
                 }
 
             }) 
+        })
+
+        socket.on('ping',(data) => {
+			var userId = data.userId;
+			if(!userId){
+                Log.error('socket ping param is error',roomId,userId)
+				return;
+			}
+			socket.emit('ping_result');
+        });
+        
+        socket.on('disconnect',()=>{
+            var userId = data.userId;
+            var roomId = data.roomId
+			if(!userId || !roomId){
+                Log.error('socket disconnect param is error',roomId,userId)
+				return;
+            }
+            
+            var index = User.getIndexByUserId(userId)
+
         })
     })
 

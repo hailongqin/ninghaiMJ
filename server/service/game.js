@@ -34,15 +34,13 @@ class Game {
     initSeats(roomInfo){
         for (var i = 0; i<roomInfo.seats.length;i++){
             var seat = roomInfo.seats[i]
-            roomInfo.seats[i] = {
-              userId:seat.userId,
-              holds:[],//手上持有的牌
-              folds:[],//打出的牌
-              chis:[],//吃的牌
-              huas:[],//花色
-              op:{}, //操作的牌
-              tingMap:[],
-              countMap:{}
+            seat.holds = [];
+            seat.folds = [];
+            seat.chis = [];
+            seat.huas = [];
+            seat.op = {};
+            seat.tingMap = [];
+            seat.countMap = {}
           }
 
         }

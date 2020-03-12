@@ -69,6 +69,11 @@ cc.Class({
             type:cc.SpriteAtlas
         },
 
+        delayMsLabel:{
+            default:null,
+            type:cc.Label
+        },
+
         gameInfo:null
     },
 
@@ -92,11 +97,16 @@ cc.Class({
       },this.node);
     },
 
+    unInit(){
+        cc.vv.roomId = '';
+        cc.vv.net.close();
+    },
+
     addTouchEvent(node){
         node.on(cc.Node.EventType.TOUCH_START,()=>{
-            console.log(this.gameInfo.hasChupai); 
-            if (!this.gameInfo.hasChupai) return; //是否有出牌的权利
-            this.gameInfo.hasChupai = false;
+            console.log(this.gameInfo.canChupai); 
+            if (!this.gameInfo.canChupai) return; //是否有出牌的权利
+            this.gameInfo.canChupai = false;
             var chupai = node.pai;
             cc.vv.net.send('chupai',{userId:cc.vv.userId,pai:chupai,roomId:this.gameInfo.roomId});
 
@@ -341,11 +351,15 @@ cc.Class({
 
        /*
        *                 'update_table','update_pepole_status','new_user_login_notify','op_notify','op_action_notify',
-                'chupai_action_notify','tingpai_notigy
+                'chupai_action_notify','tingpai_notigy' delay_ms
        */ 
 
+       this.node.on('delay_ms',(data)=>{
+           this.delayMsLabel.string = data;
+       })
+
        this.node.on('chupai_notify',()=>{
-           this.gameInfo.hasChupai = true
+           this.gameInfo.canChupai = true
        })
 
        this.node.on('tingpai_notigy',(data)=>{
@@ -375,7 +389,7 @@ cc.Class({
        this.node.on('update_table',(data)=>{
          // 更新table
          var seats = data.seats;
-         console.log(this.gameInfo)
+         this.setTimeCircle(data.turn);
         this.setTables(seats);
        })
 
@@ -438,14 +452,13 @@ cc.Class({
                uphuas:[],
                upChiResult:[],
 
+               zhuangIndex:data.zhuangIndex,
+               turn:data.turn,
                op:{},
 
                roomId:data.roomId
            };
            cc.vv.roomId = data.roomId;
-            this.gameInfo.zhuangIndex = 0;
-            this.gameInfo.turn = data.turn;
-
             for (var i = 0; i < seats.length;i++){
                 if (i  === myIndex){
                     this.gameInfo.myIndex = i;
@@ -460,10 +473,16 @@ cc.Class({
 
             this.setTables(seats);
 
-            this.setTimeCircle();
+            this.setTimeCircle(data.trun);
+            this.setFengData(data.turn);
         })
 
        
+    },
+
+    setFengData(turn){
+        //设置东南西北
+
     },
 
     setTables(seats){
@@ -504,10 +523,12 @@ cc.Class({
         cc.vv.net.send('chi',{userId:cc.vv.userId,roomId:this.gameInfo.roomId,chiIndex:index})
     },
 
-    setTimeCircle(){
+    setTimeCircle(turn){
         var turnIndex = this.gameInfo.turn;
+        if (turnIndex === turn) return;
         this.hideCircle();
         this.showOneCircle(turnIndex)
+        this.gameInfo.turnIndex = turn;
 
     },
 
@@ -667,7 +688,7 @@ cc.Class({
     setCommonFolds(folds,index){
         var gameInfoFolds = this.getGameInfoFoldsByIndex(index);
         var folsNode = this.getFoldsNodeByIndex(index);
-        var len = gameInfoHolds.length;
+        var len = gameInfoFolds.length;
         
         if (folds.length === len) return;
         else if (folds.length < len){ //被吃了 
@@ -689,11 +710,42 @@ cc.Class({
             var pai = huas[i];
             huasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
         }
+        this.setGameInfoHuasByIndex(index);
     },
 
 
     setCommonChiResults(chis,index){
 
+        var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
+        if (gameInfoChiResult.length === chis.length) return;
+
+        var chiRootResultNode = this.getChiResultNodeByIndex(index);
+        var base = chis.length - gameInfoChiResult.length - 1;
+
+        for (var i = base;i < chis.length;i++){
+            var type = chis[i].type;
+            var pai = chis[i].pai;
+            var resultNode = chiRootResultNode.children[i];
+            if (type === 'chi'){
+                var list = chis[i].list;
+                for (var j = 0; j < list.length;j++){
+                    resultNode.children[j].getComponent(cc.Sprite).spriteFrame = this.getFoldSpriteFrameByIndex(index,list[j])
+                }
+            }else if (type === 'peng'){
+                for (var j = 0; j < 3;j++){
+                    resultNode.children[j].getComponent(cc.Sprite).spriteFrame = this.getFoldSpriteFrameByIndex(index,pai)
+                }
+            }
+
+            else if (type === 'gang'){
+                for (var j = 0; j < 4;j++){
+                    resultNode.children[j].getComponent(cc.Sprite).spriteFrame = this.getFoldSpriteFrameByIndex(index,pai)
+                }
+            }
+
+        }
+
+        this.setGameInfoChiResultsByIndex(chis,index);
     },
    
     onClickReady(){
@@ -710,6 +762,10 @@ cc.Class({
 
      onLoad () {
         this.init();
+     },
+
+     onDestroy(){
+         this.unInit();
      },
 
     start () {
