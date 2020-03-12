@@ -48,9 +48,7 @@ exports.start = function(){
                        Game.updateTable(roomInfo);
                        if (Game.checkMyselfHasOp(mySeat)){
                            Game.notifyOneSeatOperation(mySeat);
-                       }
-
-                       if (roomInfo.turn === seatIndex && seat.hasChupai === false){
+                       }else if (roomInfo.turn === seatIndex && seat.hasChupai === false){
                            Game.notifyChupai(roomInfo);
                        }
                     }
@@ -564,8 +562,21 @@ exports.start = function(){
                 Log.error('socket disconnect param is error',roomId,userId)
 				return;
             }
+
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket guo get roominfo is error',err)
+                    socket.emit('guo_result',err)
+                    return;
+                }
+                var index = User.getIndexByUserId(userId);
+                var seats = roominfo.seats;
+
+                seats[index].onLine = false;
+            })
             
-            var index = User.getIndexByUserId(userId)
+  
+
 
         })
     })
