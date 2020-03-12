@@ -26,6 +26,8 @@ exports.start = function(){
         socket.on('login',function(data){
             var roomId = data.roomId;
             var userId = data.userId;
+            socket.roomId = roomId;
+            socket.userId = userId
             if (!userId || !roomId){
                 Log.error('socket login param is error',roomId,userId)
                 socket.emit('login_result',{code:-1,message:"参数错误"});
@@ -48,7 +50,7 @@ exports.start = function(){
                        Game.updateTable(roomInfo);
                        if (Game.checkMyselfHasOp(mySeat)){
                            Game.notifyOneSeatOperation(mySeat);
-                       }else if (roomInfo.turn === seatIndex && seat.hasChupai === false){
+                       }else if (roomInfo.turn === seatIndex){
                            Game.notifyChupai(roomInfo);
                        }
                     }
@@ -75,8 +77,8 @@ exports.start = function(){
             return;
         })
         socket.on('set_ready', function (data) {
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
 
             if (!userId || !roomId){
                 Log.error('socket set_ready param is error',roomId,userId)
@@ -108,7 +110,6 @@ exports.start = function(){
                 var seatOne = {
                     userId:userId,
                     onLine:true,
-                    hasChupai:true ,//初始化已经出牌
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -128,8 +129,8 @@ exports.start = function(){
         });
 
         socket.on('cancel_ready', function (data) {
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
 
             if (!userId || !roomId){
                 Log.error('socket cancel_ready param is error',roomId,userId)
@@ -163,8 +164,8 @@ exports.start = function(){
 
         socket.on('chupai',function(data){
             console.log('receive chupai',data)
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
             var pai = data.pai;
 
             if (!userId || !roomId || !pai){
@@ -186,7 +187,6 @@ exports.start = function(){
                 var index = holds.indexOf(pai);
                 holds.splice(index,1);
                 folds.push(pai);
-                seats[seatIndex].hasChupai = true;
                 seats[seatIndex].lastChuPai = pai;
 
                 seats[seatIndex].countMap[pai]--;
@@ -223,8 +223,8 @@ exports.start = function(){
 
          
         socket.on('hu',(data)=>{
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
             var fromTurn = data.fromTurn;
 
             if (!userId || !roomId){
@@ -239,23 +239,24 @@ exports.start = function(){
                     socket.emit('chi_result',err)
                     return;
                 }
-            })
+                
+                //还要判断截胡 todo
 
-            var seats = roomInfo.seats;
-            var index = Game.getIndexByUserId(seats,userId);
-            Game.moveToNextTurn(index);
-            Game.clearOperation();
-            Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo});
+                var seats = roomInfo.seats;
+                var index = Game.getIndexByUserId(seats,userId);
+                Game.clearOperation(roomInfo);
+                Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index},userId);
 
-            setTimeout(() => {
-                Game.begin(roomInfo);
-            }, 10*1000);
-        })
+                setTimeout(() => {
+                    Game.begin(roomInfo);
+                }, 10*1000);
+                })
+         })
 
         
         socket.on('gang',(data)=>{
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
             if (!userId || !roomId){
                 Log.error('socket gang param is error',roomId,userId)
                 socket.emit('chi_result',{code:-1,message:"参数错误"});
@@ -277,22 +278,9 @@ exports.start = function(){
                 }
 
                 var mySeat = seats[index];
-                var interval = setInterval(()=>{
-                    for (var k in seats){
-                        let op = seats[k].op;
-                        if (op.canHu){
-                            opTag = true;
-                            break;
-                        }
-                        else opTag = false
-                    }
-    
-                    if (!opTag){
-                        clearInterval(interval);
-                    }
-                   },50)
-
-                if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
+            
+                Game.waitOtherOperation(seats,index,'canGang',()=>{
+                if (!mySeat.op.canGang) { //有人胡了可能，没得碰
                     return;
                 }
                 var myOp = mySeat.op;
@@ -300,9 +288,9 @@ exports.start = function(){
                 var fromTurn = myOp.fromTurn;
 
                 Game.clearOperation(roomInfo);
-                Game.moveToNextTurn(index);
-                //每人可以胡，就开始碰
-               
+                Game.moveToNextTurn(roomInfo,index);
+                //每人可以胡，就开始杠
+                
                 var myHolds = mySeat.holds;
 
                 var count = 0;
@@ -323,15 +311,20 @@ exports.start = function(){
                     fromTurn
                 });
                 mySeat.countMap[gangPai] -=3;
-             
+
+                Game.notifyOperationAction(seats,{type:'gang'},userId)
+                
                 Game.fapai(roomInfo);
+                })
+
+             
             })
         })
             
 
         socket.on('peng',(data)=>{
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
 
             if (!userId || !roomId){
                 Log.error('socket peng param is error',roomId,userId)
@@ -354,60 +347,52 @@ exports.start = function(){
                 }
 
                 var mySeat = seats[index];
-                var interval = setInterval(()=>{
-                    for (var k in seats){
-                        let op = seats[k].op;
-                        if (op.canHu){
-                            opTag = true;
-                            break;
-                        }
-                        else opTag = false
+                Game.waitOtherOperation(seats,index,'canPeng',()=>{
+
+                    if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
+                        return;
                     }
+                   
+                    Game.moveToNextTurn(roomInfo,index);
+                    //每人可以胡，就开始碰
+                    var myOp = mySeat.op;
     
-                    if (!opTag){
-                        clearInterval(interval);
-                    }
-                   },50)
+                    var pengPai = myOp.pai;
+                    var myHolds = mySeat.holds;
 
-                if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
-                    return;
-                }
-                Game.clearOperation(roomInfo);
-                Game.moveToNextTurn(roomInfo);
-                //每人可以胡，就开始碰
-                var myOp = mySeat.op;
-
-                var pengPai = myOp.pai;
-                var myHolds = mySeat.holds;
-
-                var count = 0;
-                for (var i = 0; i < myHolds.length;i++){
-                    if (myHolds[i] === pengPai){
-                        myHolds.splice(i,1);
-                        i--;
-                        count++
-                        if (count === 2){
-                            break;
+                    Game.clearOperation(roomInfo);
+    
+                    var count = 0;
+                    for (var i = 0; i < myHolds.length;i++){
+                        if (myHolds[i] === pengPai){
+                            myHolds.splice(i,1);
+                            i--;
+                            count++
+                            if (count === 2){
+                                break;
+                            }
                         }
                     }
-                }
-                // 更新countMap
-                mySeat.chis.push({
-                    type:'peng',
-                    pai:pengPai
-                });
-                mySeat.countMap[pengPai] -=2;
+                    // 更新countMap
+                    mySeat.chis.push({
+                        type:'peng',
+                        pai:pengPai
+                    });
+                    mySeat.countMap[pengPai] -=2;
+    
+                    Game.updateTable(roomInfo);
+                    Game.notifyChupai(roomInfo)
+                })
+        
 
-                Game.updateTable(roomInfo);
-                Game.notifyChupai(roomInfo)
             })
         })
 
         socket.on('chi',(data)=>{
 
             console.log('receive chi data ',data)
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
 
             if (!userId || !roomId){
                 Log.error('socket chi param is error',roomId,userId)
@@ -434,6 +419,7 @@ exports.start = function(){
 
                var interval = setInterval(()=>{
                 for (var k in seats){
+                    if (k === index) continue;
                     let op = seats[k].op;
                     if (op.canHu || op.canPeng || op.canGang){
                         opTag = true;
@@ -447,9 +433,11 @@ exports.start = function(){
                 }
                },50)
 
-               if (!mySeat.op.canChi) { //有人胡碰杠了可能，没得碰
-                return;
-            }
+               Game.waitOtherOperation(seats,index,'canChi',()=>{
+                
+                if (!mySeat.op.canChi) { //有人胡碰杠了可能，没得碰
+                    return;
+                }
 
                 //没人操作，则我来吃
                 
@@ -497,14 +485,14 @@ exports.start = function(){
                 fromFolds.splice(fromFolds.length - 1,1)
 
                 Game.updateTable(roomInfo); //通知更新桌面上的牌
-                Game.notifyChupai(roomInfo);
-
+                Game.notifyChupai(roomInfo);   
+               })
             })    
         })
 
         socket.on('guo',(data)=>{
-            var roomId = data.roomId;
-            var userId = data.userId;
+            var roomId = socket.roomId;
+            var userId = socket.userId;
             var fromTurn = data.fromTurn;
 
             if (!userId || !roomId || (fromTurn === undefined || fromTurn === null)){
@@ -547,7 +535,7 @@ exports.start = function(){
         })
 
         socket.on('ping',(data) => {
-			var userId = data.userId;
+			var userId = socket.userId;
 			if(!userId){
                 Log.error('socket ping param is error',roomId,userId)
 				return;
@@ -556,8 +544,9 @@ exports.start = function(){
         });
         
         socket.on('disconnect',()=>{
-            var userId = data.userId;
-            var roomId = data.roomId
+            var userId = socket.userId;
+            var roomId = socket.roomId
+            console.log('scocket connect')
 			if(!userId || !roomId){
                 Log.error('socket disconnect param is error',roomId,userId)
 				return;
@@ -569,10 +558,11 @@ exports.start = function(){
                     socket.emit('guo_result',err)
                     return;
                 }
-                var index = User.getIndexByUserId(userId);
-                var seats = roominfo.seats;
+                var index = Game.getIndexByUserId(roomInfo.seats,userId);
+                var seats = roomInfo.seats;
 
                 seats[index].onLine = false;
+
             })
             
   

@@ -15,9 +15,8 @@ class Game {
         if (roomInfo.count === 0){ //如果是第一局
             roomInfo.zhuangIndex = 0;
         }else{
-            roomInfo.zhuangIndex = this.moveToNextZhuang(roomInfo);
+            this.moveToNextZhuang(roomInfo);
         }
-       
         roomInfo.turn = roomInfo.zhuangIndex;
         this.initSeats(roomInfo);
         roomInfo.mjLists = [];
@@ -73,8 +72,6 @@ class Game {
         for (var j = 41; j < 49;j++){ //41-48代表春夏秋冬梅兰菊竹
             data.push(j)
         }
-
-        console.log(data);
 
     }
 
@@ -183,11 +180,7 @@ class Game {
             return;
         }
 
-        var turn = roomInfo.turn;
-        var seats = roomInfo.seats;
-
-        var huas = seats[turn].huas;
-        var holds = seats[turn].holds;
+        var huas = [];
         var pai = this.getNextPai(roomInfo.mjLists)
 
         while(this.checkIsHua(pai)){
@@ -195,8 +188,11 @@ class Game {
             pai = this.getNextPai(roomInfo.mjLists);
         }
 
-        holds.unshift(pai);
-        this.addCountMap(seats[turn].countMap,pai);
+        return {
+            huas:huas,
+            pai
+        }
+
     }
 
     addCountMap(countMap,pai){
@@ -219,7 +215,6 @@ class Game {
         var op = seatData.op;
         if(count && count >= 3){
             op.canGang = true;
-            op.canPeng = true;
             op.pai = pai;
             op.fromTurn = fromTurn;
         }
@@ -236,8 +231,9 @@ class Game {
     }
 
     checkCanHu(seatData,pai,fromTurn){
+        console.log(seatData)
         var op = seatData.op;
-        var map = seat.tingMap.map((t)=>{
+        var map = seatData.tingMap.map((t)=>{
             return t.value
         })
         if (map.indexOf(pai) !== -1){
@@ -324,6 +320,36 @@ class Game {
         Room.broacastInRoom('clear_op_notify',roomInfo.roomId,{})
     }
 
+    waitOtherOperation(seats,index,level,callback){
+        var levels = ['canHu','canGang','canPeng','canChi'];
+        let lIndex = levels.indexOf(level);
+        var waitLevel = levels.splice(0,lIndex);
+        var opTag = true;
+
+        function check(op){
+            for (var key of waitLevel){
+                if (op[key]) return true;
+            }
+            return false
+        }
+
+        var interval = setInterval(()=>{
+                for (var k in seats){
+                    if (k === index) continue
+                    let op = seats[k].op;
+                    if (check(op)){
+                        opTag = true;
+                        break;
+                    }
+                    else opTag = false
+                }
+
+                if (!opTag){
+                    clearInterval(interval);
+                    callback()
+                }
+            },50)
+    }
     
     checkOtherSeatHasOp(seats,excludeIndex){
        for (var i = 0; i< seats.length;i++){
@@ -352,13 +378,13 @@ class Game {
         return index;
     }
 
-    moveToNextTurn(roomInfo,turnIndex = null){
+    moveToNextTurn(roomInfo,turnIndex){
         if (!roomInfo){
             Log.error('fapai roominfo is null')
             return;
         }
         
-        if (turnIndex){
+        if (turnIndex !== null && turnIndex !== undefined){
             roomInfo.turn = turnIndex
         }else{
             var turn = roomInfo.turn;
@@ -374,7 +400,6 @@ class Game {
             return;
         }
         
-    
         var zhuangIndex = roomInfo.zhuangIndex;
         var nextIndex = this.getNextChuPaiIndex(roomInfo.seats,zhuangIndex);
         roomInfo.zhuangIndex = nextIndex;
@@ -387,15 +412,23 @@ class Game {
             Log.error('fapai roominfo is null')
             return;
         }
-
-        this.getNextPaiIncludeHua(roomInfo);
-
         var turn = roomInfo.turn;
         var seat = roomInfo.seats[turn]
-        var pai = seat.holds[0];
 
+        var list = this.getNextPaiIncludeHua(roomInfo);
+
+
+        var pai = list.pai;
+        var huas = list.huas;
+
+        if (huas.length){
+            seat.huas = seat.huas.concat(huas);
+        }
+        console.log(roomInfo)
         this.checkCanHu(seat,pai,turn);
         this.checkCanGang(seat,pai,turn);
+        seat.holds.unshift(pai);
+        this.addCountMap(seat.countMap,pai)
         this.updateTable(roomInfo);
         var ret = this.notifyOneSeatOperation(seat);
         if (!ret){
@@ -455,11 +488,15 @@ class Game {
 
     //通知是否有操作
     notifyOperation(seats){
+        var hasOp = false;
         var ret = false;
         for (var item of seats){
-            this.notifyOneSeatOperation(item)
+            ret = this.notifyOneSeatOperation(item)
+            if (ret){
+                hasOp = true;
+            }
         }
-        return ret;
+        return hasOp;
     }
 
     notifyOneSeatOperation(seat){
@@ -501,7 +538,6 @@ class Game {
 
         var seats = roomInfo.seats;
         var turn = roomInfo.turn;
-        seats[turn].hasChupai = false;
         var socket = User.getSocketByUser(seats[turn].userId);
         socket.emit('chupai_notify');
     }

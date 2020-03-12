@@ -76,7 +76,7 @@ cc.Class({
 
         cc.vv.net = require('net');
 
-        var param = ths.urlParse();
+        var param = this.urlParse();
 
         if (cc.vv.storage.getStorage('userId')){
             cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
