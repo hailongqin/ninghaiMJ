@@ -364,12 +364,18 @@ cc.Class({
 
        //显示tingpai 的节点
        this.node.on('tingpai_notigy',(data)=>{
-        
+
        })
 
        //值给个声音
        this.node.on('op_action_notify',(data)=>{
-
+            if (data.type === 'hu'){
+                var roomInfo = data.roomInfo;
+                var seats = roomInfo.seats;
+                for (var key in seats){
+                    this.setCommonHolds(seats[key].holds,key,true)
+                }
+            }
        })
 
        // 只给个声音
@@ -576,7 +582,7 @@ cc.Class({
         if (index === gameInfo.upIndex) return this.upAltas
     },
 
-    getBottomSpriteFrameByIndex(index,pai){
+    getHoldSpriteFrameByIndex(index,pai){
         var gameInfo = this.gameInfo;
         if (index === gameInfo.myIndex) return this.myHoldsAltas.getSpriteFrame('my-'+pai)
         if (index === gameInfo.leftIndex) return this.LeftAltas.getSpriteFrame('cemian4')
@@ -584,7 +590,7 @@ cc.Class({
         if (index === gameInfo.upIndex) return this.upAltas.getSpriteFrame('cemian1')
     },
 
-    getFoldSpriteFrameByIndex(index,pai){
+    getBottomSpriteFrameByIndex(index,pai){
         var gameInfo = this.gameInfo;
         if (index === gameInfo.myIndex) return this.myBottomAltas.getSpriteFrame('my-bottom-'+pai)
         if (index === gameInfo.leftIndex) return this.LeftAltas.getSpriteFrame('left-'+pai)
@@ -662,10 +668,10 @@ cc.Class({
     },
 
 
-    setCommonHolds(holds,index){
+    setCommonHolds(holds,index,isHu = false){
         var holdsNode = this.getHoldsNodeByIndex(index)
         function setPositionPai(i,pai){
-            holdsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getHoldSpriteFrameByIndex(index,pai)
+            holdsNode.children[i].getComponent(cc.Sprite).spriteFrame = isHu?this.getBottomSpriteFrameByIndex(index,pai) : this.getHoldSpriteFrameByIndex(index,pai)
             holdsNode.children[i].pai = pai;
         }
         var len = holds.length; //13
