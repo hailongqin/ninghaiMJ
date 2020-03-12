@@ -42,8 +42,6 @@ class Game {
             seat.tingMap = [];
             seat.countMap = {}
           }
-
-        }
     }
 
     //初始化麻将牌
@@ -199,7 +197,6 @@ class Game {
 
         holds.unshift(pai);
         this.addCountMap(seats[turn].countMap,pai);
-    
     }
 
     addCountMap(countMap,pai){
@@ -337,6 +334,12 @@ class Game {
        return false
     }
 
+    checkMyselfHasOp(seat){
+        var op = seat.op;
+        if (op.canHu || op.canGang || op.canPeng || op.canChi) return true
+        return false;
+    }
+
     getIndexByUserId(seats,userId){
         var ids = seats.map((s)=>{return s.userId});
 
@@ -417,7 +420,9 @@ class Game {
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
-        }   
+        }
+        
+        var statusList = roomInfo.se
 
         Room.broacastInRoom('update_pepole_status',roomInfo.roomId,roomInfo)
     }
@@ -439,23 +444,27 @@ class Game {
     notifyOperation(seats){
         var ret = false;
         for (var item of seats){
-            var userId = item.userId;
-            var hasOp = false;
-            var op = item.op
-            if (op.canHu || op.canChi || op.canGang || op.canPeng){
-                hasOp = true;
-            }
-            if (hasOp){
-                var socket = User.getSocketByUser(userId)
-                if (!socket){
-                    Log.error('sendOperation get socket is null',userId);
-                    return;
-                }
-                ret = true;
-                socket.emit('op_notify',{op})
-            }
+            this.notifyOneSeatOperation(item)
         }
         return ret;
+    }
+
+    notifyOneSeatOperation(seat){
+        var userId = seat.userId;
+        var hasOp = false;
+        var op = seat.op
+        if (op.canHu || op.canChi || op.canGang || op.canPeng){
+            hasOp = true;
+        }
+        if (hasOp){
+            var socket = User.getSocketByUser(userId)
+            if (!socket){
+                Log.error('sendOperation get socket is null',userId);
+                return;
+            }
+            ret = true;
+            socket.emit('op_notify',{op})
+        }
     }
 
     //通知前端操作的结果，仅供特效自体和声音播放，不设计pai的排序
@@ -477,6 +486,7 @@ class Game {
 
         var seats = roomInfo.seats;
         var turn = roomInfo.turn;
+        seats[turn].hasChupai = false;
         var socket = User.getSocketByUser(seats[turn].userId);
         socket.emit('chupai_notify');
     }

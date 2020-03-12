@@ -189,6 +189,7 @@ exports.start = function(){
                 holds.splice(index,1);
                 folds.push(pai);
                 seats[seatIndex].hasChupai = true;
+                seats[seatIndex].lastChuPai = pai;
 
                 seats[seatIndex].countMap[pai]--;
                 Game.sortPai(holds);
@@ -200,6 +201,7 @@ exports.start = function(){
 
                 for (var i = 0;i < seats.length;i++){       
                     if (userId === seats[i].userId) continue;
+                    if (seats[i].lastChuPai === pai) continue;
                     Game.checkCanHu(seats[i],pai,seatIndex)     // 检查是否有人胡
                     Game.checkCanGang(seats[i],pai,seatIndex)   // 检查是否有人杠
                     Game.checkCanPeng(seats[i],pai,seatIndex);
@@ -216,8 +218,14 @@ exports.start = function(){
                 }else{ // 如果没有操作
                     Game.moveToNextTurn(roomInfo)
                     Game.fapai(roomInfo);
+                    var nextZhuaPai = seats[turn].holds[0]
+                    Game.checkCanHu(seats[turn],pai,roomInfo.nextZhuaPai)     // 检查下个人是否可以胡
+                    Game.checkCanGang(seats[turn],pai,roomInfo.nextZhuaPai)   //检查下个人是否可以杠
+                    var nextRet =  Game.notifyOperation(seats);
                     Game.updateTable(roomInfo);
-                    Game.notifyChupai(roomInfo)
+                    
+                    if (!nextRet)
+                        Game.notifyChupai(roomInfo)
                 }
               
             })
@@ -536,8 +544,11 @@ exports.start = function(){
                 var ret = Game.checkOtherSeatHasOp(seats,index)
                 // 所有人都没有操作
                 if (!ret){
-                     // 可能已经被其他人操作了
-                     if (roomInfo.turn === fromTurn){
+                     if (fromTurn === index){ //如果这个通知是来自自己的(胡，杠)
+                        Game.notifyChupai(roomInfo) //通知出牌
+                        return
+                     }
+                    if (roomInfo.turn === fromTurn){ //这个通知不是自己的，来自其他人
                         Game.moveToNextTurn(roomInfo)
                         Game.fapai(roomInfo);
                         Game.updateTable(roomInfo);
