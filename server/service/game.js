@@ -26,7 +26,29 @@ class Game {
  
         roomInfo.count++;
         Room.broacastInRoom('game_start',roomInfo.roomId,roomInfo);
-        this.notifyChupai(roomInfo);
+
+        var isTianHu = false
+        for (var i = 0; i < roomInfo.seats.length;i++){
+            var seat = roomInfo.seats[i];
+            if (i !== roomInfo.turn){
+                this.checkCanTingPai(seat); // 检查是否听牌了
+            }else{
+                isTianHu = this.checkIsHu(seat.countMap); //检查是否天胡了
+                if (isTianHu){
+                    seat.op = {
+                        canHu:true,
+                        pai:seat.holds[0],
+                        fromTurn:roomInfo.turn
+                    }
+                    this.notifyOneSeatOperation(seat)
+                }
+            }
+        }
+
+        if (!isTianHu){
+            this.notifyChupai(roomInfo);
+        }
+
         
     }
 
@@ -234,7 +256,7 @@ class Game {
         console.log(seatData)
         var op = seatData.op;
         var map = seatData.tingMap.map((t)=>{
-            return t.value
+            return t.pai
         })
         if (map.indexOf(pai) !== -1){
             op.canHu = true;
@@ -519,14 +541,14 @@ class Game {
         return hasOp;
     }
 
-    //通知前端操作的结果，仅供特效自体和声音播放，不设计pai的排序
-    notifyOperationAction(roomInfo,data,userId){
+    //通知前端操作的结果，仅供特效自体和声音播放，不设计pai的排序 ,不包括发送给谁
+    notifyOperationAction(roomInfo,data,excludeUsers = []){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
 
-        Room.broacastInRoom('op_action_notify',roomInfo.roomId,data,[userId])
+        Room.broacastInRoom('op_action_notify',roomInfo.roomId,data,excludeUsers)
     }
 
     //通知前端出牌
@@ -584,7 +606,7 @@ class Game {
                 var ret = this.checkIsHu(countMap);
                 if (ret){
                     tingMap.push({
-                        value:i
+                        pai:i
                     })
                 }
                 if (countMap[i] === 1){
@@ -596,9 +618,7 @@ class Game {
             }
         })
         seat.tingMap = tingMap;
-        if (tingMap.length){
-           this.notifyTingPai(seat)
-        }
+        this.notifyTingPai(seat)
     }
 
 

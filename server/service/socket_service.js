@@ -3,8 +3,6 @@ var conf = require('../config').config;
 
 var express = require('express');
 
-
-
 var app = express();
 
 var Util = require('../utils/util');
@@ -246,8 +244,13 @@ exports.start = function(){
 
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
+                var seat = seats[index];
+                var pai = seat.op.pai;
+                seat.holds.unshift(pai);
+                seats[fromTurn].folds.splice(-1,1);
                 Game.clearOperation(roomInfo);
-                Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index},userId);
+             
+                Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
 
                 setTimeout(() => {
                     Game.begin(roomInfo);
@@ -314,7 +317,7 @@ exports.start = function(){
                 });
                 mySeat.countMap[gangPai] -=3;
 
-                Game.notifyOperationAction(seats,{type:'gang'},userId)
+                Game.notifyOperationAction(seats,{type:'gang'})
                 
                 Game.fapai(roomInfo);
                 })
@@ -453,7 +456,7 @@ exports.start = function(){
 
                 Game.clearOperation(roomInfo);
                 Game.moveToNextTurn(roomInfo); //轮到下一个人
-                Game.notifyOperationAction(roomInfo,{type:'chi',index:roomInfo.turn},userId) //通知有人吃了
+                Game.notifyOperationAction(roomInfo,{type:'chi',index:roomInfo.turn}) //通知有人吃了
               
                 var myHolds = mySeat.holds;
                 var myChis = mySeat.chis;
@@ -484,7 +487,7 @@ exports.start = function(){
                 })
 
                 var fromFolds = roomInfo.seats[fromTurn].folds
-                fromFolds.splice(fromFolds.length - 1,1)
+                fromFolds.splice(- 1,1)
 
                 Game.updateTable(roomInfo); //通知更新桌面上的牌
                 Game.notifyChupai(roomInfo);   

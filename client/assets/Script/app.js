@@ -127,12 +127,27 @@ cc.Class({
         folds.push(pai);
     },
 
+    showTingPaiNode(){
+        this.myTingPaiNode.active = true;
+    },
+
+    hideTingPaiNode(){
+        this.myTingPaiNode.active = false;
+    },
+
     clearTable(){
           //吃的选择
       
   
           this.hideOpNode();
           this.hideChiList();
+
+          this.hideTingPaiNode();
+
+          this.myHuResultShow.active = false;
+          this.leftHuResultShow.active = false;
+          this.rightHuResultShow.active = false;
+          this.upHuResultShow.active = false;
   
           //吃的结果
           
@@ -310,6 +325,14 @@ cc.Class({
         this.upHuasNode = upNode.getChildByName('huas');
         this.upFoldsNode = upNode.getChildByName('folds');
 
+        this.myHuResultShow = this.node.getChildByName('myHuResultShow');
+        this.leftHuResultShow = this.node.getChildByName('leftHuResultShow');
+        this.rightHuResultShow = this.node.getChildByName('rightHuResultShow');
+        this.upHuResultShow = this.node.getChildByName('upHuResultShow');
+
+        this.myTingPaiNode = this.node.getChildByName('tingpai');
+        this.myTingPaiListNode = this.myTingPaiNode.getChildByName('tNode');
+
         this.clearTable();
       
     },
@@ -361,7 +384,7 @@ cc.Class({
         this.myOpNode5.active = null;
     },
 
-    hideChiList(){
+    hideChiList(){ // 操作的吃
         this.myChiListParentNode.active = null;
         this.myChiList1Node.active = null;
         this.myChiList2Node.active = null;
@@ -429,14 +452,16 @@ cc.Class({
 
        //显示tingpai 的节点
        this.node.on('tingpai_notigy',(data)=>{
-
+            this.setTingPaiResult(data);
        })
 
-       //值给个声音
+       //值给个声音，或者显示文案
        this.node.on('op_action_notify',(data)=>{
-            // if (data.type === 'hu'){
+            if (data.type === 'hu'){
             //    this.clearTable();
-            // }
+
+            this.setCommonHuShowAction(data.index)
+            }
        })
 
        // 只给个声音
@@ -570,6 +595,13 @@ cc.Class({
         }
     },
 
+    setCommonHuShowAction(index){
+        if (index === this.gameInfo.myIndex) this.myHuResultShow.active = true;
+        if (index === this.gameInfo.leftIndex) this.leftHuResultShow.active = true;
+        if (index === this.gameInfo.rightIndex) this.rightHuResultShow.active = true;
+        if (index === this.gameInfo.upIndex) this.upHuResultShow.active = true;
+
+    },
    
 
     onHuClick(){
@@ -742,6 +774,7 @@ cc.Class({
         var len = holds.length; //13
         if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
             start = 0;
+            this.hideTingPaiNode();
         }else{
             holdsNode.children[0].getComponent(cc.Sprite).spriteFrame = null;
             holdsNode.children[0].pai = null;
@@ -827,6 +860,28 @@ cc.Class({
         }
 
         this.setGameInfoChiResultsByIndex(chis,index);
+    },
+
+    setTingPaiResult(tingMap){
+        if (tingMap.length === 0){
+            this.hideTingPaiNode();
+            return;
+        }else{
+            var paiLists = tingMap.map((t)=>{return t.pai});
+            var totalLen = this.myTingPaiListNode.children.length;
+            var i = 0;
+            console.log(paiLists);
+            for (i = 0;i<paiLists.length;i++){
+                console.log(this.getBottomSpriteFrameByIndex(this.gameInfo.myIndex,paiLists[i]),paiLists[i])
+                this.myTingPaiListNode.children[i].children[0].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(this.gameInfo.myIndex,paiLists[i]);
+            }
+
+            for (;i < totalLen;i++){
+                this.myTingPaiListNode.children[i].children[0].getComponent(cc.Sprite).spriteFrame = null;
+
+            }
+            this.showTingPaiNode();
+        }
     },
    
     onClickReady(){
