@@ -20,8 +20,6 @@ var Log = require('../utils/log');
 exports.start = function(){
     const server = require('http').createServer(app);
     const io = require('socket.io')(server);
-
-
     io.on('connection',function(socket) {
         socket.on('login',function(data){
             var roomId = data.roomId;
@@ -182,6 +180,10 @@ exports.start = function(){
                 var seats = roomInfo.seats;
                 var seatsUserId = seats.map((s)=>{return s.userId});
                 var seatIndex = seatsUserId.indexOf(userId);
+
+                if (roomInfo.turn !== seatIndex){ //断线重连的时候，一方万一
+                    return; //不是该人出
+                }
                 var holds = seats[seatIndex].holds;
                 var folds = seats[seatIndex].folds;
                 var index = holds.indexOf(pai);
