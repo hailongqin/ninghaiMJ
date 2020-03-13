@@ -144,10 +144,10 @@ cc.Class({
 
           this.hideTingPaiNode();
 
-          this.myHuResultShow.active = false;
-          this.leftHuResultShow.active = false;
-          this.rightHuResultShow.active = false;
-          this.upHuResultShow.active = false;
+          this.myHuResultShowNode.active = false;
+          this.leftHuResultShowNode.active = false;
+          this.rightHuResultShowNode.active = false;
+          this.upHuResultShowNode.active = false;
   
           //吃的结果
           
@@ -325,10 +325,10 @@ cc.Class({
         this.upHuasNode = upNode.getChildByName('huas');
         this.upFoldsNode = upNode.getChildByName('folds');
 
-        this.myHuResultShow = this.node.getChildByName('myHuResultShow');
-        this.leftHuResultShow = this.node.getChildByName('leftHuResultShow');
-        this.rightHuResultShow = this.node.getChildByName('rightHuResultShow');
-        this.upHuResultShow = this.node.getChildByName('upHuResultShow');
+        this.myHuResultShowNode = this.node.getChildByName('myHuResultShow');
+        this.leftHuResultShowNode = this.node.getChildByName('leftHuResultShow');
+        this.rightHuResultShowNode = this.node.getChildByName('rightHuResultShow');
+        this.upHuResultShowNode = this.node.getChildByName('upHuResultShow');
 
         this.myTingPaiNode = this.node.getChildByName('tingpai');
         this.myTingPaiListNode = this.myTingPaiNode.getChildByName('tNode');
@@ -459,7 +459,7 @@ cc.Class({
        this.node.on('op_action_notify',(data)=>{
             if (data.type === 'hu'){
             //    this.clearTable();
-
+            console.log('type is hu',data.index);
             this.setCommonHuShowAction(data.index)
             }
        })
@@ -596,10 +596,10 @@ cc.Class({
     },
 
     setCommonHuShowAction(index){
-        if (index === this.gameInfo.myIndex) this.myHuResultShow.active = true;
-        if (index === this.gameInfo.leftIndex) this.leftHuResultShow.active = true;
-        if (index === this.gameInfo.rightIndex) this.rightHuResultShow.active = true;
-        if (index === this.gameInfo.upIndex) this.upHuResultShow.active = true;
+        if (index === this.gameInfo.myIndex) this.myHuResultShowNode.active = true;
+        if (index === this.gameInfo.leftIndex) this.leftHuResultShowNode.active = true;
+        if (index === this.gameInfo.rightIndex) this.rightHuResultShowNode.active = true;
+        if (index === this.gameInfo.upIndex) this.upHuResultShowNode.active = true;
 
     },
    
@@ -774,7 +774,7 @@ cc.Class({
         var len = holds.length; //13
         if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
             start = 0;
-            this.hideTingPaiNode();
+            if (index === this.gameInfo.myIndex) this.hideTingPaiNode();
         }else{
             holdsNode.children[0].getComponent(cc.Sprite).spriteFrame = null;
             holdsNode.children[0].pai = null;
@@ -798,7 +798,7 @@ cc.Class({
         var gameInfoFolds = this.getGameInfoFoldsByIndex(index);
         var foldsNode = this.getFoldsNodeByIndex(index);
         var len = gameInfoFolds.length;
-        // console.log(this.gameInfo,gameInfoFolds,folds);
+         console.log(this.gameInfo,gameInfoFolds,folds);
         if (folds.length === len) return;
         else if (folds.length < len){ //被吃了 
             console.log('被吃了',folds,len)
@@ -810,7 +810,7 @@ cc.Class({
                 foldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
             }
         }
-        this.setGameInfoFoldsByIndex(index)
+        this.setGameInfoFoldsByIndex(folds,index)
     },
     setCommonHuas(huas,index){
         var gameInfoHuas = this.getGameInfoHuasByIndex(index);
@@ -820,7 +820,7 @@ cc.Class({
             var pai = huas[i];
             huasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
         }
-        this.setGameInfoHuasByIndex(index);
+        this.setGameInfoHuasByIndex(huas,index);
     },
 
 
@@ -864,6 +864,7 @@ cc.Class({
 
     setTingPaiResult(tingMap){
         if (tingMap.length === 0){
+            console.log('tingmap hide',tingMap)
             this.hideTingPaiNode();
             return;
         }else{
@@ -872,7 +873,7 @@ cc.Class({
             var i = 0;
             console.log(paiLists);
             for (i = 0;i<paiLists.length;i++){
-                console.log(this.getBottomSpriteFrameByIndex(this.gameInfo.myIndex,paiLists[i]),paiLists[i])
+                console.log(this.myTingPaiListNode.children[i],this.myTingPaiListNode.children[i].children[0])
                 this.myTingPaiListNode.children[i].children[0].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(this.gameInfo.myIndex,paiLists[i]);
             }
 

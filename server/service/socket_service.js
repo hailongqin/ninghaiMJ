@@ -191,7 +191,6 @@ exports.start = function(){
 
                 seats[seatIndex].countMap[pai]--;
                 Game.sortPai(holds);
-
                 Game.checkCanTingPai(seats[seatIndex]);//检查自己是否可以停牌了
 
 
@@ -210,7 +209,7 @@ exports.start = function(){
 
                var ret =  Game.notifyOperation(seats);
              
-                if (ret){ //如果有操作的，则等待他们操作
+                if (ret){ //如果有操作的，则等待他们操作 
                     Game.updateTable(roomInfo); // 更新桌面
                     return 
                 }else{ // 如果没有操作
@@ -317,6 +316,10 @@ exports.start = function(){
                 });
                 mySeat.countMap[gangPai] -=3;
 
+                if (fromTurn !== index){ //如果不是自摸的杠
+                    seats[fromTurn].folds.splice(-1,1)
+                }
+
                 Game.notifyOperationAction(seats,{type:'gang'})
                 
                 Game.fapai(roomInfo);
@@ -363,6 +366,7 @@ exports.start = function(){
                     var myOp = mySeat.op;
     
                     var pengPai = myOp.pai;
+                    var fromTurn = myOp.fromTurn;
                     var myHolds = mySeat.holds;
 
                     Game.clearOperation(roomInfo);
@@ -384,6 +388,7 @@ exports.start = function(){
                         pai:pengPai
                     });
                     mySeat.countMap[pengPai] -=2;
+                    seats[fromTurn].folds.splice(-1,1);
     
                     Game.updateTable(roomInfo);
                     Game.notifyChupai(roomInfo)
@@ -419,24 +424,6 @@ exports.start = function(){
                 }
 
                 var mySeat = seats[index];
-                var opTag = true;
-                console.log(seats);
-
-               var interval = setInterval(()=>{
-                for (var k in seats){
-                    if (k === index) continue;
-                    let op = seats[k].op;
-                    if (op.canHu || op.canPeng || op.canGang){
-                        opTag = true;
-                        break;
-                    }
-                    else opTag = false
-                }
-
-                if (!opTag){
-                    clearInterval(interval);
-                }
-               },50)
 
                Game.waitOtherOperation(seats,index,'canChi',()=>{
                 
@@ -487,7 +474,7 @@ exports.start = function(){
                 })
 
                 var fromFolds = roomInfo.seats[fromTurn].folds
-                fromFolds.splice(- 1,1)
+                fromFolds.splice(-1,1)
 
                 Game.updateTable(roomInfo); //通知更新桌面上的牌
                 Game.notifyChupai(roomInfo);   

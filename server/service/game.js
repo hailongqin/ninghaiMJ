@@ -281,22 +281,22 @@ class Game {
         op.chiList = [];
 
 
-        //A-2 A-1 A
-        if (this.checkPaiInRange(superPrev,range) && this.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
+           //A A+1 A+2
+        if (this.checkPaiInRange(superNext,range) && this.checkPaiInRange(next,range) && countMap[superNext] && countMap[next]){
             op.canChi = true;
-            op.chiList.push([superPrev,prev,pai]); 
+            op.chiList.push([pai,next,superNext]);
         }
-
+    
         //A-1 A A+1
         if (this.checkPaiInRange(prev,range) && this.checkPaiInRange(next,range) && countMap[prev] && countMap[next]){
             op.canChi = true;
             op.chiList.push([prev,pai,next]);
         }
 
-        //A A+1 A+2
-        if (this.checkPaiInRange(superNext,range) && this.checkPaiInRange(next,range) && countMap[superNext] && countMap[next]){
+         //A-2 A-1 A
+         if (this.checkPaiInRange(superPrev,range) && this.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
             op.canChi = true;
-            op.chiList.push([pai,next,superNext]);
+            op.chiList.push([superPrev,prev,pai]); 
         }
 
         if (op.canChi){
@@ -355,9 +355,13 @@ class Game {
             return false
         }
 
+        console.log(seats,waitLevel,index)
+
         var interval = setInterval(()=>{
-                for (var k in seats){
-                    if (k === index) continue
+                for (var _k in seats){
+                    var k = parseInt(_k)
+                    if (k === index) continue;
+                    console.log(seats[k],k)
                     let op = seats[k].op;
                     if (check(op)){
                         opTag = true;
