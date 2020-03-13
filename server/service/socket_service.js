@@ -245,8 +245,13 @@ exports.start = function(){
                 var index = Game.getIndexByUserId(seats,userId);
                 var seat = seats[index];
                 var pai = seat.op.pai;
-                seat.holds.unshift(pai);
-                seats[fromTurn].folds.splice(-1,1);
+                var fromTurn = seat.op.fromTurn;
+              
+                if (index !== fromTurn){
+                    seat.holds.unshift(pai);
+                    seats[fromTurn].folds.splice(-1,1);
+                }
+         
                 Game.clearOperation(roomInfo);
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
@@ -298,12 +303,13 @@ exports.start = function(){
                 var myHolds = mySeat.holds;
 
                 var count = 0;
+                var maxCount = fromTurn === index?4:3;
                 for (var i = 0; i < myHolds.length;i++){
                     if (myHolds[i] === gangPai){
                         myHolds.splice(i,1);
                         i--;
                         count++
-                        if (count === 3){
+                        if (count === maxCount){
                             break;
                         }
                     }
@@ -314,7 +320,7 @@ exports.start = function(){
                     pai:gangPai,
                     fromTurn
                 });
-                mySeat.countMap[gangPai] -=3;
+                mySeat.countMap[gangPai] -=maxCount;
 
                 if (fromTurn !== index){ //如果不是自摸的杠
                     seats[fromTurn].folds.splice(-1,1)

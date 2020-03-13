@@ -460,7 +460,12 @@ cc.Class({
             if (data.type === 'hu'){
             //    this.clearTable();
             console.log('type is hu',data.index);
-            this.setCommonHuShowAction(data.index)
+            var seats = data.roomInfo.seats;
+            this.setCommonHuShowAction(data.index);
+            for (var i = 0; i < seats.length;i++){
+                this.setCommonHolds(seats[i].holds,i,true);
+                this.setCommonFolds(seats[i].folds);
+            }
             }
        })
 
