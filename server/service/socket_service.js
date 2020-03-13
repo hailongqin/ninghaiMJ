@@ -542,26 +542,26 @@ exports.start = function(){
         });
         
         socket.on('disconnect',()=>{
-            var userId = socket.userId;
-            var roomId = socket.roomId
-            console.log('scocket connect')
-			if(!userId || !roomId){
-                Log.error('socket disconnect param is error',roomId,userId)
-				return;
-            }
+            // var userId = socket.userId;
+            // var roomId = socket.roomId
+            // console.log('scocket connect')
+			// if(!userId || !roomId){
+            //     Log.error('socket disconnect param is error',roomId,userId)
+			// 	return;
+            // }
 
-            Room.getRoomInfo(roomId,(err,roomInfo)=>{
-                if (err){
-                    Log.error('socket guo get roominfo is error',err)
-                    socket.emit('guo_result',err)
-                    return;
-                }
-                var index = Game.getIndexByUserId(roomInfo.seats,userId);
-                var seats = roomInfo.seats;
+            // Room.getRoomInfo(roomId,(err,roomInfo)=>{
+            //     if (err){
+            //         Log.error('socket guo get roominfo is error',err)
+            //         socket.emit('guo_result',err)
+            //         return;
+            //     }
+            //     var index = Game.getIndexByUserId(roomInfo.seats,userId);
+            //     var seats = roomInfo.seats;
 
-                seats[index].onLine = false;
+            //     seats[index].onLine = false;
 
-            })
+            // })
             
   
 

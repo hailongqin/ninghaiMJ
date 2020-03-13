@@ -80,12 +80,13 @@ cc.Class({
 
         if (cc.vv.storage.getStorage('userId')){
             cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
-            if (param.roomId){
-                cc.vv.roomId = ret.roomId
-                cc.director.loadScene(this.roomSecen.name); 
-            }else{
-                cc.director.loadScene(this.hallScen.name);
-            }
+            cc.director.loadScene(this.hallScen.name);
+            // if (param.roomId){
+            //     cc.vv.roomId = ret.roomId
+            //     cc.director.loadScene(this.roomSecen.name); 
+            // }else{
+               
+            // }
        
         }else{
             cc.director.loadScene(this.loginScen.name);

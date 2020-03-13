@@ -107,8 +107,8 @@ cc.Class({
     onDelClicked:function(){
         var len = this.roomId.length
        if (!len) return;
+       this.roomIdNode.children[this.roomId.length - 1].getComponent(cc.Label).string = '';
        this.roomId = this.roomId.substring(0,len - 1)
-       
     },
     onCloseClicked:function(){
         this.node.active = false;

@@ -464,7 +464,7 @@ cc.Class({
             this.setCommonHuShowAction(data.index);
             for (var i = 0; i < seats.length;i++){
                 this.setCommonHolds(seats[i].holds,i,true);
-                this.setCommonFolds(seats[i].folds);
+                this.setCommonFolds(seats[i].folds,i);
             }
             }
        })

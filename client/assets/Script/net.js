@@ -3,7 +3,7 @@ var io = require('socket-io')
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:"192.168.0.100:1000",
+        ip:"182.92.76.77:1000",
         sio:null,
         pingTimer:null,
         handlerNode:null,
