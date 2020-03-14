@@ -74,6 +74,11 @@ cc.Class({
             type:cc.Label
         },
 
+        remainNumber:{
+            default:null,
+            type:cc.Label
+        },
+
         gameInfo:null
     },
 
@@ -150,113 +155,73 @@ cc.Class({
           this.upHuResultShowNode.active = false;
   
           //吃的结果
-          
-          var myHoldsNode = this.myHoldsNode;
-          var myHuasNode = this.myHuasNode;
-          var myFoldsNode = this.myFoldsNode;
-          var myChiResultNode = this.myChiResultNode;
-          for(var i = 0; i < myHoldsNode.children.length; ++i){
-              var sprite = myHoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-              this.addTouchEvent(myHoldsNode.children[i]);
+          var self = this;
+          function clearHoldsNode(node,isTouchEvent = false){
+            for(var i = 0; i < node.children.length; ++i){
+                var sprite = node.children[i].getComponent(cc.Sprite);
+                sprite.spriteFrame = null;
+                if (isTouchEvent) self.addTouchEvent(node.children[i]);
+            }
           }
-          for(var i = 0; i < myHuasNode.children.length; ++i){
-              var sprite = myHuasNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
+
+          function clearHuasNode(node){
+            for(var i = 0; i < node.children.length; ++i){
+                var sprite = node.children[i].getComponent(cc.Sprite);
+                sprite.spriteFrame = null;
+            }
           }
-          for(var i = 0; i < myFoldsNode.children.length; ++i){
-              var sprite = myFoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
+
+          function clearFoldsNode(node){
+            for(var i = 0; i < node.children.length; ++i){
+                var sprite = node.children[i].getComponent(cc.Sprite);
+                sprite.spriteFrame = null;
+            }
+    
           }
-  
-          for(var i = 0; i < myChiResultNode.children.length; ++i){
-              var subChiItem = myChiResultNode.children[i];
-              for (var k = 0; k < subChiItem.children.length;k++){
-                  var sprite = subChiItem.children[k].getComponent(cc.Sprite);
-                  sprite.spriteFrame = null;
-              }
-             
+
+          function clearChiResultNode(node){
+            for(var i = 0; i < node.children.length; ++i){
+                var subChiItem = node.children[i];
+                for (var k = 0; k < subChiItem.children.length;k++){
+                    var sprite = subChiItem.children[k].getComponent(cc.Sprite);
+                    sprite.spriteFrame = null;
+                }    
+            }
           }
-  
+
+
+          clearHoldsNode(this.myHoldsNode,true);
+          clearFoldsNode(this.myFoldsNode);
+          clearHuasNode(this.myHuasNode);
+          clearChiResultNode(this.myChiResultNode);
+
+          clearHoldsNode(this.leftHoldsNode);
+          clearFoldsNode(this.leftFoldsNode);
+          clearHuasNode(this.leftHuasNode);
+          clearChiResultNode(this.leftChiResultNode);
+
+          clearHoldsNode(this.rightHoldsNode);
+          clearFoldsNode(this.rightFoldsNode);
+          clearHuasNode(this.rightHuasNode);
+          clearChiResultNode(this.rightChiResultNode);     
+
+          clearHoldsNode(this.upHoldsNode);
+          clearFoldsNode(this.upFoldsNode);
+          clearHuasNode(this.upHuasNode);
+          clearChiResultNode(this.upChiResultNode);     
+
+
+          for (var i = 0; i < 4;i++){
+              var snode = this['result'+i+'Node'];
+              clearHoldsNode(snode.getChildByName('holds'));
+              clearFoldsNode(snode.getChildByName('huas'));
+              clearChiResultNode(snode.getChildByName('chiresult'));
+          }
+
+          this.totalShowResultNode.active = false;
+
+          this.hideRemainNumber();
          
-  
-         // 初始化左边的牌
-          var leftHoldsNode = this.leftHoldsNode;
-          var leftFoldsNode = this.leftFoldsNode;
-          var leftHuasNode = this.leftHuasNode;
-          var leftChiResultNode = this.leftChiResultNode;
-          for(var i = 0; i < leftHoldsNode.children.length; ++i){
-              var sprite = leftHoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-          for(var i = 0; i < leftHuasNode.children.length; ++i){
-              var sprite = leftHuasNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-  
-          for(var i = 0; i < leftFoldsNode.children.length; ++i){
-              var sprite = leftFoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-  
-          for(var i = 0; i < leftChiResultNode.children.length; ++i){
-              var subChiItem = leftChiResultNode.children[i];
-              for (var k = 0; k < subChiItem.children.length;k++){
-                  var sprite = subChiItem.children[k].getComponent(cc.Sprite);
-                  sprite.spriteFrame = null;
-              }
-          }
-  
-          //初始化右边的牌
-          var rightHoldsNode = this.rightHoldsNode;
-          var rightFoldsNode = this.rightFoldsNode;
-          var rightHuasNode = this.rightHuasNode;
-          var rightChiResultNode = this.rightChiResultNode;
-          for(var i = 0; i < rightHoldsNode.children.length; ++i){
-              var sprite = rightHoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-          for(var i = 0; i < rightHuasNode.children.length; ++i){
-              var sprite = rightHuasNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-          for(var i = 0; i < rightFoldsNode.children.length; ++i){
-              var sprite = rightFoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-          for(var i = 0; i < rightChiResultNode.children.length; ++i){
-              var subChiItem = rightChiResultNode.children[i];
-              for (var k = 0; k < subChiItem.children.length;k++){
-                  var sprite = subChiItem.children[k].getComponent(cc.Sprite);
-                  sprite.spriteFrame = null;
-              }
-          }
-  
-  
-          //初始化上方的牌
-          var upHoldsNode = this.upHoldsNode;
-          var upFoldsNode = this.upFoldsNode;
-          var upHuasNode = this.upHuasNode;
-          var upChiResultNode = this.upChiResultNode;
-          for(var i = 0; i < upHoldsNode.children.length; ++i){
-              var sprite = upHoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-          for(var i = 0; i < upHuasNode.children.length; ++i){
-              var sprite = upHuasNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-          for(var i = 0; i < upFoldsNode.children.length; ++i){
-              var sprite = upFoldsNode.children[i].getComponent(cc.Sprite);
-              sprite.spriteFrame = null;
-          }
-          for(var i = 0; i < upChiResultNode.children.length; ++i){
-              var subChiItem = upChiResultNode.children[i];
-              for (var k = 0; k < subChiItem.children.length;k++){
-                  var sprite = subChiItem.children[k].getComponent(cc.Sprite);
-                  sprite.spriteFrame = null;
-              }
-          }
 
     },
 
@@ -333,8 +298,25 @@ cc.Class({
         this.myTingPaiNode = this.node.getChildByName('tingpai');
         this.myTingPaiListNode = this.myTingPaiNode.getChildByName('tNode');
 
+
+        //胡的弹框展示节点
+        var totalShowResultNode = this.totalShowResultNode = this.node.getChildByName('totalShowResult');
+
+        var contentNode = totalShowResultNode.getChildByName('content');
+
+        this.result0Node = contentNode.getChildByName('list1');
+        this.result1Node = contentNode.getChildByName('list2')
+        this.result2Node = contentNode.getChildByName('list3')
+        this.result3Node = contentNode.getChildByName('list4')
+
+        this.remainNumberNode = this.node.getChildByName('remainNumber');
+
         this.clearTable();
       
+    },
+
+    closeResultShowodal(){
+        this.clearTable();
     },
 
     setTipConetnt(content){
@@ -404,7 +386,12 @@ cc.Class({
         for (var i = 0; i < node.children.length;i++){
             node.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+list[i]);
             if (list[i] === pai){
-                node.children[i].y +=10;
+                node.children[i].scaleX = 1.2
+                node.children[i].scaleY = 1.2
+            }
+            else{
+                node.children[i].scaleX = 1
+                node.children[i].scaleY = 1
             }
             
         }
@@ -435,6 +422,18 @@ cc.Class({
         this.timeBackNode.children[index].active = true;
     },
 
+    setRemainNumber(data){
+        this.remainNumber.string = data.mjLists.length;
+    },
+
+    showRemainNumberNode(){
+        this.remainNumberNode.active = true;
+    },
+
+    hideRemainNumber(){
+        this.remainNumberNode.active = false;
+    },
+
     initHander(){
 
        /*
@@ -463,9 +462,14 @@ cc.Class({
             var seats = data.roomInfo.seats;
             this.setCommonHuShowAction(data.index);
             for (var i = 0; i < seats.length;i++){
-                this.setCommonHolds(seats[i].holds,i,true);
+                var holdsNode = this.getHoldsNodeByIndex(i);
+                this.setCommonHolds(holdsNode,seats[i].holds,i,true);
                 this.setCommonFolds(seats[i].folds,i);
             }
+
+            setTimeout(() => {
+                this.setResultModalShow(data.roomInfo);
+            }, 3*1000);
             }
        })
 
@@ -490,6 +494,7 @@ cc.Class({
          var seats = data.seats;
          this.setTimeCircle(data.turn);
         this.setTables(seats);
+        this.setRemainNumber(data)
        })
 
        this.node.on('clear_op_notify',(data)=>{
@@ -576,6 +581,8 @@ cc.Class({
 
             this.setTimeCircle(data.trun);
             this.setFengData(data.turn);
+            this.showRemainNumberNode();
+            this.setRemainNumber(data);
         })
 
        
@@ -593,10 +600,14 @@ cc.Class({
             var folds = seat.folds;
             var huas = seat.huas;
             var chis = seat.chis;
-            this.setCommonHolds(holds,i);
+            var holdsNode = this.getHoldsNodeByIndex(i);
+            var huasNode = this.getHuasNodeByIndex(i);
+            var chiRootResultNode = this.getChiResultNodeByIndex(i);
+
+            this.setCommonHolds(holdsNode,holds,i);
             this.setCommonFolds(folds,i);
-            this.setCommonHuas(huas,i);
-            this.setCommonChiResults(chis,i);
+            this.setCommonHuas(huasNode,huas,i);
+            this.setCommonChiResults(chiRootResultNode,chis,i);
         }
     },
 
@@ -768,8 +779,7 @@ cc.Class({
     },
 
 
-    setCommonHolds(holds,index,isHu = false){
-        var holdsNode = this.getHoldsNodeByIndex(index);
+    setCommonHolds(holdsNode,holds,index,isHu = false){
         var self = this;
         function setPositionPai(i,pai){
             holdsNode.children[i].getComponent(cc.Sprite).spriteFrame = isHu?self.getBottomSpriteFrameByIndex(index,pai) : self.getHoldSpriteFrameByIndex(index,pai)
@@ -817,10 +827,12 @@ cc.Class({
         }
         this.setGameInfoFoldsByIndex(folds,index)
     },
-    setCommonHuas(huas,index){
-        var gameInfoHuas = this.getGameInfoHuasByIndex(index);
-        var huasNode = this.getHuasNodeByIndex(index);
-        if (huas.length === gameInfoHuas.length) return;
+    setCommonHuas(huasNode,huas,index,forceAdd = false){
+        if (!forceAdd){
+            var gameInfoHuas = this.getGameInfoHuasByIndex(index);
+            if (huas.length === gameInfoHuas.length) return;
+        }
+      
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
             huasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
@@ -829,22 +841,21 @@ cc.Class({
     },
 
 
-    setCommonChiResults(chis,index){
+    setCommonChiResults(chiRootResultNode,chis,index,forceAdd = false){
 
-        var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
-        if (gameInfoChiResult.length === chis.length) return;
-
-        var chiRootResultNode = this.getChiResultNodeByIndex(index);
-        var base = chis.length - gameInfoChiResult.length - 1;
-
-        console.log('chis',gameInfoChiResult,chiRootResultNode)
+        var base = 0;
+        if (!forceAdd){
+            var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
+            if (gameInfoChiResult.length === chis.length) return;
+             base = chis.length - gameInfoChiResult.length - 1;
+        }
 
         for (var i = base;i < chis.length;i++){
 
             var type = chis[i].type;
             var pai = chis[i].pai;
             var resultNode = chiRootResultNode.children[i];
-            console.log(base,i,chis,resultNode)
+
             if (type === 'chi'){
                 var list = chis[i].list;
                 for (var j = 0; j < list.length;j++){
@@ -878,7 +889,6 @@ cc.Class({
             var i = 0;
             console.log(paiLists);
             for (i = 0;i<paiLists.length;i++){
-                console.log(this.myTingPaiListNode.children[i],this.myTingPaiListNode.children[i].children[0])
                 this.myTingPaiListNode.children[i].children[0].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(this.gameInfo.myIndex,paiLists[i]);
             }
 
@@ -900,6 +910,21 @@ cc.Class({
          cc.vv.net.send('cancel_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId});
         this.readyBtn.active = true;
         this.unReadyBtn.active = false;
+    },
+
+    setResultModalShow(data){
+        var seats  = data.seats;
+        var index = this.gameInfo.myIndex;
+        for (var i = 0; i < seats.length;i++){
+            var sNode = this['result'+i+'Node'];
+            var holdsNode = sNode.getChildByName('holds');
+            var chiresultNode = sNode.getChildByName('chiresult');
+            var huasNode = sNode.getChildByName('huas');
+            this.setCommonHolds(holdsNode,seats[i].holds,index);
+            this.setCommonHuas(huasNode,seats[i].huas,index,true);
+            this.setCommonChiResults(chiresultNode,seats[i].chis,index,true);
+        }
+        this.totalShowResultNode.active = true;
     },
 
      onLoad () {

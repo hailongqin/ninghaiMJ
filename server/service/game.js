@@ -253,7 +253,6 @@ class Game {
     }
 
     checkCanHu(seatData,pai,fromTurn){
-        console.log(seatData)
         var op = seatData.op;
         var map = seatData.tingMap.map((t)=>{
             return t.pai
@@ -346,7 +345,7 @@ class Game {
         var levels = ['canHu','canGang','canPeng','canChi'];
         let lIndex = levels.indexOf(level);
         var waitLevel = levels.splice(0,lIndex);
-        var opTag = true;
+        var opTag = false;
 
         function check(op){
             for (var key of waitLevel){
@@ -355,14 +354,13 @@ class Game {
             return false
         }
 
-        console.log(seats,waitLevel,index)
+        var otherSeats = seats.filter((s,_id)=>{
+            return _id !== index
+        })
 
         var interval = setInterval(()=>{
-                for (var _k in seats){
-                    var k = parseInt(_k)
-                    if (k === index) continue;
-                    console.log(seats[k],k)
-                    let op = seats[k].op;
+                for (var i = 0; i <otherSeats;i++){
+                    let op = otherSeats[i].op;
                     if (check(op)){
                         opTag = true;
                         break;
@@ -378,8 +376,11 @@ class Game {
     }
     
     checkOtherSeatHasOp(seats,excludeIndex){
-       for (var i = 0; i< seats.length;i++){
-           if (i === excludeIndex) continue
+        
+        var otherSeats = seats.filter((s,_id)=>{
+            return _id !== excludeIndex
+        })
+       for (var i = 0; i< otherSeats.length;i++){
            var op = seats[i].op;
            if (op.canHu || op.canGang || op.canPeng || op.canChi) return true
        }
@@ -450,7 +451,6 @@ class Game {
         if (huas.length){
             seat.huas = seat.huas.concat(huas);
         }
-        console.log(roomInfo)
         this.checkCanHu(seat,pai,turn);
         this.checkCanGang(seat,pai,turn);
         seat.holds.unshift(pai);

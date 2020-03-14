@@ -46,7 +46,7 @@ cc.Class({
 
      onLoad () {
 
-        cc.vv.Util.setFitSreenMode();
+       // cc.vv.Util.setFitSreenMode();
 
         this.onCickConfirmCreateRoom = cc.vv.Util.throttle(this._onCickConfirmCreateRoom, 2000, { 'leading': true, 'trailing': false })
 

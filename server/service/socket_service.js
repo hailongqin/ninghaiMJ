@@ -86,7 +86,7 @@ exports.start = function(){
                     Log.error('socket set_ready get roominfo is error',err)
                     return;
                 }
-
+                Log.info('receive set_ready data is ',roomInfo)
                 if (roomInfo.gameStart) return;
 
                 var seats = roomInfo.seats;
@@ -173,7 +173,7 @@ exports.start = function(){
                     Log.error('getRoomInfo chupai  is error',err)
                     return;
                 }
-
+                Log.info('receive chupai data is ',roomInfo)
                 //将牌从自己手中扣除
                 var seats = roomInfo.seats;
                 var seatsUserId = seats.map((s)=>{return s.userId});
@@ -223,9 +223,7 @@ exports.start = function(){
          
         socket.on('hu',(data)=>{
             var roomId = socket.roomId;
-            var userId = socket.userId;
-            var fromTurn = data.fromTurn;
-
+            var userId = socket.userId;      
             if (!userId || !roomId){
                 Log.error('socket gang param is error',roomId,userId)
                 socket.emit('chi_result',{code:-1,message:"参数错误"});
@@ -238,16 +236,26 @@ exports.start = function(){
                     socket.emit('chi_result',err)
                     return;
                 }
-                
+                Log.info('receive hu data is ',roomInfo)
+
                 //还要判断截胡 todo
+
+                //
+
+                
 
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 var seat = seats[index];
                 var pai = seat.op.pai;
-                var fromTurn = seat.op.fromTurn;
+
+                if (!seat.op.canHu) return;
+                
+                var fromTurn = seat.op.fromTurn; //0
               
+                console.log('hu fromTurn ',fromTurn,index)
                 if (index !== fromTurn){
+                    console.log('zimo from Turn is ',fromTurn,seats);
                     seat.holds.unshift(pai);
                     seats[fromTurn].folds.splice(-1,1);
                 }
@@ -278,7 +286,7 @@ exports.start = function(){
                     socket.emit('chi_result',err)
                     return;
                 }
-                
+                Log.info('gang hu data is ',roomInfo)
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -352,7 +360,7 @@ exports.start = function(){
                     socket.emit('peng_result',err)
                     return;
                 }
-
+                Log.info('receive peng data is ',roomInfo)
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -422,6 +430,7 @@ exports.start = function(){
                     socket.emit('chi_result',err)
                     return;
                 }
+                Log.info('receive chi data is ',roomInfo)
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -505,7 +514,7 @@ exports.start = function(){
                     socket.emit('guo_result',err)
                     return;
                 }
-
+                Log.info('receive guo data is ',roomInfo)
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId)
                 if (index === undefined || index === null){
