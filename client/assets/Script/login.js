@@ -41,16 +41,24 @@ cc.Class({
 
     },
 
+    getUserInfo(){
+        cc.vv.http.sendRequest('/user/get_user_info',{userId:cc.vv.userId},(data)=>{
+            cc.vv.userInfo = data.data;
+        })
+    },
+
     onClickUser1Login(){
-        cc.vv.userId = 1;
-        cc.vv.storage.setStorage('userId',1)
+        cc.vv.userId = '1';
+        cc.vv.storage.setStorage('userId','1')
         cc.director.loadScene(this.hallScen.name);
+        this.getUserInfo();
     },
 
     onClickUser2Login(){
-        cc.vv.userId = 2
-        cc.vv.storage.setStorage('userId',2)
+        cc.vv.userId = '2'
+        cc.vv.storage.setStorage('userId','2')
         cc.director.loadScene(this.hallScen.name);
+        this.getUserInfo();
     },
 
     // update (dt) {},

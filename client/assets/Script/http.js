@@ -52,7 +52,7 @@ function sendRequest(path, data, successCallback, failCallback) {
 
     console.log('data is ',data)
     try {
-        xhr.send(JSON.stringify({...data,userId:1}));
+        xhr.send(JSON.stringify({...data,userId:cc.vv.userId}));
     }
     catch (e) {
         //setTimeout(retryFunc, 200);

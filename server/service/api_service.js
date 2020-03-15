@@ -7,11 +7,7 @@ const os = require('os');
 
 
 var roomRouter = require('./room_service')
-
-
-
-
-
+var userRouter = require('./user_service');
 
 var app = express();
 
@@ -47,7 +43,8 @@ app.all('*', function(req, res, next) {
 });
 
 
-app.use('/room',roomRouter)
+app.use('/room',roomRouter);
+app.use('/user',userRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

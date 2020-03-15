@@ -80,6 +80,11 @@ cc.Class({
 
         if (cc.vv.storage.getStorage('userId')){
             cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
+            console.log('get Storage user id is ',cc.vv.userId)
+            cc.vv.http.sendRequest('/user/get_user_info',{userId:cc.vv.userId},(data)=>{
+                console.log('login data is ',data)
+                cc.vv.userInfo = data.data;
+            })
             cc.director.loadScene(this.hallScen.name);
             // if (param.roomId){
             //     cc.vv.roomId = ret.roomId

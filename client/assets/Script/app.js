@@ -5,6 +5,8 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
+import { threadId } from "worker_threads";
+
 var maxHoldLength = 14;
 
 cc.Class({
@@ -84,7 +86,7 @@ cc.Class({
 
     // LIFE-CYCLE CALLBACKS:
   
-
+   
     init(){
         console.log(cc.vv);
 
@@ -98,7 +100,9 @@ cc.Class({
       }
       cc.vv.net.connect(()=>{
           this.initHander();
-          cc.vv.net.send('login',{userId:cc.vv.userId,roomId:cc.vv.roomId})
+          var param = {userId:cc.vv.userId,roomId:cc.vv.roomId};
+            param.userInfo =  cc.vv.userInfo
+          cc.vv.net.send('login',param)
       },this.node);
     },
 
@@ -194,21 +198,29 @@ cc.Class({
           clearFoldsNode(this.myFoldsNode);
           clearHuasNode(this.myHuasNode);
           clearChiResultNode(this.myChiResultNode);
+          this.myNode.getChildByName('zhuang').active = false;
+          this.hideStatusNode(this.myStatusNode)
 
           clearHoldsNode(this.leftHoldsNode);
           clearFoldsNode(this.leftFoldsNode);
           clearHuasNode(this.leftHuasNode);
           clearChiResultNode(this.leftChiResultNode);
+          this.leftNode.getChildByName('zhuang').active = false;
+          this.hideStatusNode(this.leftStatusNode)
 
           clearHoldsNode(this.rightHoldsNode);
           clearFoldsNode(this.rightFoldsNode);
           clearHuasNode(this.rightHuasNode);
-          clearChiResultNode(this.rightChiResultNode);     
+          clearChiResultNode(this.rightChiResultNode);  
+          this.rightNode.getChildByName('zhuang').active = false;   
+          this.hideStatusNode(this.rightStatusNode)
 
           clearHoldsNode(this.upHoldsNode);
           clearFoldsNode(this.upFoldsNode);
           clearHuasNode(this.upHuasNode);
-          clearChiResultNode(this.upChiResultNode);     
+          clearChiResultNode(this.upChiResultNode); 
+          this.upNode.getChildByName('zhuang').active = false;  
+          this.hideStatusNode(this.upStatusNode)  
 
 
           for (var i = 0; i < 4;i++){
@@ -223,6 +235,31 @@ cc.Class({
           this.hideRemainNumber();
          
 
+    },
+
+    hideStatusNode(node){
+        node.active = false;
+    },
+    showStatusNode(node){
+        node.active = true;
+    },
+
+    showAllStatusNode(){
+        this.myStatusNode.active = false;
+        this.leftStatusNode.active = false;
+        this.rightStatusNode.active = false;
+        this.upStatusNode.active = false;
+    },
+
+    setUserInfo(node,userInfo){
+        if (userInfo.userName){
+            node.getChildByName('userName').getComponent(cc.Label).string = userInfo.userName
+        }
+        if (userInfo.header){
+            cc.loader.load({url: userInfo.header, type: 'png'}, function (err, tex) {        
+                node.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
+            });
+        }
     },
 
     initUiData(){
@@ -252,11 +289,12 @@ cc.Class({
 
         //保存我的节点
           //初始化自己的牌
-        var myNode = this.node.getChildByName('my');
+        var myNode = this.myNode = this.node.getChildByName('my');
         this.myHoldsNode = myNode.getChildByName('holds');
         this.myHuasNode = myNode.getChildByName('huas');
         this.myFoldsNode = myNode.getChildByName('folds');
         this.myChiNode = myOpNode.getChildByName('chi');
+        this.myStatusNode = myNode.getChildByName('status');
         this.myChiListParentNode = myOpNode.getChildByName('chilist');
         this.myChiList1Node = this.myChiListParentNode.getChildByName('list1');
         this.myChiList2Node = this.myChiListParentNode.getChildByName('list2');
@@ -265,30 +303,33 @@ cc.Class({
 
 
         //保存左边的
-        var leftNode = this.node.getChildByName('left');
+        var leftNode = this.leftNode = this.node.getChildByName('left');
         this.leftChiResultNode = leftNode.getChildByName('chiresult');
         // console.log(LeftNode.children)
         this.leftHoldsNode = leftNode.getChildByName('holds');
         this.leftHuasNode = leftNode.getChildByName('huas');
         this.leftFoldsNode = leftNode.getChildByName('folds');
-
+        this.leftStatusNode = leftNode.getChildByName('status');
 
         //保存右边的
-        var rightNode = this.node.getChildByName('right');
+        var rightNode = this.rightNode = this.node.getChildByName('right');
         this.rightChiResultNode = rightNode.getChildByName('chiresult');
 
         this.rightHoldsNode = rightNode.getChildByName('holds');
         this.rightHuasNode = rightNode.getChildByName('huas');
         this.rightFoldsNode = rightNode.getChildByName('folds');
+        this.rightStatusNode = rightNode.getChildByName('status');
 
 
         //保存上面的
-        var upNode = this.node.getChildByName('up');
+        var upNode = this.upNode = this.node.getChildByName('up');
         this.upChiResultNode = upNode.getChildByName('chiresult');
 
         this.upHoldsNode = upNode.getChildByName('holds');
         this.upHuasNode = upNode.getChildByName('huas');
         this.upFoldsNode = upNode.getChildByName('folds');
+        this.upStatusNode = upNode.getChildByName('status');
+
 
         this.myHuResultShowNode = this.node.getChildByName('myHuResultShow');
         this.leftHuResultShowNode = this.node.getChildByName('leftHuResultShow');
@@ -434,6 +475,14 @@ cc.Class({
         this.remainNumberNode.active = false;
     },
 
+    showNode(node){
+        node.active = true;
+    },
+
+    hideNode(node){
+        node.active = false;
+    },
+
     initHander(){
 
        /*
@@ -480,6 +529,45 @@ cc.Class({
 
        // 未开始的时候，更新各个用户的状态
        this.node.on('update_pepole_status',(data)=>{
+  
+            if (data.gameStart) return;
+            var userId = cc.vv.userId;
+            var seats = data.seats;
+            var players = data.players;
+
+            var seatUserIds = seats.map((s)=>{return s.userId});
+            var playerUserIds = players.map((s)=>{return s.userId});
+            var myIndex = -1;
+            if (playerUserIds.indexOf(userId) !== -1){
+                myIndex = seats.length;
+                this.showNode(this.readyBtn);
+                this.hideNode(this.unReadyBtn);
+            }else if (seatUserIds.indexOf(userId) !== -1){
+                myIndex = seatUserIds.indexOf(userId)
+                this.showNode(this.unReadyBtn);
+                this.hideNode(this.readyBtn);
+            }
+
+            this.hideNode(this.myStatusNode)
+            this.hideNode(this.leftStatusNode)
+            this.hideNode(this.rightStatusNode)
+            this.hideNode(this.upStatusNode)
+            for (var i = 0; i < seats.length;i++){
+                var userInfo = seats[i].userInfo;
+                if (this.checkIsMySelfIndex(myIndex,i)){
+                    this.setUserInfo(this.myStatusNode,userInfo);
+                    this.showNode(this.myStatusNode);
+                }else if ( this.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
+                    this.setUserInfo(this.leftStatusNode,userInfo)
+                    this.showNode(this.leftStatusNode);
+                }else if (this.checkIsRightIndex(myIndex,i,seats)){ //右边的牌
+                    this.setUserInfo(this.rightStatusNode,userInfo)
+                    this.showNode(this.rightStatusNode);
+                }else if (this.checkIsUpIndex(myIndex,i,seats)){ //对面的牌
+                    this.setUserInfo(this.upStatusNode,userInfo)
+                    this.showNode(this.upStatusNode);
+                }  
+            }
 
        })
 
@@ -492,7 +580,7 @@ cc.Class({
        this.node.on('update_table',(data)=>{
          // 更新table
          var seats = data.seats;
-         this.setTimeCircle(data.turn);
+         this.setTimeShowAccordingTurn(data.turn);
         this.setTables(seats);
         this.setRemainNumber(data)
        })
@@ -530,6 +618,7 @@ cc.Class({
         this.node.on('game_start',(data) => {
             this.readyBtn.active = false;
             this.unReadyBtn.active = false;
+            this.showAllStatusNode();
 
             var userId = cc.vv.userId;
             var seats = data.seats;
@@ -566,21 +655,20 @@ cc.Class({
            };
            cc.vv.roomId = data.roomId;
             for (var i = 0; i < seats.length;i++){
-                if (i  === myIndex){
+                if (this.checkIsMySelfIndex(myIndex,i)){
                     this.gameInfo.myIndex = i;
-                }else if ( i < myIndex && Math.abs(i-myIndex) === 1){ //左边的牌
+                }else if ( this.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
                     this.gameInfo.leftIndex = i;
-                }else if (i > myIndex && Math.abs(i-myIndex) === 1){ //右边的牌
+                }else if (this.checkIsRightIndex(myIndex,i,seats)){ //右边的牌
                     this.gameInfo.rightIndex = i;
-                }else if (i > myIndex && Math.abs(i-myIndex) === 2){ //对面的牌
+                }else if (this.checkIsUpIndex(myIndex,i,seats)){ //对面的牌
                     this.gameInfo.upIndex = i;
                 } 
             }
 
             this.setTables(seats);
 
-            this.setTimeCircle(data.trun);
-            this.setFengData(data.turn);
+            this.setFengData(data.zhuangIndex);
             this.showRemainNumberNode();
             this.setRemainNumber(data);
         })
@@ -588,8 +676,89 @@ cc.Class({
        
     },
 
-    setFengData(turn){
+    checkIsMySelfIndex(myIndex,compareIndex){
+        return myIndex === compareIndex;
+    },
+
+    checkIsLeftIndex(myIndex,compareIndex,seats){
+        var ret = false;
+        if (myIndex > compareIndex && Math.abs(myIndex -compareIndex) === 1)   ret = true;
+        if (compareIndex === seats.length - 1 && myIndex === 0) ret = true;
+        return ret;
+    },
+
+    checkIsRightIndex(myIndex,compareIndex,seats){
+        if (myIndex < compareIndex && Math.abs(myIndex -compareIndex) === 1)   ret = true;
+        if (myIndex === seats.length - 1 && compareIndex === 0) ret = true;
+        return ret; 
+    },
+
+    checkIsUpIndex(myIndex,compareIndex,seats){
+        if (Math.abs(myIndex - compareIndex) === 2) return true;
+        return false;
+    },
+
+    setFengData(zhuangIndex){
         //设置东南西北
+        var gameInfo = this.gameInfo;
+        
+        console.log('zhuangInex',zhuangIndex,gameInfo)
+
+      // this.timeBackNode.setRotation(0); //这时候我是北风家
+       this.timeBackNode.angle = 0;
+       if (zhuangIndex === gameInfo.myIndex){ //变成东风家
+        this.myNode.getChildByName('zhuang').active = true;
+        this.timeBackNode.angle = -90;
+        gameInfo.myFengIndex = 0;
+        gameInfo.rightFengIndex = 1;
+        gameInfo.upFengIndex = 2;
+        gameInfo.leftFengIndex = 3;
+       }else if (zhuangIndex === gameInfo.leftIndex){
+        this.timeBackNode.angle = 180;
+        this.leftNode.getChildByName('zhuang').active = true;
+        gameInfo.myFengIndex = 1;
+        gameInfo.rightFengIndex = 2;
+        gameInfo.upFengIndex = 3;
+        gameInfo.leftFengIndex = 0;
+       }
+       else if (zhuangIndex === gameInfo.upIndex){
+        this.timeBackNode.angle = 90;
+        this.upNode.getChildByName('zhuang').active = true;
+        gameInfo.myFengIndex = 2;
+        gameInfo.rightFengIndex = 3;
+        gameInfo.upFengIndex = 0;
+        gameInfo.leftFengIndex = 1;
+       }else if (zhuangIndex === gameInfo.rightIndex){
+        this.rightNode.getChildByName('zhuang').active = true;
+        gameInfo.myFengIndex = 3;
+        gameInfo.rightFengIndex = 0;
+        gameInfo.upFengIndex = 1;
+        gameInfo.leftFengIndex = 2;
+       }
+
+      this.setTimeShowAccordingTurn(zhuangIndex)
+
+    },
+
+    setTimeShowAccordingTurn(turn){
+        var gameInfo = this.gameInfo;
+        this.hideCircle();
+        if (gameInfo.myIndex === turn){
+            this.timeBackNode.children[gameInfo.myFengIndex].active = true;
+        }
+        
+        if (gameInfo.leftIndex === turn){
+            this.timeBackNode.children[gameInfo.leftFengIndex].active = true;
+        }
+        
+        if (gameInfo.rightIndex === turn){
+            this.timeBackNode.children[gameInfo.rightFengIndex].active = true;
+        }
+        
+        if (gameInfo.upIndex === turn){
+            this.timeBackNode.children[gameInfo.upFengIndex].active = true;
+        }
+        gameInfo.turn = turn;
 
     },
 
@@ -641,16 +810,6 @@ cc.Class({
         var index = parseInt(param);
         cc.vv.net.send('chi',{userId:cc.vv.userId,roomId:this.gameInfo.roomId,chiIndex:index})
     },
-
-    setTimeCircle(turn){
-        var turnIndex = this.gameInfo.turn;
-        if (turnIndex === turn) return;
-        this.hideCircle();
-        this.showOneCircle(turnIndex)
-        this.gameInfo.turnIndex = turn;
-
-    },
-
 
     getHoldsNodeByIndex(index){
         var gameInfo = this.gameInfo;
@@ -901,7 +1060,7 @@ cc.Class({
     },
    
     onClickReady(){
-       cc.vv.net.send('set_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId});
+       cc.vv.net.send('set_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId,userInfo:cc.vv.userInfo});
       this.readyBtn.active = false;
       this.unReadyBtn.active = true;
     },

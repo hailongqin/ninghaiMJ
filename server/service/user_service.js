@@ -68,3 +68,30 @@ router.post('/create_user', function(req, res, next){
 
     }
 })
+
+router.post('/get_user_info',function(req,res,next){
+    var body = req.body;
+    var userId = body.userId;
+    if (!userId){
+        Log.error('get_user_info userid is null');
+        res.json({code:-1,message:'参数错误'})
+        return
+    }
+
+    
+    userModel.findOne({userId})
+    .select("-_id header userName")
+    .exec((err,ret)=> {
+        if (err){
+            Log.error('post get_user_info read db is err',err)
+            res.json({code:-1,message:"读取数据错误"});
+            return;
+        }
+
+        res.json({
+            code:0,data:ret
+        })
+    })
+})
+
+module.exports = router;

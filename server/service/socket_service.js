@@ -57,11 +57,13 @@ exports.start = function(){
                 var playersUserIds = players.map((s)=>{return s.userId});
                 if (playersUserIds.indexOf(userId) !== -1){ //已经是看客
                     User.bindUserAndSocket(userId,socket);
+                    Game.updatePepoleStatus(roomInfo);
                     return;
                 }
 
                 players.push({
                     userId,
+                    userInfo:data.userInfo || {}
                 })
 
                 User.bindUserAndSocket(userId,socket);
@@ -105,6 +107,7 @@ exports.start = function(){
 
                 var seatOne = {
                     userId:userId,
+                    userInfo:data.userInfo|| {},
                     onLine:true,
                 }
                 seats.push(seatOne);
