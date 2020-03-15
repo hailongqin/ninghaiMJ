@@ -12,6 +12,7 @@ class Game {
 
     //开始一局新的
     begin(roomInfo){
+        roomInfo.process = 'start';
         if (roomInfo.count === 0){ //如果是第一局
             roomInfo.zhuangIndex = 0;
         }else{

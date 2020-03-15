@@ -89,6 +89,7 @@ router.post('/create_room', function(req, res, next){
                         zhuangIndex:0, //庄家
                         turn:0, //轮到第几个出牌
                         count:0,//第几局了
+                        process:'end'
 
                     }
                     roomModel.create(condition,  (err, doc) => {

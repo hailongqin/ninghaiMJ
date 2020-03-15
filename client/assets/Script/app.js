@@ -144,10 +144,24 @@ cc.Class({
         this.myTingPaiNode.active = false;
     },
 
+    hideReadySign(node){
+       node.getChildByName('ready_sign').active = false;
+    },
+    showReadySign(node){
+      node.getChildByName('ready_sign').active = true;
+    },
+
+    hideAllReadySign(){
+        var nodes = ['myStatusNode','leftStatusNode','rightStatusNode','upStatusNode']
+            nodes.forEach((n)=>{
+                this.hideReadySign(this[n]);
+            })
+    },
+
     clearTable(){
           //吃的选择
       
-  
+          this.hideAllReadySign();
           this.hideOpNode();
           this.hideChiList();
 
@@ -199,28 +213,28 @@ cc.Class({
           clearHuasNode(this.myHuasNode);
           clearChiResultNode(this.myChiResultNode);
           this.myNode.getChildByName('zhuang').active = false;
-          this.hideStatusNode(this.myStatusNode)
+ 
 
           clearHoldsNode(this.leftHoldsNode);
           clearFoldsNode(this.leftFoldsNode);
           clearHuasNode(this.leftHuasNode);
           clearChiResultNode(this.leftChiResultNode);
           this.leftNode.getChildByName('zhuang').active = false;
-          this.hideStatusNode(this.leftStatusNode)
+  
 
           clearHoldsNode(this.rightHoldsNode);
           clearFoldsNode(this.rightFoldsNode);
           clearHuasNode(this.rightHuasNode);
           clearChiResultNode(this.rightChiResultNode);  
           this.rightNode.getChildByName('zhuang').active = false;   
-          this.hideStatusNode(this.rightStatusNode)
+
 
           clearHoldsNode(this.upHoldsNode);
           clearFoldsNode(this.upFoldsNode);
           clearHuasNode(this.upHuasNode);
           clearChiResultNode(this.upChiResultNode); 
           this.upNode.getChildByName('zhuang').active = false;  
-          this.hideStatusNode(this.upStatusNode)  
+
 
 
           for (var i = 0; i < 4;i++){
@@ -530,7 +544,7 @@ cc.Class({
        // 未开始的时候，更新各个用户的状态
        this.node.on('update_pepole_status',(data)=>{
   
-            if (data.gameStart) return;
+            if (data.gameStart && data.process !== 'end') return;
             var userId = cc.vv.userId;
             var seats = data.seats;
             var players = data.players;
@@ -557,15 +571,19 @@ cc.Class({
                 if (this.checkIsMySelfIndex(myIndex,i)){
                     this.setUserInfo(this.myStatusNode,userInfo);
                     this.showNode(this.myStatusNode);
-                }else if ( this.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
+                    this.showReadySign(this.myStatusNode)
+                }else if (this.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
                     this.setUserInfo(this.leftStatusNode,userInfo)
                     this.showNode(this.leftStatusNode);
+                    this.showReadySign(this.leftStatusNode)
                 }else if (this.checkIsRightIndex(myIndex,i,seats)){ //右边的牌
                     this.setUserInfo(this.rightStatusNode,userInfo)
                     this.showNode(this.rightStatusNode);
+                    this.showReadySign(this.rightStatusNode)
                 }else if (this.checkIsUpIndex(myIndex,i,seats)){ //对面的牌
                     this.setUserInfo(this.upStatusNode,userInfo)
                     this.showNode(this.upStatusNode);
+                    this.showReadySign(this.upStatusNode)
                 }  
             }
 
@@ -618,7 +636,7 @@ cc.Class({
         this.node.on('game_start',(data) => {
             this.readyBtn.active = false;
             this.unReadyBtn.active = false;
-            this.showAllStatusNode();
+            this.hideAllReadySign();
 
             var userId = cc.vv.userId;
             var seats = data.seats;
@@ -683,13 +701,13 @@ cc.Class({
     checkIsLeftIndex(myIndex,compareIndex,seats){
         var ret = false;
         if (myIndex > compareIndex && Math.abs(myIndex -compareIndex) === 1)   ret = true;
-        if (compareIndex === seats.length - 1 && myIndex === 0) ret = true;
+        if (compareIndex === seats.length - 1 && myIndex === 0 && seats.length === 4) ret = true;
         return ret;
     },
 
     checkIsRightIndex(myIndex,compareIndex,seats){
         if (myIndex < compareIndex && Math.abs(myIndex -compareIndex) === 1)   ret = true;
-        if (myIndex === seats.length - 1 && compareIndex === 0) ret = true;
+        if (myIndex === seats.length - 1 && compareIndex === 0 && seats.length === 4) ret = true;
         return ret; 
     },
 
