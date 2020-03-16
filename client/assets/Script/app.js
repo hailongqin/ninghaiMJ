@@ -89,6 +89,7 @@ cc.Class({
    
     init(){
         console.log(cc.vv);
+        return;
 
         this.initUiData();
      
@@ -1105,7 +1106,10 @@ cc.Class({
     },
 
      onLoad () {
-        this.init();
+         var comp = this.node.getChildByName('my').getChildByName('holds').children[0].getComponent('pai');
+         console.log('comp',comp)
+         comp.setPaiSpriteFrame(1);
+      //  this.init();
      },
 
      onDestroy(){

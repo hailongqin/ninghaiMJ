@@ -1,5 +1,9 @@
 {
-  "excludeScenes": [],
+  "excludeScenes": [
+    "96e3c3b4-d2f0-4136-a799-9eacee9e543b",
+    "2e7e354c-af69-40c1-9c71-457ee63dc378",
+    "7cc9d1f7-dca2-4c2a-8f5b-9a81ff3363f7"
+  ],
   "orientation": {
     "landscapeLeft": true,
     "landscapeRight": true,
@@ -7,11 +11,11 @@
     "upsideDown": false
   },
   "packageName": "org.cocos2d.helloworld",
-  "startScene": "7cc9d1f7-dca2-4c2a-8f5b-9a81ff3363f7",
+  "startScene": "8dcf6bcf-a3e3-42a4-a45b-66f59f6cbcee",
   "title": "hello_world",
   "webOrientation": "landscape",
   "includeSDKBox": false,
-  "inlineSpriteFrames": true,
+  "inlineSpriteFrames": false,
   "inlineSpriteFrames_native": true,
   "mergeStartScene": false,
   "optimizeHotUpdate": false,
