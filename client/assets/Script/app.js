@@ -1079,9 +1079,9 @@ cc.Class({
     },
    
     onClickReady(){
-        // var comp = this.node.getChildByName('my').getChildByName('holds').children[0].getComponent('pai');
-        // console.log('comp',comp)
-        // comp.setPaiSpriteFrame(1);
+        var comp = this.node.getChildByName('my').getChildByName('holds').children[0].getComponent('pai');
+        console.log('comp',comp)
+        comp.setPaiSpriteFrame(1);
         return;
        cc.vv.net.send('set_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId,userInfo:cc.vv.userInfo});
       this.readyBtn.active = false;
