@@ -1079,6 +1079,10 @@ cc.Class({
     },
    
     onClickReady(){
+        // var comp = this.node.getChildByName('my').getChildByName('holds').children[0].getComponent('pai');
+        // console.log('comp',comp)
+        // comp.setPaiSpriteFrame(1);
+        return;
        cc.vv.net.send('set_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId,userInfo:cc.vv.userInfo});
       this.readyBtn.active = false;
       this.unReadyBtn.active = true;
@@ -1106,18 +1110,16 @@ cc.Class({
     },
 
      onLoad () {
-         var comp = this.node.getChildByName('my').getChildByName('holds').children[0].getComponent('pai');
-         console.log('comp',comp)
-         comp.setPaiSpriteFrame(1);
+       
       //  this.init();
      },
 
      onDestroy(){
-         this.unInit();
+        // this.unInit();
      },
 
     start () {
-
+      
     },
 
     // update (dt) {},

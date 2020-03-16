@@ -43,9 +43,9 @@ cc.Class({
     },
 
     setPaiSpriteFrame(pai){
-        if (this.node.children.length){
-            this.node.children[0].getComponent(cc.Sprite).spriteFrame = this.paiAltas.getSpriteFrame(pai);
-        }
+        // if (this.node.children.length){
+        //     this.node.children[0].getComponent(cc.Sprite).spriteFrame = this.paiAltas.getSpriteFrame(pai);
+        // }
     }
 
     // update (dt) {},

@@ -55,8 +55,8 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        -13.046,
-        146.558,
+        216.126,
+        34.791,
         0,
         0,
         0,
@@ -231,6 +231,9 @@
       "__id__": 1
     },
     "_enabled": true,
+    "paiAltas": {
+      "__uuid__": "03598713-5f28-4b0e-89ed-1bb38ed7c403"
+    },
     "_id": ""
   },
   {

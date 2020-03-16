@@ -15,7 +15,7 @@
   "title": "hello_world",
   "webOrientation": "landscape",
   "includeSDKBox": false,
-  "inlineSpriteFrames": false,
+  "inlineSpriteFrames": true,
   "inlineSpriteFrames_native": true,
   "mergeStartScene": false,
   "optimizeHotUpdate": false,
