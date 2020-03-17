@@ -42,18 +42,21 @@ cc.Class({
         for (var i = 0; i < seats.length;i++){
             seat = seats[i];
             node = '';
-            if (cc.vv.Common.checkIsMySelfIndex(myIndex,i,seats)) selected.push(0);     
-            if (cc.vv.Common.checkIsLeftIndex(myIndex,i,seats))   selected.push(3)      
-            if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)) selected.push(1)  
-            if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats))   selected.push(2)  
+            if (cc.vv.Common.checkIsMySelfIndex(myIndex,i,seats)) selected.push({index:0,seat:seat});     
+            if (cc.vv.Common.checkIsLeftIndex(myIndex,i,seats))   selected.push({index:3,seat:seat})      
+            if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)) selected.push({index:1,seat:seat})  
+            if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats))   selected.push({index:2,seat:seat})  
         }
 
+        var indexLists = selected.map((s)=>{return s.index})
+
         for (var i = 0; i < this.node.children.length;i++){
-            if (selected.indexOf(i) !== -1){
+            var index = indexLists.indexOf(i);
+            if (index !== -1){
                 node = this.node.children[i];
                 node.active = true;
-                this.setUserInfo(node,seat.userInfo);
-                this.setReadySign(node,roomInfo,seat);
+                this.setUserInfo(node,selected[index].seat.userInfo);
+                this.setReadySign(node,roomInfo,selected[index].seat);
             }else{
                 this.node.children[i].active = false;
             }

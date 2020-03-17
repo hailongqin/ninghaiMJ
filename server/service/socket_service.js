@@ -534,6 +534,7 @@ exports.start = function(){
                 var ret = Game.checkOtherSeatHasOp(seats,index)
                 // 所有人都没有操作
                 if (!ret){
+                    Game.clearOperation();
                      if (fromTurn === index){ //如果这个通知是来自自己的(胡，杠)
                         Game.notifyChupai(roomInfo) //通知出牌
                         return

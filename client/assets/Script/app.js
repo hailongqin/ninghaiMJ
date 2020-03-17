@@ -329,6 +329,7 @@ cc.Class({
 
        this.node.on('clear_op_notify',(data)=>{
             this.gameInfo.op = {};
+            this.opNode.getComponent('operation').hide();
        })
        // 操作通知
        this.node.on('op_notify',(data)=>{
@@ -560,9 +561,9 @@ cc.Class({
 
 
     setCommonHolds(holdsNode,holds,index){
-        console.log(holdsNode,index)
+       
         function setPositionPai(i,pai){
-            console.log(i,pai)
+     
             holdsNode.children[i].getComponent('pai').setPaiSpriteFrame(pai);
             holdsNode.children[i].pai = pai;
         }
@@ -634,23 +635,27 @@ cc.Class({
             var type = chis[i].type;
             var pai = chis[i].pai;
             var resultNode = chiRootResultNode.children[i];
-
+            var j = 0;
             if (type === 'chi'){
                 var list = chis[i].list;
-                for (var j = 0; j < list.length;j++){
-                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
+                for (; j < list.length;j++){
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(list[j]);
                 }
             }else if (type === 'peng'){
-                for (var j = 0; j < 3;j++){
-                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
+                for (; j < 3;j++){
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(list[j]);
                 }
             }
 
             else if (type === 'gang'){
-                for (var j = 0; j < 4;j++){
-                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
+                for (; j < 4;j++){
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(list[j]);
                 }
             }
+            for (;j<4;j++){
+                resultNode.children[j].getComponent('pai').setPaiSpriteFrame(null);
+            }
+            resultNode.active = true;
 
         }
 
