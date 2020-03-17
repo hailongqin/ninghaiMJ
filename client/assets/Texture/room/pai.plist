@@ -544,6 +544,21 @@
                 <key>textureRotated</key>
                 <false/>
             </dict>
+            <key>48.png</key>
+            <dict>
+                <key>aliases</key>
+                <array/>
+                <key>spriteOffset</key>
+                <string>{0,0}</string>
+                <key>spriteSize</key>
+                <string>{45,70}</string>
+                <key>spriteSourceSize</key>
+                <string>{45,70}</string>
+                <key>textureRect</key>
+                <string>{{45,323},{45,70}}</string>
+                <key>textureRotated</key>
+                <false/>
+            </dict>
             <key>5.png</key>
             <dict>
                 <key>aliases</key>
@@ -709,21 +724,6 @@
                 <key>textureRotated</key>
                 <false/>
             </dict>
-            <key>zhu.png</key>
-            <dict>
-                <key>aliases</key>
-                <array/>
-                <key>spriteOffset</key>
-                <string>{0,0}</string>
-                <key>spriteSize</key>
-                <string>{45,70}</string>
-                <key>spriteSourceSize</key>
-                <string>{45,70}</string>
-                <key>textureRect</key>
-                <string>{{45,323},{45,70}}</string>
-                <key>textureRotated</key>
-                <false/>
-            </dict>
         </dict>
         <key>metadata</key>
         <dict>
@@ -738,7 +738,7 @@
             <key>size</key>
             <string>{248,735}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:adef4576810ec8e422c36c48dafd1804:4ba8ad4428ce239037102bfdf05b33d6:a0fcd5292797d58aa6b83b0527728e34$</string>
+            <string>$TexturePacker:SmartUpdate:e59c56fe57d523abcd70275f8cf71877:4259814c177f4f38882d89a5d3330e07:a0fcd5292797d58aa6b83b0527728e34$</string>
             <key>textureFileName</key>
             <string>pai.png</string>
         </dict>

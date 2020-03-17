@@ -24,46 +24,17 @@ cc.Class({
         //         this._bar = value;
         //     }
         // },
-
-        paiAltas:{
-            default:null,
-            type:cc.SpriteAtlas
-        }
-
     },
 
     // LIFE-CYCLE CALLBACKS:
 
-    // onLoad () {
-        
-    //  },
+    // onLoad () {},
 
     start () {
 
     },
 
-    setPaiSpriteFrame(pai){
-        if (pai === null || pai === undefined){
-            this.node.active = false;
-            return
-        }
-
-
-        if (this.node.children.length){
-            this.node.children[0].getComponent(cc.Sprite).spriteFrame = this.paiAltas.getSpriteFrame(pai);
-        }
-        this.node.active = true;
-        this.node.pai = pai
-    },
-
-    clickChuPai(){
-        console.log(this.node.pai);
-        cc.vv.net.send('chupai',{pai:this.node.pai});
-    },
-
-    hide(){
-        this.node.active = false;
-    }
+    
 
     // update (dt) {},
 });

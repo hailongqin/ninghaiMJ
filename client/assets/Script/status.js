@@ -34,21 +34,28 @@ cc.Class({
 
     },
 
-    setStatusData(myIndex,roomInfo,includingMySelf = false){
+    setStatusData(myIndex,roomInfo){
         var seat = ''
         var seats = roomInfo.seats;
-        var node = ''
+        var node = '';
+        var selected = [];
         for (var i = 0; i < seats.length;i++){
             seat = seats[i];
             node = '';
-            if (cc.vv.Common.checkIsMySelfIndex(myIndex,i) && includingMySelf) node = this.node.children[0]     
-            if (cc.vv.Common.checkIsLeftIndex(myIndex,i))  node = this.node.children[3]          
-            if (cc.vv.Common.checkIsRightIndex(myIndex,i)) node = this.node.children[1]
-            if (cc.vv.Common.checkIsUpIndex(myIndex,i))  node = this.node.children[2]
+            if (cc.vv.Common.checkIsMySelfIndex(myIndex,i,seats)) selected.push(0);     
+            if (cc.vv.Common.checkIsLeftIndex(myIndex,i,seats))   selected.push(3)      
+            if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)) selected.push(1)  
+            if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats))   selected.push(2)  
+        }
 
-            if (node){
+        for (var i = 0; i < this.node.children.length;i++){
+            if (selected.indexOf(i) !== -1){
+                node = this.node.children[i];
+                node.active = true;
                 this.setUserInfo(node,seat.userInfo);
-                this.setReadySign(node,roomInfo,seat.userInfo);
+                this.setReadySign(node,roomInfo,seat);
+            }else{
+                this.node.children[i].active = false;
             }
         }
     },
@@ -64,13 +71,21 @@ cc.Class({
         }
     },
 
-    setReadySign(node,roomInfo,userInfo){
-        if (!roomInfo.gameStart || roomInfo.gameStart && roomInfo.process === 'end') {
+    setReadySign(node,roomInfo,seat){
+        if ((!roomInfo.gameStart || (roomInfo.gameStart && roomInfo.process === 'end')) && seat.ready) {
             //游戏未开始或者这轮已经结束
             node.getChildByName('ready_sign').active = true;
+        }else{
+            node.getChildByName('ready_sign').active = false;
         }
 
         return;
+    },
+
+    clearAllReadySign(){
+        for (var i = 0; i < this.node.children.length;i++){
+            this.node.children[i].getChildByName('ready_sign').active = false;
+        }
     },
 
 

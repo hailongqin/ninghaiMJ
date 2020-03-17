@@ -42,6 +42,7 @@ cc.Class({
     },
 
     showOperation(op){
+        var index = 2;
         var keys = [
             {
                 action:'canChi',
@@ -50,13 +51,46 @@ cc.Class({
 
         keys.forEach((k)=>{
             if (op[k.action]){
-                this['myOpNode'+ index].active = true;   
-                this['myOpNode'+ index].opType = k.type
-                this['myOpNode'+ index].getComponent(cc.Sprite).spriteFrame = this.actionAltas.getSpriteFrame(k.action);
+                var childNode = this.node.getChildByName('op'+index);
+                childNode.active = true;   
+                childNode.opType = k.type
+                childNode.getComponent(cc.Sprite).spriteFrame = this.actionAltas.getSpriteFrame(k.action);
                 index++;
             }
         })
         this.op = op;
+    },
+
+    onClickOp(node){
+        console.log(node.type);
+        var op = this.op;
+        if (!node.opType){
+            console.log('error')
+            return;
+        }
+
+        if (node.opType === 'guo'){
+            cc.vv.net.send('guo',{fromTurn:op.fromTurn})
+        }
+
+        if (node.opType === 'chi'){
+            if (!op.canChi) return;
+            var pai = op.pai;
+            if (op.chiList.length > 1){
+                for (var key in op.chiList){
+                    this.setOneChiList(key,op.chiList[key],pai);
+                }
+            }else{
+                cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0})
+            }
+
+            return;
+        }
+
+        if (!op.canHu && !op.canChi && !op.canPeng && !op.canGang) return;
+        cc.vv.net.send(node.opType,{roomId:this.gameInfo.roomId,userId:cc.vv.userId,fromTurn:op.fromTurn})
+
+        this.hideOpNode();
     },
 
     start () {
@@ -78,7 +112,7 @@ cc.Class({
         console.log('clickchiitem',param);
         if (!this.op || !this.op.canChi) return
         var index = parseInt(param);
-        cc.vv.net.send('chi',{userId:cc.vv.userId,roomId:cc.vv.roomId,chiIndex:index})
+        cc.vv.net.send('chi',{chiIndex:index})
     },
 
     clearOp(){
@@ -112,10 +146,7 @@ cc.Class({
             }
 
             if (!op.canHu && !op.canChi && !op.canPeng && !op.canGang) return;
-            cc.vv.net.send(node.opType,{roomId:this.gameInfo.roomId,userId:cc.vv.userId,fromTurn:op.fromTurn})
-
-            this.hideOpNode();
-
+            cc.vv.net.send(node.opType,{fromTurn:op.fromTurn})
     },
 
     setOneChiList(index,list,pai){

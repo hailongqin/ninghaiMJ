@@ -1,5 +1,5 @@
 
-var URL = 'http://182.92.76.77:4000';
+var URL = 'http://192.168.0.101:4000';
 
 function sendRequest(path, data, successCallback, failCallback) {
     var xhr = cc.loader.getXMLHttpRequest();

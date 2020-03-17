@@ -76,6 +76,10 @@ cc.Class({
 
         cc.vv.net = require('net');
 
+        var Common = require('common');
+        cc.vv.Common = new Common();
+        cc.vv.User = require('user');
+
         var param = this.urlParse();
 
         if (cc.vv.storage.getStorage('userId')){

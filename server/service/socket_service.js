@@ -107,8 +107,9 @@ exports.start = function(){
 
                 var seatOne = {
                     userId:userId,
-                    userInfo:data.userInfo|| {},
+                    userInfo:data && data.userInfo?data.userInfo:{},
                     onLine:true,
+                    ready:true
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -127,7 +128,7 @@ exports.start = function(){
 
         });
 
-        socket.on('cancel_ready', function (data) {
+        socket.on('cancel_ready', function () {
             var roomId = socket.roomId;
             var userId = socket.userId;
 
@@ -149,15 +150,18 @@ exports.start = function(){
 
                 var seats = roomInfo.seats;//坐下的人
                 var players = roomInfo.players;
+                var index = Game.getIndexByUserId(seats,userId);
+                if (index !== null && index !== undefined){
+                    var seat = seats[index];
+                    roomInfo.seats = seats.filter((item) => {
+                        return item.userId !== userId
+                    })
+    
+                    players.push(seat);
+                    Game.updatePepoleStatus(roomInfo);
+                }
 
-                roomInfo.seats = seats.filter((item) => {
-                    return item.userId !== userId
-                })
-
-                players.push({userId})
-
-                socket.emit('cancel_ready_result',{code:0});
-                Room.broacastInRoom('one_cancel_ready',roomId,roomInfo);
+             
             })
         })
 

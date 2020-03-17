@@ -76,9 +76,23 @@ cc.Class({
             type:cc.Label
         },
 
-        remainNumber:{
+        remainNumberNode:{
             default:null,
-            type:cc.Label
+            type:cc.Node
+        },
+
+        myTingPaiNode:{
+            default:null,
+            type:cc.Node
+        },
+
+        statusNode:{
+            default:null,
+            type:cc.Node
+        },
+        opNode:{
+            default:null,
+            type:cc.Node
         },
 
         gameInfo:null
@@ -122,14 +136,37 @@ cc.Class({
 
    
 
+    clearOperationNode(){
+      this.node.getChildByName('op').getComponent('operation').init();  
+    },
+
     showTingPaiNode(){
         this.myTingPaiNode.active = true;
     },
 
-
-    clearOperationNode(){
-      this.node.getChildByName('op').getComponent('operation').init();  
+    hideTingPaiNode(){
+        this.myTingPaiNode.active = false;
     },
+    setRemainNumber(data){
+        this.remainNumberNode.children[0].getComponent(cc.Label).string = data.mjLists.length;
+    },
+
+    showRemainNumberNode(){
+        this.remainNumberNode.active = true;
+    },
+
+    hideRemainNumber(){
+        this.remainNumberNode.active = false;
+    },
+
+    showNode(node){
+      node.active = true;  
+    },
+
+    hideNode(node){
+        node.active = false
+    },
+
 
     clearTable(){
           this.clearOperationNode();
@@ -138,14 +175,16 @@ cc.Class({
 
 
           function hidePaiNode(node){
+              console.log(node);
             for(var i = 0; i < node.children.length; ++i){
                  node.children[i].getComponent('pai').hide();
              }  
           }
 
           function hideChiResultNode(node){
+              console.log(node)
             for(var i = 0; i < node.children.length; ++i){
-                this.hideNode(node.children[i]);
+                node.children[i].active = false;
             }
           }
 
@@ -166,9 +205,7 @@ cc.Class({
 
     },
 
-    initUiData(){
- 
-
+    initEveryNode(){
         //保存我的节
           //初始化自己的牌
         var myNode = this.myNode = this.node.getChildByName('my');
@@ -202,29 +239,9 @@ cc.Class({
         this.upHuasNode = upNode.getChildByName('huas');
         this.upFoldsNode = upNode.getChildByName('folds');
 
-
-        this.myTingPaiNode = this.node.getChildByName('tingpai');
-        this.myTingPaiListNode = this.myTingPaiNode.getChildByName('tNode');
-
-        
-        this.remainNumberNode = this.node.getChildByName('remainNumber');
-
         this.clearTable();
       
     },
-
-    setRemainNumber(data){
-        this.remainNumber.string = data.mjLists.length;
-    },
-
-    showRemainNumberNode(){
-        this.remainNumberNode.active = true;
-    },
-
-    hideRemainNumber(){
-        this.remainNumberNode.active = false;
-    },
-
 
 
     initHander(){
@@ -250,19 +267,7 @@ cc.Class({
        //值给个声音，或者显示文案
        this.node.on('op_action_notify',(data)=>{
             if (data.type === 'hu'){
-            //    this.clearTable();
-            console.log('type is hu',data.index);
-            var seats = data.roomInfo.seats;
-            this.setCommonHuShowAction(data.index);
-            for (var i = 0; i < seats.length;i++){
-                var holdsNode = this.getHoldsNodeByIndex(i);
-                this.setCommonHolds(holdsNode,seats[i].holds,i,true);
-                this.setCommonFolds(seats[i].folds,i);
-            }
-
-            setTimeout(() => {
-                this.setResultModalShow(data.roomInfo);
-            }, 3*1000);
+                
             }
        })
 
@@ -273,10 +278,16 @@ cc.Class({
 
        // 未开始的时候，更新各个用户的状态
        this.node.on('update_pepole_status',(data)=>{
-  
-            if (data.gameStart && data.process !== 'end') return;
-            var userId = cc.vv.userId;
+
+            var gameStart = data.gameStart;
+            if (gameStart){
+                this.hideNode(this.readyBtn);
+                this.hideNode(this.unReadyBtn);
+            }
+
             var seats = data.seats;
+            var userId = cc.vv.userId;
+      
             var players = data.players;
 
             var seatUserIds = seats.map((s)=>{return s.userId});
@@ -284,15 +295,21 @@ cc.Class({
             var myIndex = -1;
             if (playerUserIds.indexOf(userId) !== -1){
                 myIndex = seats.length;
-                this.showNode(this.readyBtn);
-                this.hideNode(this.unReadyBtn);
+                if (!gameStart && data.conf.userCount !== seats.length){
+                    this.showNode(this.readyBtn);
+                    this.hideNode(this.unReadyBtn);
+                }
+ 
             }else if (seatUserIds.indexOf(userId) !== -1){
                 myIndex = seatUserIds.indexOf(userId)
-                this.showNode(this.unReadyBtn);
-                this.hideNode(this.readyBtn);
+                if (!gameStart){
+                    this.showNode(this.unReadyBtn);
+                    this.hideNode(this.readyBtn);
+                }
+     
             }
 
-            
+            this.statusNode.getComponent('status').setStatusData(myIndex,data);
 
        })
 
@@ -305,7 +322,7 @@ cc.Class({
        this.node.on('update_table',(data)=>{
          // 更新table
          var seats = data.seats;
-         this.setTimeShowAccordingTurn(data.turn);
+        //  this.setTimeShowAccordingTurn(data.turn);
         this.setTables(seats);
         this.setRemainNumber(data)
        })
@@ -315,25 +332,7 @@ cc.Class({
        })
        // 操作通知
        this.node.on('op_notify',(data)=>{
-        var op = data.op;
-        this.myOpNode1.active = true;
-        var index = 2;
-
-        var keys = [
-            {
-                action:'canChi',
-                type:'chi'
-            },{action:'canPeng',type:'peng'},{action:'canGang',type:'gang'},{action:"canHu",type:'hu'}];
-
-        keys.forEach((k)=>{
-            if (op[k.action]){
-                this['myOpNode'+ index].active = true;   
-                this['myOpNode'+ index].opType = k.type
-                this['myOpNode'+ index].getComponent(cc.Sprite).spriteFrame = this.actionAltas.getSpriteFrame(k.action);
-                index++;
-            }
-        })
-        this.gameInfo.op = op;
+        this.opNode.getComponent('operation').showOperation(data.op)
 
        })
             
@@ -341,7 +340,7 @@ cc.Class({
         this.node.on('game_start',(data) => {
             this.readyBtn.active = false;
             this.unReadyBtn.active = false;
-            this.hideAllReadySign();
+            this.statusNode.getComponent('status').clearAllReadySign();
 
             var userId = cc.vv.userId;
             var seats = data.seats;
@@ -378,13 +377,13 @@ cc.Class({
            };
            cc.vv.roomId = data.roomId;
             for (var i = 0; i < seats.length;i++){
-                if (this.checkIsMySelfIndex(myIndex,i)){
+                if (cc.vv.Common.checkIsMySelfIndex(myIndex,i)){
                     this.gameInfo.myIndex = i;
-                }else if ( this.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
+                }else if ( cc.vv.Common.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
                     this.gameInfo.leftIndex = i;
-                }else if (this.checkIsRightIndex(myIndex,i,seats)){ //右边的牌
+                }else if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)){ //右边的牌
                     this.gameInfo.rightIndex = i;
-                }else if (this.checkIsUpIndex(myIndex,i,seats)){ //对面的牌
+                }else if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats)){ //对面的牌
                     this.gameInfo.upIndex = i;
                 } 
             }
@@ -397,6 +396,14 @@ cc.Class({
        
     },
 
+    onClickReady(){
+        cc.vv.net.send('set_ready',{userInfo:cc.vv.userInfo});
+    },
+
+    onClickCancleReady(){
+        cc.vv.net.send('cancel_ready');
+    },
+
 
     setTables(seats){
         for (var i = 0; i < seats.length;i++){
@@ -407,10 +414,11 @@ cc.Class({
             var chis = seat.chis;
             var holdsNode = this.getHoldsNodeByIndex(i);
             var huasNode = this.getHuasNodeByIndex(i);
+            var foldsNode = this.getFoldsNodeByIndex(i);
             var chiRootResultNode = this.getChiResultNodeByIndex(i);
 
             this.setCommonHolds(holdsNode,holds,i);
-            this.setCommonFolds(folds,i);
+            this.setCommonFolds(foldsNode,folds,i);
             this.setCommonHuas(huasNode,huas,i);
             this.setCommonChiResults(chiRootResultNode,chis,i);
         }
@@ -551,10 +559,11 @@ cc.Class({
     },
 
 
-    setCommonHolds(holdsNode,holds,index,isHu = false){
-        var self = this;
+    setCommonHolds(holdsNode,holds,index){
+        console.log(holdsNode,index)
         function setPositionPai(i,pai){
-            holdsNode.children[i].getComponent(cc.Sprite).spriteFrame = isHu?self.getBottomSpriteFrameByIndex(index,pai) : self.getHoldSpriteFrameByIndex(index,pai)
+            console.log(i,pai)
+            holdsNode.children[i].getComponent('pai').setPaiSpriteFrame(pai);
             holdsNode.children[i].pai = pai;
         }
         var start = 1; //hold开始位置
@@ -563,7 +572,7 @@ cc.Class({
             start = 0;
             if (index === this.gameInfo.myIndex) this.hideTingPaiNode();
         }else{
-            holdsNode.children[0].getComponent(cc.Sprite).spriteFrame = null;
+            holdsNode.children[0].getComponent('pai').setPaiSpriteFrame(null)
             holdsNode.children[0].pai = null;
         }
    
@@ -574,53 +583,51 @@ cc.Class({
         }
 
         for (;start<maxHoldLength;start++){
-            holdsNode.children[start].getComponent(cc.Sprite).spriteFrame = null;
+            holdsNode.children[start].getComponent('pai').setPaiSpriteFrame(null);
             holdsNode.children[start].pai = null;
         }
         this.setGameInfoHoldsByIndex(holds,index)
 
     },
 
-    setCommonFolds(folds,index){
+    setCommonFolds(foldsNode,folds,index){
         var gameInfoFolds = this.getGameInfoFoldsByIndex(index);
-        var foldsNode = this.getFoldsNodeByIndex(index);
         var len = gameInfoFolds.length;
          console.log(this.gameInfo,gameInfoFolds,folds);
         if (folds.length === len) return;
         else if (folds.length < len){ //被吃了 
             console.log('被吃了',folds,len)
-            foldsNode.children[len - 1].getComponent(cc.Sprite).spriteFrame = null;
+            foldsNode.children[len - 1].getComponent('pai').setPaiSpriteFrame(null);
         }
         else{
             for (var i = len;i < folds.length;i++){
                 var pai = folds[i];
-                foldsNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
+                foldsNode.children[i].getComponent('pai').setPaiSpriteFrame(pai);
             }
         }
         this.setGameInfoFoldsByIndex(folds,index)
     },
-    setCommonHuas(huasNode,huas,index,forceAdd = false){
-        if (!forceAdd){
-            var gameInfoHuas = this.getGameInfoHuasByIndex(index);
-            if (huas.length === gameInfoHuas.length) return;
-        }
+    setCommonHuas(huasNode,huas,index){
+        var gameInfoHuas = this.getGameInfoHuasByIndex(index);
+        if (huas.length === gameInfoHuas.length) return;
       
         for (var i = 0; i < huas.length;i++){
             var pai = huas[i];
-            huasNode.children[i].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
+            huasNode.children[i].getComponent('pai').setPaiSpriteFrame(pai);
         }
         this.setGameInfoHuasByIndex(huas,index);
     },
 
 
-    setCommonChiResults(chiRootResultNode,chis,index,forceAdd = false){
+    setCommonChiResults(chiRootResultNode,chis,index){
 
         var base = 0;
-        if (!forceAdd){
-            var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
-            if (gameInfoChiResult.length === chis.length) return;
-             base = chis.length - gameInfoChiResult.length - 1;
-        }
+    
+        var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
+        if (gameInfoChiResult.length === chis.length) return;
+        
+        base = chis.length - gameInfoChiResult.length - 1;
+       
 
         for (var i = base;i < chis.length;i++){
 
@@ -631,17 +638,17 @@ cc.Class({
             if (type === 'chi'){
                 var list = chis[i].list;
                 for (var j = 0; j < list.length;j++){
-                    resultNode.children[j].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,list[j])
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
                 }
             }else if (type === 'peng'){
                 for (var j = 0; j < 3;j++){
-                    resultNode.children[j].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
                 }
             }
 
             else if (type === 'gang'){
                 for (var j = 0; j < 4;j++){
-                    resultNode.children[j].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(index,pai)
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
                 }
             }
 
@@ -657,15 +664,16 @@ cc.Class({
             return;
         }else{
             var paiLists = tingMap.map((t)=>{return t.pai});
-            var totalLen = this.myTingPaiListNode.children.length;
+            var totalLen = 9;
             var i = 0;
-            console.log(paiLists);
+            var tNode = this.myTingPaiNode.getChildByName('tNode');
+    
             for (i = 0;i<paiLists.length;i++){
-                this.myTingPaiListNode.children[i].children[0].getComponent(cc.Sprite).spriteFrame = this.getBottomSpriteFrameByIndex(this.gameInfo.myIndex,paiLists[i]);
+                tNode.children[i].getComponent('pai').setPaiSpriteFrame(paiLists[i]);
             }
 
             for (;i < totalLen;i++){
-                this.myTingPaiListNode.children[i].children[0].getComponent(cc.Sprite).spriteFrame = null;
+                tNode.children[i].getComponent('pai').setPaiSpriteFrame(null);
 
             }
             this.showTingPaiNode();
