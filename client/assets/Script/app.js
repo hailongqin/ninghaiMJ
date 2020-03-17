@@ -88,17 +88,14 @@ cc.Class({
   
    
     init(){
-        console.log(cc.vv);
-        return;
 
-        this.initUiData();
-     
-
+   
       if (cc.vv.roomId){
         this.roomIdLabel.string = cc.vv.roomId;
       }else{
           return;
       }
+      this.initEveryNode();
       cc.vv.net.connect(()=>{
           this.initHander();
           var param = {userId:cc.vv.userId,roomId:cc.vv.roomId};
@@ -118,364 +115,102 @@ cc.Class({
             if (!this.gameInfo.canChupai) return; //是否有出牌的权利
             this.gameInfo.canChupai = false;
             var chupai = node.pai;
-            cc.vv.net.send('chupai',{userId:cc.vv.userId,pai:chupai,roomId:this.gameInfo.roomId});
-
-            // this.calcHoldsAndFolds(this.gameInfo.myHolds,this.gameInfo.myFolds,chupai);
-
-            // this.gameInfo.myHolds.sort((a,b)=>{
-            //     return a - b;
-            // })
-            // this.setMyUiHolds(this.gameInfo.myHolds);
-            // this.setMyFolds(chupai);
+            cc.vv.net.send('chupai',{pai:chupai})
 
         })
     },
 
-    calcHoldsAndFolds(holds,folds,pai){
-        var index = holds.indexOf(pai);
-        holds.splice(index,1);
-        folds.push(pai);
-    },
+   
 
     showTingPaiNode(){
         this.myTingPaiNode.active = true;
     },
 
-    hideTingPaiNode(){
-        this.myTingPaiNode.active = false;
-    },
 
-    hideReadySign(node){
-       node.getChildByName('ready_sign').active = false;
-    },
-    showReadySign(node){
-      node.getChildByName('ready_sign').active = true;
-    },
-
-    hideAllReadySign(){
-        var nodes = ['myStatusNode','leftStatusNode','rightStatusNode','upStatusNode']
-            nodes.forEach((n)=>{
-                this.hideReadySign(this[n]);
-            })
+    clearOperationNode(){
+      this.node.getChildByName('op').getComponent('operation').init();  
     },
 
     clearTable(){
-          //吃的选择
-      
-          this.hideAllReadySign();
-          this.hideOpNode();
-          this.hideChiList();
-
+          this.clearOperationNode();
           this.hideTingPaiNode();
-
-          this.myHuResultShowNode.active = false;
-          this.leftHuResultShowNode.active = false;
-          this.rightHuResultShowNode.active = false;
-          this.upHuResultShowNode.active = false;
-  
-          //吃的结果
-          var self = this;
-          function clearHoldsNode(node,isTouchEvent = false){
-            for(var i = 0; i < node.children.length; ++i){
-                var sprite = node.children[i].getComponent(cc.Sprite);
-                sprite.spriteFrame = null;
-                if (isTouchEvent) self.addTouchEvent(node.children[i]);
-            }
-          }
-
-          function clearHuasNode(node){
-            for(var i = 0; i < node.children.length; ++i){
-                var sprite = node.children[i].getComponent(cc.Sprite);
-                sprite.spriteFrame = null;
-            }
-          }
-
-          function clearFoldsNode(node){
-            for(var i = 0; i < node.children.length; ++i){
-                var sprite = node.children[i].getComponent(cc.Sprite);
-                sprite.spriteFrame = null;
-            }
-    
-          }
-
-          function clearChiResultNode(node){
-            for(var i = 0; i < node.children.length; ++i){
-                var subChiItem = node.children[i];
-                for (var k = 0; k < subChiItem.children.length;k++){
-                    var sprite = subChiItem.children[k].getComponent(cc.Sprite);
-                    sprite.spriteFrame = null;
-                }    
-            }
-          }
-
-
-          clearHoldsNode(this.myHoldsNode,true);
-          clearFoldsNode(this.myFoldsNode);
-          clearHuasNode(this.myHuasNode);
-          clearChiResultNode(this.myChiResultNode);
-          this.myNode.getChildByName('zhuang').active = false;
- 
-
-          clearHoldsNode(this.leftHoldsNode);
-          clearFoldsNode(this.leftFoldsNode);
-          clearHuasNode(this.leftHuasNode);
-          clearChiResultNode(this.leftChiResultNode);
-          this.leftNode.getChildByName('zhuang').active = false;
-  
-
-          clearHoldsNode(this.rightHoldsNode);
-          clearFoldsNode(this.rightFoldsNode);
-          clearHuasNode(this.rightHuasNode);
-          clearChiResultNode(this.rightChiResultNode);  
-          this.rightNode.getChildByName('zhuang').active = false;   
-
-
-          clearHoldsNode(this.upHoldsNode);
-          clearFoldsNode(this.upFoldsNode);
-          clearHuasNode(this.upHuasNode);
-          clearChiResultNode(this.upChiResultNode); 
-          this.upNode.getChildByName('zhuang').active = false;  
-
-
-
-          for (var i = 0; i < 4;i++){
-              var snode = this['result'+i+'Node'];
-              clearHoldsNode(snode.getChildByName('holds'));
-              clearFoldsNode(snode.getChildByName('huas'));
-              clearChiResultNode(snode.getChildByName('chiresult'));
-          }
-
-          this.totalShowResultNode.active = false;
-
           this.hideRemainNumber();
+
+
+          function hidePaiNode(node){
+            for(var i = 0; i < node.children.length; ++i){
+                 node.children[i].getComponent('pai').hide();
+             }  
+          }
+
+          function hideChiResultNode(node){
+            for(var i = 0; i < node.children.length; ++i){
+                this.hideNode(node.children[i]);
+            }
+          }
+
+          var nodeStrs = ['myHoldsNode','myFoldsNode','myHuasNode','leftHoldsNode','leftFoldsNode','leftHuasNode',
+                            'rightHoldsNode','rightFoldsNode','rightHuasNode','upHoldsNode','upFoldsNode','upHuasNode'];
+
+            nodeStrs.forEach((n)=>{
+                hidePaiNode(this[n])
+            })
+
+            hideChiResultNode(this.myChiResultNode);
+            hideChiResultNode(this.leftChiResultNode);
+            hideChiResultNode(this.rightChiResultNode);  
+            hideChiResultNode(this.upChiResultNode); 
+
+
          
 
     },
 
-    hideStatusNode(node){
-        node.active = false;
-    },
-    showStatusNode(node){
-        node.active = true;
-    },
-
-    showAllStatusNode(){
-        this.myStatusNode.active = false;
-        this.leftStatusNode.active = false;
-        this.rightStatusNode.active = false;
-        this.upStatusNode.active = false;
-    },
-
-    setUserInfo(node,userInfo){
-        if (userInfo.userName){
-            node.getChildByName('userName').getComponent(cc.Label).string = userInfo.userName
-        }
-        if (userInfo.header){
-            cc.loader.load({url: userInfo.header, type: 'png'}, function (err, tex) {        
-                node.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
-            });
-        }
-    },
-
     initUiData(){
+ 
 
-        //初始化时间周圆
-        var timeNode = this.node.getChildByName('time');
-        this.timeBackNode = timeNode.getChildByName('timeBack');
-        this.hideCircle();
-
-        //初始化tip提示
-        this.roomTipNode = this.node.getChildByName('tip');
-
-        //初始化操作节点
-        var myOpNode = this.node.getChildByName('op');
-
-        this.myOpNode1 = myOpNode.getChildByName('op1');
-        this.myOpNode1.opType = 'guo'
-        this.initOpNodeHandler(this.myOpNode1)
-        this.myOpNode2 = myOpNode.getChildByName('op2');
-        this.initOpNodeHandler(this.myOpNode2)
-        this.myOpNode3 = myOpNode.getChildByName('op3');
-        this.initOpNodeHandler(this.myOpNode3)
-        this.myOpNode4 = myOpNode.getChildByName('op4');
-        this.initOpNodeHandler(this.myOpNode4)
-        this.myOpNode5 = myOpNode.getChildByName('op5');
-        this.initOpNodeHandler(this.myOpNode5);
-
-        //保存我的节点
+        //保存我的节
           //初始化自己的牌
         var myNode = this.myNode = this.node.getChildByName('my');
         this.myHoldsNode = myNode.getChildByName('holds');
         this.myHuasNode = myNode.getChildByName('huas');
         this.myFoldsNode = myNode.getChildByName('folds');
-        this.myChiNode = myOpNode.getChildByName('chi');
-        this.myStatusNode = myNode.getChildByName('status');
-        this.myChiListParentNode = myOpNode.getChildByName('chilist');
-        this.myChiList1Node = this.myChiListParentNode.getChildByName('list1');
-        this.myChiList2Node = this.myChiListParentNode.getChildByName('list2');
-        this.myChiList3Node = this.myChiListParentNode.getChildByName('list3');
         this.myChiResultNode = myNode.getChildByName('chiresult');
+
 
 
         //保存左边的
         var leftNode = this.leftNode = this.node.getChildByName('left');
         this.leftChiResultNode = leftNode.getChildByName('chiresult');
-        // console.log(LeftNode.children)
         this.leftHoldsNode = leftNode.getChildByName('holds');
         this.leftHuasNode = leftNode.getChildByName('huas');
         this.leftFoldsNode = leftNode.getChildByName('folds');
-        this.leftStatusNode = leftNode.getChildByName('status');
+
 
         //保存右边的
         var rightNode = this.rightNode = this.node.getChildByName('right');
         this.rightChiResultNode = rightNode.getChildByName('chiresult');
-
         this.rightHoldsNode = rightNode.getChildByName('holds');
         this.rightHuasNode = rightNode.getChildByName('huas');
         this.rightFoldsNode = rightNode.getChildByName('folds');
-        this.rightStatusNode = rightNode.getChildByName('status');
 
 
         //保存上面的
         var upNode = this.upNode = this.node.getChildByName('up');
         this.upChiResultNode = upNode.getChildByName('chiresult');
-
         this.upHoldsNode = upNode.getChildByName('holds');
         this.upHuasNode = upNode.getChildByName('huas');
         this.upFoldsNode = upNode.getChildByName('folds');
-        this.upStatusNode = upNode.getChildByName('status');
 
-
-        this.myHuResultShowNode = this.node.getChildByName('myHuResultShow');
-        this.leftHuResultShowNode = this.node.getChildByName('leftHuResultShow');
-        this.rightHuResultShowNode = this.node.getChildByName('rightHuResultShow');
-        this.upHuResultShowNode = this.node.getChildByName('upHuResultShow');
 
         this.myTingPaiNode = this.node.getChildByName('tingpai');
         this.myTingPaiListNode = this.myTingPaiNode.getChildByName('tNode');
 
-
-        //胡的弹框展示节点
-        var totalShowResultNode = this.totalShowResultNode = this.node.getChildByName('totalShowResult');
-
-        var contentNode = totalShowResultNode.getChildByName('content');
-
-        this.result0Node = contentNode.getChildByName('list1');
-        this.result1Node = contentNode.getChildByName('list2')
-        this.result2Node = contentNode.getChildByName('list3')
-        this.result3Node = contentNode.getChildByName('list4')
-
+        
         this.remainNumberNode = this.node.getChildByName('remainNumber');
 
         this.clearTable();
       
-    },
-
-    closeResultShowodal(){
-        this.clearTable();
-    },
-
-    setTipConetnt(content){
-        this.roomTipNode.getComponent(cc.Label).string = content;
-    },
-
-    initOpNodeHandler(node){
-        node.on(cc.Node.EventType.TOUCH_START,()=>{
-            console.log(this.gameInfo.op,node)
-            var op = this.gameInfo.op;
-            if (!node.opType){
-                console.log('error')
-                return;
-            }
-
-            if (node.opType === 'guo'){
-                cc.vv.net.send('guo',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,fromTurn:op.fromTurn})
-            }
-
-            if (node.opType === 'chi'){
-                if (!op.canChi) return;
-                var pai = op.pai;
-                if (op.chiList.length > 1){
-                    for (var key in op.chiList){
-                        this.setOneChiList(key,op.chiList[key],pai);
-                    }
-                }else{
-                    cc.vv.net.send('chi',{roomId:this.gameInfo.roomId,userId:cc.vv.userId,chiIndex:0})
-                }
-
-                return;
-            }
-
-            if (!op.canHu && !op.canChi && !op.canPeng && !op.canGang) return;
-            cc.vv.net.send(node.opType,{roomId:this.gameInfo.roomId,userId:cc.vv.userId,fromTurn:op.fromTurn})
-
-            this.hideOpNode();
-
-        })
-    },
-
-    hideOpNode(){
-        this.myOpNode1.active = null;
-        this.myOpNode2.active = null;
-        this.myOpNode3.active = null;
-        this.myOpNode4.active = null;
-        this.myOpNode5.active = null;
-    },
-
-    hideChiList(){ // 操作的吃
-        this.myChiListParentNode.active = null;
-        this.myChiList1Node.active = null;
-        this.myChiList2Node.active = null;
-        this.myChiList3Node.active = null;
-    },
-
-    setOneChiList(index,list,pai){
-        var key = '';
-        if (index == 0) key = 'myChiList1Node';
-        if (index == 1) key = 'myChiList2Node';
-        if (index == 2) key = 'myChiList3Node';
-
-
-        var node = this[key];
-        console.log(node,key)
-
-        for (var i = 0; i < node.children.length;i++){
-            node.children[i].getComponent(cc.Sprite).spriteFrame = this.myBottomAltas.getSpriteFrame('my-bottom-'+list[i]);
-            if (list[i] === pai){
-                node.children[i].scaleX = 1.2
-                node.children[i].scaleY = 1.2
-            }
-            else{
-                node.children[i].scaleX = 1
-                node.children[i].scaleY = 1
-            }
-            
-        }
-
-        node.active = true;
-        this.myChiListParentNode.active = true;
-
-    },
-
-    hideCircle(){
-        for (var i = 0;i < this.timeBackNode.children.length;i++){
-            this.timeBackNode.children[i].active = false;
-        }
-    },
-
-    showOneCircle(turnIndex){
-        var index = 0;
-        if (turnIndex === this.gameInfo.leftIndex){
-            index = 3;
-        }else if (turnIndex === this.gameInfo.rightIndex){
-            index = 1;
-        }else if (turnIndex === this.gameInfo.upIndex){
-            index = 2;
-        }else if (turnIndex === this.gameInfo.myIndex){
-            index = 0;
-        }
-
-        this.timeBackNode.children[index].active = true;
     },
 
     setRemainNumber(data){
@@ -490,13 +225,7 @@ cc.Class({
         this.remainNumberNode.active = false;
     },
 
-    showNode(node){
-        node.active = true;
-    },
 
-    hideNode(node){
-        node.active = false;
-    },
 
     initHander(){
 
@@ -563,30 +292,7 @@ cc.Class({
                 this.hideNode(this.readyBtn);
             }
 
-            this.hideNode(this.myStatusNode)
-            this.hideNode(this.leftStatusNode)
-            this.hideNode(this.rightStatusNode)
-            this.hideNode(this.upStatusNode)
-            for (var i = 0; i < seats.length;i++){
-                var userInfo = seats[i].userInfo;
-                if (this.checkIsMySelfIndex(myIndex,i)){
-                    this.setUserInfo(this.myStatusNode,userInfo);
-                    this.showNode(this.myStatusNode);
-                    this.showReadySign(this.myStatusNode)
-                }else if (this.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
-                    this.setUserInfo(this.leftStatusNode,userInfo)
-                    this.showNode(this.leftStatusNode);
-                    this.showReadySign(this.leftStatusNode)
-                }else if (this.checkIsRightIndex(myIndex,i,seats)){ //右边的牌
-                    this.setUserInfo(this.rightStatusNode,userInfo)
-                    this.showNode(this.rightStatusNode);
-                    this.showReadySign(this.rightStatusNode)
-                }else if (this.checkIsUpIndex(myIndex,i,seats)){ //对面的牌
-                    this.setUserInfo(this.upStatusNode,userInfo)
-                    this.showNode(this.upStatusNode);
-                    this.showReadySign(this.upStatusNode)
-                }  
-            }
+            
 
        })
 
@@ -606,8 +312,6 @@ cc.Class({
 
        this.node.on('clear_op_notify',(data)=>{
             this.gameInfo.op = {};
-            this.hideOpNode();
-            this.hideChiList();
        })
        // 操作通知
        this.node.on('op_notify',(data)=>{
@@ -686,8 +390,6 @@ cc.Class({
             }
 
             this.setTables(seats);
-
-            this.setFengData(data.zhuangIndex);
             this.showRemainNumberNode();
             this.setRemainNumber(data);
         })
@@ -695,91 +397,6 @@ cc.Class({
        
     },
 
-    checkIsMySelfIndex(myIndex,compareIndex){
-        return myIndex === compareIndex;
-    },
-
-    checkIsLeftIndex(myIndex,compareIndex,seats){
-        var ret = false;
-        if (myIndex > compareIndex && Math.abs(myIndex -compareIndex) === 1)   ret = true;
-        if (compareIndex === seats.length - 1 && myIndex === 0 && seats.length === 4) ret = true;
-        return ret;
-    },
-
-    checkIsRightIndex(myIndex,compareIndex,seats){
-        if (myIndex < compareIndex && Math.abs(myIndex -compareIndex) === 1)   ret = true;
-        if (myIndex === seats.length - 1 && compareIndex === 0 && seats.length === 4) ret = true;
-        return ret; 
-    },
-
-    checkIsUpIndex(myIndex,compareIndex,seats){
-        if (Math.abs(myIndex - compareIndex) === 2) return true;
-        return false;
-    },
-
-    setFengData(zhuangIndex){
-        //设置东南西北
-        var gameInfo = this.gameInfo;
-        
-        console.log('zhuangInex',zhuangIndex,gameInfo)
-
-      // this.timeBackNode.setRotation(0); //这时候我是北风家
-       this.timeBackNode.angle = 0;
-       if (zhuangIndex === gameInfo.myIndex){ //变成东风家
-        this.myNode.getChildByName('zhuang').active = true;
-        this.timeBackNode.angle = -90;
-        gameInfo.myFengIndex = 0;
-        gameInfo.rightFengIndex = 1;
-        gameInfo.upFengIndex = 2;
-        gameInfo.leftFengIndex = 3;
-       }else if (zhuangIndex === gameInfo.leftIndex){
-        this.timeBackNode.angle = 180;
-        this.leftNode.getChildByName('zhuang').active = true;
-        gameInfo.myFengIndex = 1;
-        gameInfo.rightFengIndex = 2;
-        gameInfo.upFengIndex = 3;
-        gameInfo.leftFengIndex = 0;
-       }
-       else if (zhuangIndex === gameInfo.upIndex){
-        this.timeBackNode.angle = 90;
-        this.upNode.getChildByName('zhuang').active = true;
-        gameInfo.myFengIndex = 2;
-        gameInfo.rightFengIndex = 3;
-        gameInfo.upFengIndex = 0;
-        gameInfo.leftFengIndex = 1;
-       }else if (zhuangIndex === gameInfo.rightIndex){
-        this.rightNode.getChildByName('zhuang').active = true;
-        gameInfo.myFengIndex = 3;
-        gameInfo.rightFengIndex = 0;
-        gameInfo.upFengIndex = 1;
-        gameInfo.leftFengIndex = 2;
-       }
-
-      this.setTimeShowAccordingTurn(zhuangIndex)
-
-    },
-
-    setTimeShowAccordingTurn(turn){
-        var gameInfo = this.gameInfo;
-        this.hideCircle();
-        if (gameInfo.myIndex === turn){
-            this.timeBackNode.children[gameInfo.myFengIndex].active = true;
-        }
-        
-        if (gameInfo.leftIndex === turn){
-            this.timeBackNode.children[gameInfo.leftFengIndex].active = true;
-        }
-        
-        if (gameInfo.rightIndex === turn){
-            this.timeBackNode.children[gameInfo.rightFengIndex].active = true;
-        }
-        
-        if (gameInfo.upIndex === turn){
-            this.timeBackNode.children[gameInfo.upFengIndex].active = true;
-        }
-        gameInfo.turn = turn;
-
-    },
 
     setTables(seats){
         for (var i = 0; i < seats.length;i++){
@@ -807,29 +424,6 @@ cc.Class({
 
     },
    
-
-    onHuClick(){
-
-    },
-
-    onPengClick(){
-
-    },
-
-    onGangClick(){
-
-    },
-
-
-    onClickChiItem(btn,param){
-        console.log('clickchiitem',param);
-        this.hideChiList();
-        this.hideOpNode();
-        if (!this.gameInfo.op.canChi) return
-        var index = parseInt(param);
-        cc.vv.net.send('chi',{userId:cc.vv.userId,roomId:this.gameInfo.roomId,chiIndex:index})
-    },
-
     getHoldsNodeByIndex(index){
         var gameInfo = this.gameInfo;
         if (index === gameInfo.myIndex) return this.myHoldsNode
@@ -1077,41 +671,9 @@ cc.Class({
             this.showTingPaiNode();
         }
     },
-   
-    onClickReady(){
-        var comp = this.node.getChildByName('my').getChildByName('holds').children[0].getComponent('pai');
-        console.log('comp',comp)
-        comp.setPaiSpriteFrame(1);
-        return;
-       cc.vv.net.send('set_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId,userInfo:cc.vv.userInfo});
-      this.readyBtn.active = false;
-      this.unReadyBtn.active = true;
-    },
-
-    onClickCancelReady(){
-         cc.vv.net.send('cancel_ready',{userId:cc.vv.userId,roomId:cc.vv.roomId});
-        this.readyBtn.active = true;
-        this.unReadyBtn.active = false;
-    },
-
-    setResultModalShow(data){
-        var seats  = data.seats;
-        var index = this.gameInfo.myIndex;
-        for (var i = 0; i < seats.length;i++){
-            var sNode = this['result'+i+'Node'];
-            var holdsNode = sNode.getChildByName('holds');
-            var chiresultNode = sNode.getChildByName('chiresult');
-            var huasNode = sNode.getChildByName('huas');
-            this.setCommonHolds(holdsNode,seats[i].holds,index);
-            this.setCommonHuas(huasNode,seats[i].huas,index,true);
-            this.setCommonChiResults(chiresultNode,seats[i].chis,index,true);
-        }
-        this.totalShowResultNode.active = true;
-    },
-
      onLoad () {
        
-      //  this.init();
+        this.init();
      },
 
      onDestroy(){

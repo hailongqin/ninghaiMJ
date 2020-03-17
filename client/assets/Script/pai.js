@@ -43,9 +43,21 @@ cc.Class({
     },
 
     setPaiSpriteFrame(pai){
+        if (pai === null || pai === undefined){
+            this.node.active = false;
+            return
+        }
+
+
         if (this.node.children.length){
             this.node.children[0].getComponent(cc.Sprite).spriteFrame = this.paiAltas.getSpriteFrame(pai);
         }
+        this.node.active = true;
+        this.node.pai = pai
+    },
+
+    hide(){
+        this.node.active = false;
     }
 
     // update (dt) {},
