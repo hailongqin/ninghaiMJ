@@ -43,7 +43,7 @@ exports.start = function(){
                     User.bindUserAndSocket(userId,socket);
                     var mySeat = seats[seatIndex];
                     mySeat.onLine = true;
-                    Game.updatePepoleStatus(roomInfo);
+                    socket.emit('game_start',roomInfo);
                     if (roomInfo.gameStart){ //游戏已经开始了
                        Game.updateTable(roomInfo);
                        if (Game.checkMyselfHasOp(mySeat)){
@@ -355,32 +355,44 @@ exports.start = function(){
                 var myOp = mySeat.op;
                 var gangPai = myOp.pai;
                 var fromTurn = myOp.fromTurn;
+                var where = myOp.where;
+                var whereIndex = myOp.index;
+                var chis = mySeat.chis;
 
                 Game.clearOperation(roomInfo);
                 Game.moveToNextTurn(roomInfo,index);
                 //每人可以胡，就开始杠
-                
-                var myHolds = mySeat.holds;
 
-                var count = 0;
-                var maxCount = fromTurn === index?4:3;
-                for (var i = 0; i < myHolds.length;i++){
-                    if (myHolds[i] === gangPai){
-                        myHolds.splice(i,1);
-                        i--;
-                        count++
-                        if (count === maxCount){
-                            break;
+                //来自碰的牌的杠
+                if (where && where === 'folds'){
+                    chis[whereIndex].type = 'gang';
+                    chis[whereIndex].fromTurn = roomInfo.turn;
+                    mySeat.countMap[gangPai] -= 1;
+                }else{
+                    var myHolds = mySeat.holds;
+
+                    var count = 0;
+                    var maxCount = fromTurn === index?4:3;
+                    for (var i = 0; i < myHolds.length;i++){
+                        if (myHolds[i] === gangPai){
+                            myHolds.splice(i,1);
+                            i--;
+                            count++
+                            if (count === maxCount){
+                                break;
+                            }
                         }
                     }
+                    // 更新countMap
+                    mySeat.chis.push({
+                        type:'gang',
+                        pai:gangPai,
+                        fromTurn
+                    });
+                    mySeat.countMap[gangPai] -=maxCount;
                 }
-                // 更新countMap
-                mySeat.chis.push({
-                    type:'gang',
-                    pai:gangPai,
-                    fromTurn
-                });
-                mySeat.countMap[gangPai] -=maxCount;
+                
+     
 
                 if (fromTurn !== index){ //如果不是自摸的杠
                     seats[fromTurn].folds.splice(-1,1)
@@ -620,7 +632,7 @@ exports.start = function(){
                     return;
                 }
 
-                console.log(roomInfo)
+                // console.log(roomInfo)
                 
                 var index = Game.getIndexByUserId(roomInfo.seats,userId);
                 if (index !== null && index !== undefined){
