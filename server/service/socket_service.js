@@ -632,7 +632,11 @@ exports.start = function(){
                     return;
                 }
 
-                // console.log(roomInfo)
+                if (!roomInfo){
+                    return;
+                }
+
+                 console.log(roomInfo.seats)
                 
                 var index = Game.getIndexByUserId(roomInfo.seats,userId);
                 if (index !== null && index !== undefined){
