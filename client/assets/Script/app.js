@@ -95,6 +95,21 @@ cc.Class({
             type:cc.Node
         },
 
+        fengNode:{
+            default:null,
+            type:cc.Node
+        },
+
+        huShowNode:{
+            default:null,
+            type:cc.Node
+        },
+
+        huResultModalNode:{
+            default:null,
+            type:cc.Node
+        },
+
         gameInfo:null
     },
 
@@ -134,6 +149,10 @@ cc.Class({
         })
     },
 
+    clickResultReadyBtn(){
+        cc.vv.net.send('game_ready');
+        this.clearTable();
+    },
    
 
     clearOperationNode(){
@@ -167,12 +186,32 @@ cc.Class({
         node.active = false
     },
 
+    setHuNodePosition(index){
+        var gameInfo = this.gameInfo;
+        if(index === gameInfo.myIndex){
+            this.huShowNode.x = 0;
+            this.huShowNode.y =  -this.huShowNode.parent.height*(2/3);
+        }else if(index === gameInfo.leftIndex){
+            this.huShowNode.x = -this.huShowNode.parent.width*(2/3);
+            this.huShowNode.y = 0
+        }else if(index === gameInfo.rightIndex){
+            this.huShowNode.x = this.huShowNode.parent.width*(2/3);
+            this.huShowNode.y = 0
+        }else if(index === gameInfo.upIndex){
+            this.huShowNode.x = 0;
+            this.huShowNode.y = this.huShowNode.parent.height*(2/3);
+        }
+
+        this.showNode(this.huShowNode)
+    },
+
 
     clearTable(){
           this.clearOperationNode();
           this.hideTingPaiNode();
           this.hideRemainNumber();
-
+          this.hideNode(this.huShowNode);
+          this.huResultModalNode.getComponent('huResult').reset();
 
           function hidePaiNode(node){
               console.log(node);
@@ -182,7 +221,6 @@ cc.Class({
           }
 
           function hideChiResultNode(node){
-              console.log(node)
             for(var i = 0; i < node.children.length; ++i){
                 node.children[i].active = false;
             }
@@ -267,7 +305,10 @@ cc.Class({
        //值给个声音，或者显示文案
        this.node.on('op_action_notify',(data)=>{
             if (data.type === 'hu'){
-                
+                this.setHuNodePosition(data.index);
+                setTimeout(() => {
+                    this.showResultModal(data);
+                }, 3000);
             }
        })
 
@@ -322,7 +363,7 @@ cc.Class({
        this.node.on('update_table',(data)=>{
          // 更新table
          var seats = data.seats;
-        //  this.setTimeShowAccordingTurn(data.turn);
+         this.fengNode.getComponent('feng').setTurn(data)
         this.setTables(seats);
         this.setRemainNumber(data)
        })
@@ -342,7 +383,6 @@ cc.Class({
             this.readyBtn.active = false;
             this.unReadyBtn.active = false;
             this.statusNode.getComponent('status').clearAllReadySign();
-
             var userId = cc.vv.userId;
             var seats = data.seats;
          
@@ -389,6 +429,8 @@ cc.Class({
                 } 
             }
 
+            this.fengNode.getComponent('feng').setFengDirection(myIndex,data);
+            this.fengNode.getComponent('feng').setTurn(data)
             this.setTables(seats);
             this.showRemainNumberNode();
             this.setRemainNumber(data);
@@ -403,6 +445,37 @@ cc.Class({
 
     onClickCancleReady(){
         cc.vv.net.send('cancel_ready');
+    },
+
+    showResultModal(data){
+        var roomInfo = data.roomInfo;
+        var seats = roomInfo.seats;
+        for (var i = 0; i < seats.length;i++){
+            var node = this.huResultModalNode.getChildByName('list'+i);
+            var seat = seats[i]
+            var holds = seat.holds;
+            var huas = seat.huas;
+            var chis = seat.chis;
+            var holdsNode = node.getChildByName('holds');
+            var huasNode = node.getChildByName('huas');
+            var chiRootResultNode = node.getChildByName('chiresultNode');
+            var huShowNode = node.getChildByName('canHu');
+            var nameNode = node.getChildByName('name');
+
+            if (seat.userInfo && seat.userInfo.userName){
+                nameNode.getComponent(cc.Label).string = seat.userInfo.userName
+            }
+
+            this.setCommonHolds(holdsNode,holds,i);
+            this.setCommonHuas(huasNode,huas,i,true);
+            this.setCommonChiResults(chiRootResultNode,chis,i,true);
+            if (i === data.index){
+                this.showNode(huShowNode);
+            }else{
+                this.hideNode(huShowNode);
+            }
+        }
+        this.showNode(this.huResultModalNode);
     },
 
 
@@ -608,30 +681,35 @@ cc.Class({
         }
         this.setGameInfoFoldsByIndex(folds,index)
     },
-    setCommonHuas(huasNode,huas,index){
+    setCommonHuas(huasNode,huas,index,force = false){
         var gameInfoHuas = this.getGameInfoHuasByIndex(index);
-        if (huas.length === gameInfoHuas.length) return;
+        if (!force && huas.length === gameInfoHuas.length) return;
+
+        var i = 0;
       
-        for (var i = 0; i < huas.length;i++){
+        for (; i < huas.length;i++){
             var pai = huas[i];
             huasNode.children[i].getComponent('pai').setPaiSpriteFrame(pai);
+        }
+        for (; i < 8;i++){
+            huasNode.children[i].getComponent('pai').setPaiSpriteFrame(null);
         }
         this.setGameInfoHuasByIndex(huas,index);
     },
 
 
-    setCommonChiResults(chiRootResultNode,chis,index){
+    setCommonChiResults(chiRootResultNode,chis,index,force = false){
 
         var base = 0;
-    
-        var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
-        if (gameInfoChiResult.length === chis.length) return;
-        
-        base = chis.length - gameInfoChiResult.length - 1;
+        if (!force){
+            var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
+            if (gameInfoChiResult.length === chis.length) return;
+            base = chis.length - gameInfoChiResult.length - 1;
+        }
+      
        
 
         for (var i = base;i < chis.length;i++){
-
             var type = chis[i].type;
             var pai = chis[i].pai;
             var resultNode = chiRootResultNode.children[i];
@@ -643,13 +721,13 @@ cc.Class({
                 }
             }else if (type === 'peng'){
                 for (; j < 3;j++){
-                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(list[j]);
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
                 }
             }
 
             else if (type === 'gang'){
                 for (; j < 4;j++){
-                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(list[j]);
+                    resultNode.children[j].getComponent('pai').setPaiSpriteFrame(pai);
                 }
             }
             for (;j<4;j++){
@@ -658,6 +736,7 @@ cc.Class({
             resultNode.active = true;
 
         }
+
 
         this.setGameInfoChiResultsByIndex(chis,index);
     },

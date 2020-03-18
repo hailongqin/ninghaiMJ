@@ -24,38 +24,45 @@ cc.Class({
 
     },
 
-    setFengDirection(myIndex,zhuangIndex){
+    setFengDirection(myIndex,roomInfo){
+        var zhuangIndex = roomInfo.zhuangIndex;
+        var seats = roomInfo.seats;
         if (this.zhuangIndex === zhuangIndex) return;
-        if (cc.vv.Common.checkIsMySelfIndex(myIndex,zhuangIndex)){
+        if (cc.vv.Common.checkIsMySelfIndex(myIndex,zhuangIndex,seats)){
             this.node.angle = -90;
         }
-        if (cc.vv.Common.checkIsLeftIndex(myIndex,zhuangIndex)){
+        if (cc.vv.Common.checkIsLeftIndex(myIndex,zhuangIndex,seats)){
             this.node.angle = 180;
         }
-        if (cc.vv.Common.checkIsRightIndex(myIndex,zhuangIndex)){
+        if (cc.vv.Common.checkIsRightIndex(myIndex,zhuangIndex,seats)){
             this.node.angle = 0;
         }
-        if (cc.vv.Common.checkIsUpIndex(myIndex,zhuangIndex)){
+        if (cc.vv.Common.checkIsUpIndex(myIndex,zhuangIndex,seats)){
             this.node.angle = 90;
         }
         this.zhuangIndex = zhuangIndex;
+        this.turn = null;
         this.show();
     },
 
-    setTurn(turn){
-        if (turn === this.turn) return;
+    setTurn(roomInfo){
+        if (!roomInfo) return;
+    
+        if (roomInfo.turn === this.turn) return;
         var zhuangIndex = this.zhuangIndex;
+        var seats = roomInfo.seats;
+        var turn = roomInfo.turn
         this.hideAllChildren();
-        if (cc.vv.Common.checkIsMySelfIndex(zhuangIndex,turn)){
+        if (cc.vv.Common.checkIsMySelfIndex(zhuangIndex,turn,seats)){
             this.node.children[0].active = true;
         }
-        if (cc.vv.Common.checkIsLeftIndex(zhuangIndex,turn)){
-            this.node.children[2].active = true;
+        if (cc.vv.Common.checkIsLeftIndex(zhuangIndex,turn,seats)){
+            this.node.children[3].active = true;
         }
-        if (cc.vv.Common.checkIsRightIndex(zhuangIndex,turn)){
+        if (cc.vv.Common.checkIsRightIndex(zhuangIndex,turn,seats)){
             this.node.children[1].active = true;
         }
-        if (cc.vv.Common.checkIsUpIndex(zhuangIndex,turn)){
+        if (cc.vv.Common.checkIsUpIndex(zhuangIndex,turn,seats)){
             this.node.children[2].active = true;
         }
         this.turn = turn;

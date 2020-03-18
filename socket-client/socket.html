@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="./socket-io.js"></script>
+</head>
+<body>
+<button onclick="disconnect()">断开</button>
+    <button onclick="connect()">链接</button>
+
+<button onclick="jishu()"></button>
+
+<div  id="shu">
+
+</div>
+
+</body>
+
+<script>
+        var count = 1;
+        function jishu() {
+            document.getElementById('shu').innerHTML = count;
+            count++;
+        }
+    var socket
+    function disconnect(){
+        console.log('duankai')
+        socket.disconnect();
+    }
+
+    function connect(){
+        socket= window.io.connect('101.37.71.188:2000',{
+            'reconnection':true,
+            'reconnectionDelay':1000,
+            'reconnectionDelayMax':1000,
+            'force new connection': true,
+        });
+        socket.on('reconnect',function(){
+            console.log('reconnection');
+        });
+        socket.on('connect',(data)=>{
+            console.log('connetction ok')
+        });
+        socket.on('disconnect',function(data){
+            console.log("disconnect");
+        });
+
+        socket.on('connect_failed',function (){
+            console.log('connect_failed');
+        });
+
+    }
+
+</script>
+</html>

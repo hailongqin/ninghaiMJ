@@ -41,8 +41,10 @@ exports.start = function(){
 
                 if (seatIndex !== -1){ //已经是坐下的人
                     User.bindUserAndSocket(userId,socket);
+                    var mySeat = seats[seatIndex];
+                    mySeat.onLine = true;
+                    Game.updatePepoleStatus(roomInfo);
                     if (roomInfo.gameStart){ //游戏已经开始了
-                        var mySeat = seats[seatIndex]
                        Game.updateTable(roomInfo);
                        if (Game.checkMyselfHasOp(mySeat)){
                            Game.notifyOneSeatOperation(mySeat);
@@ -95,6 +97,7 @@ exports.start = function(){
                 var conf = roomInfo.conf;
                 var players = roomInfo.players;
                 var seatUserIds = seats.map((s)=>{return s.userId});
+
                 if (seatUserIds.indexOf(userId) !== -1){ //已经坐着了
                     Game.updatePepoleStatus(roomInfo);
                     return;
@@ -128,6 +131,46 @@ exports.start = function(){
 
         });
 
+        socket.on('game_ready', function (data) {
+            var roomId = socket.roomId;
+            var userId = socket.userId;
+
+            if (!userId || !roomId){
+                Log.error('socket set_ready param is error',roomId,userId)
+                return;
+            }
+
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket set_ready get roominfo is error',err)
+                    return;
+                }
+                Log.info('receive game_ready data is ',roomInfo)
+
+                var index = Game.getIndexByUserId(userId);
+
+                seats[index].ready = true;
+
+                var allReady = true;
+                for (var item of seats){
+                    if (!item.ready){
+                        allReady = false;
+                        break;
+                    }
+                }
+
+                Game.updatePepoleStatus(roomInfo);
+
+                if (allReady){
+                    if (roomInfo.timer){
+                        clearTimeout(roomInfo.timer);
+                        roomInfo.timer = null
+                    }
+
+                    Game.beigin();
+                }
+            })
+        })
         socket.on('cancel_ready', function () {
             var roomId = socket.roomId;
             var userId = socket.userId;
@@ -271,10 +314,12 @@ exports.start = function(){
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
 
-                setTimeout(() => {
-                    Game.begin(roomInfo);
-                }, 10*1000);
-                })
+                roomInfo.process = 'end';
+
+                roomInfo.timer = setTimeout(() => {
+                                     Game.begin(roomInfo);
+                                 }, 10*1000);
+                                })
          })
 
         
@@ -534,7 +579,7 @@ exports.start = function(){
                 var ret = Game.checkOtherSeatHasOp(seats,index)
                 // 所有人都没有操作
                 if (!ret){
-                    Game.clearOperation();
+                     Game.clearOperation(roomInfo);
                      if (fromTurn === index){ //如果这个通知是来自自己的(胡，杠)
                         Game.notifyChupai(roomInfo) //通知出牌
                         return
@@ -559,26 +604,39 @@ exports.start = function(){
         });
         
         socket.on('disconnect',()=>{
-            // var userId = socket.userId;
-            // var roomId = socket.roomId
-            // console.log('scocket connect')
-			// if(!userId || !roomId){
-            //     Log.error('socket disconnect param is error',roomId,userId)
-			// 	return;
-            // }
+            var userId = socket.userId;
+            var roomId = socket.roomId
+            console.log('scocket disconnect',userId,roomId)
 
-            // Room.getRoomInfo(roomId,(err,roomInfo)=>{
-            //     if (err){
-            //         Log.error('socket guo get roominfo is error',err)
-            //         socket.emit('guo_result',err)
-            //         return;
-            //     }
-            //     var index = Game.getIndexByUserId(roomInfo.seats,userId);
-            //     var seats = roomInfo.seats;
+			if(!userId || !roomId){
+                Log.error('socket disconnect param is error',roomId,userId)
+				return;
+            }
 
-            //     seats[index].onLine = false;
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket guo get roominfo is error',err)
+                    socket.emit('guo_result',err)
+                    return;
+                }
 
-            // })
+                console.log(roomInfo)
+                
+                var index = Game.getIndexByUserId(roomInfo.seats,userId);
+                if (index !== null && index !== undefined){
+                    var seats = roomInfo.seats;
+                    seats[index].onLine = false;
+                    Game.updatePepoleStatus(roomInfo)
+                }
+
+                index = Game.getIndexByUserId(roomInfo.players,userId);
+
+                if (index !== null && index !== undefined){
+                    roomInfo.players.splice(index,1);
+                }
+              
+
+            })
             
   
 

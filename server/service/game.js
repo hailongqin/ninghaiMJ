@@ -396,7 +396,7 @@ class Game {
 
     getIndexByUserId(seats,userId){
         var ids = seats.map((s)=>{return s.userId});
-
+        console.log(ids,userId)
         var index = ids.indexOf(userId);
         if (index === -1){
             Log.error('getIndexByUserId index is invalid')

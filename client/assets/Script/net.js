@@ -3,7 +3,7 @@ var io = require('socket-io')
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:"192.168.0.101:1000",
+        ip:"192.168.0.100:1000",
         sio:null,
         pingTimer:null,
         handlerNode:null,
@@ -20,7 +20,7 @@ cc.Class({
 
             var self = this;
             var opts = {
-                'reconnection':false,
+                'reconnection':true,
                 'force new connection': true,
                 'transports':['websocket', 'polling']
             }
@@ -70,7 +70,7 @@ cc.Class({
             })
             this.pingTimer = setInterval(()=>{
                 lastSendTime = Date.now();
-                this.send('ping',{userId:cc.vv.userId});
+                this.send('ping');
             },5000)
         },
         send:function(event,data){
