@@ -47,16 +47,12 @@ cc.Class({
         })
     },
 
-    onClickUser1Login(){
-        cc.vv.userId = '1';
-        cc.vv.storage.setStorage('userId','1')
-        cc.director.loadScene(this.hallScen.name);
-        this.getUserInfo();
-    },
+ 
 
-    onClickUser2Login(){
-        cc.vv.userId = '2'
-        cc.vv.storage.setStorage('userId','2')
+    onClickUserLogin(event,param){
+        console.log(param)
+        cc.vv.userId = param
+        cc.vv.storage.setStorage('userId',param)
         cc.director.loadScene(this.hallScen.name);
         this.getUserInfo();
     },

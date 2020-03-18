@@ -454,9 +454,42 @@ class Game {
         }
         this.checkCanHu(seat,pai,turn);
         this.checkCanGang(seat,pai,turn);
+
+        // 检查手牌是否有刚的
         seat.holds.unshift(pai);
-        this.addCountMap(seat.countMap,pai)
+        this.addCountMap(seat.countMap,pai);
         this.updateTable(roomInfo);
+
+        //判断手牌能否杠
+        for (var _key in seat.countMap){
+            var key = parseInt(_key)
+            if (seat.countMap[key] === 4){
+                seat.op = {
+                    canGang:true,
+                    fromTurn:turn,
+                    pai:key
+                }
+            }
+        }
+
+        //判断持牌中有没有杠的
+        for (var i = 0 ; i < seat.chis.length;i++){
+            var item = seat.chis[i];
+            if (item.type === 'gang'){
+                var pai = item.pai;
+                if (seat.countMap[pai] === 1){
+                    seat.op = {
+                        canGang:true,
+                        fromTurn:turn,
+                        pai:key,
+                        where:'folds',
+                        index:i
+                    } 
+                    break;
+                }
+            }
+        }
+
         var ret = this.notifyOneSeatOperation(seat);
         if (!ret){
             this.notifyChupai(roomInfo)

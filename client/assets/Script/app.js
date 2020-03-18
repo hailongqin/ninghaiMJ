@@ -407,7 +407,7 @@ cc.Class({
                rightChiResult:[],
                upFolds:[],
                upHolds:[],
-               uphuas:[],
+               upHuas:[],
                upChiResult:[],
 
                zhuangIndex:data.zhuangIndex,
