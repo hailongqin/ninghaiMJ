@@ -171,8 +171,9 @@ exports.start = function(){
                 }
                 Log.info('receive game_ready data is ',roomInfo)
 
-                var index = Game.getIndexByUserId(userId);
                 var seats = roomInfo.seats;
+                var index = Game.getIndexByUserId(seats,userId);
+          
 
                 seats[index].ready = true;
 
@@ -184,14 +185,14 @@ exports.start = function(){
                     }
                 }
                 Room.broacastInRoom('user_game_ready',roomInfo.roomId,{index:index,roomInfo})
-                if (allReady){
-                    if (roomInfo.timer){
-                        clearTimeout(roomInfo.timer);
-                        roomInfo.timer = null
-                    }
+                // if (allReady){
+                //     if (roomInfo.timer){
+                //         clearTimeout(roomInfo.timer);
+                //         roomInfo.timer = null
+                //     }
 
-                    Game.beigin();
-                }
+                //     Game.beigin(roomInfo);
+                // }
             })
         })
         socket.on('cancel_ready', function () {
@@ -370,7 +371,9 @@ exports.start = function(){
                 }
 
                 var mySeat = seats[index];
-            
+                if (!mySeat.op.canGang) { //有人胡了可能，没得碰
+                    return;
+                }
                 Game.waitOtherOperation(seats,index,'canGang',()=>{
                 if (!mySeat.op.canGang) { //有人胡了可能，没得碰
                     return;
@@ -447,7 +450,9 @@ exports.start = function(){
                     socket.emit('peng_result',err)
                     return;
                 }
-                Log.info('receive peng data is ',roomInfo)
+                Log.info('receive peng data is ',roomInfo);
+
+                
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -456,6 +461,10 @@ exports.start = function(){
                 }
 
                 var mySeat = seats[index];
+                if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
+                    return;
+                }
+
                 Game.waitOtherOperation(seats,index,'canPeng',()=>{
 
                     if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
@@ -587,9 +596,9 @@ exports.start = function(){
         socket.on('guo',(data)=>{
             var roomId = socket.roomId;
             var userId = socket.userId;
-            var fromTurn = data.fromTurn;
 
-            if (!userId || !roomId || (fromTurn === undefined || fromTurn === null)){
+
+            if (!userId || !roomId){
                 Log.error('socket guo param is error',roomId,userId,fromTurn)
                 socket.emit('guo_result',{code:-1,message:"参数错误"});
                 return;
@@ -601,7 +610,10 @@ exports.start = function(){
                     socket.emit('guo_result',err)
                     return;
                 }
-                Log.info('receive guo data is ',roomInfo)
+                Log.info('roomInfo',roomInfo);
+
+                
+
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId)
                 if (index === undefined || index === null){
@@ -609,6 +621,11 @@ exports.start = function(){
                     return;
                 }
 
+                var op = seats[index].op;
+                if (!op.canPeng && !op.canGang && !op.canHu && !op.canChi){ 
+                    return;
+                }
+                var fromTurn = op.fromTurn
                 seats[index].op = {};
 
                 var ret = Game.checkOtherSeatHasOp(seats,index)
@@ -619,7 +636,7 @@ exports.start = function(){
                         Game.notifyChupai(roomInfo) //通知出牌
                         return
                      }
-                    else { //这个通知不是自己的，来自其他人
+                    else{ //这个通知不是自己的，来自其他人
                         Game.moveToNextTurn(roomInfo)
                         Game.fapai(roomInfo);
                      }

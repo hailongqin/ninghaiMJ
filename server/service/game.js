@@ -434,7 +434,6 @@ class Game {
 
     getIndexByUserId(seats,userId){
         var ids = seats.map((s)=>{return s.userId});
-        console.log(ids,userId)
         var index = ids.indexOf(userId);
         if (index === -1){
             Log.error('getIndexByUserId index is invalid')
@@ -498,17 +497,6 @@ class Game {
         this.addCountMap(seat.countMap,pai);
         this.updateTable(roomInfo);
 
-        //判断手牌能否杠
-        for (var _key in seat.countMap){
-            var key = parseInt(_key)
-            if (seat.countMap[key] === 4){
-                seat.op = {
-                    canGang:true,
-                    fromTurn:turn,
-                    pai:key
-                }
-            }
-        }
 
         //判断持牌中有没有杠的
         for (var i = 0 ; i < seat.chis.length;i++){
@@ -516,13 +504,11 @@ class Game {
             if (item.type === 'gang'){
                 var pai = item.pai;
                 if (seat.countMap[pai] === 1){
-                    seat.op = {
-                        canGang:true,
-                        fromTurn:turn,
-                        pai:key,
-                        where:'folds',
-                        index:i
-                    } 
+                    seat.op.canGang = true;
+                    seat.op.fromTurn =turn;
+                    seat.op.pai =key;
+                    seat.op.where = 'folds';
+                    seat.op.index = i;
                     break;
                 }
             }

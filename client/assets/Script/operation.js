@@ -101,13 +101,15 @@ cc.Class({
     clickOpAction(event){
             var node = event.currentTarget;
             var op = this.op;
+            console.log('clickOpAction',op,node.opType)
             if (!node.opType){
                 console.log('error')
                 return;
             }
 
             if (node.opType === 'guo'){
-                cc.vv.net.send('guo',{fromTurn:op.fromTurn})
+                cc.vv.net.send('guo');
+                return;
             }
 
             if (node.opType === 'chi'){
@@ -126,7 +128,7 @@ cc.Class({
             }
 
             if (!op.canHu && !op.canChi && !op.canPeng && !op.canGang) return;
-            cc.vv.net.send(node.opType,{fromTurn:op.fromTurn})
+            cc.vv.net.send(node.opType)
     },
 
     setOneChiList(index,list,pai){

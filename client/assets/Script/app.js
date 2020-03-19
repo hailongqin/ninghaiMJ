@@ -312,8 +312,6 @@ cc.Class({
        */ 
 
        this.node.on('chupai',(event)=>{
-           console.log(event.detail);
-           console.log(this.gameInfo.canChupai); 
            if (!this.gameInfo.canChupai) return; //是否有出牌的权利
            this.gameInfo.canChupai = false;
            cc.vv.net.send('chupai',{pai:event.detail})
@@ -350,7 +348,6 @@ cc.Class({
        // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次
        this.node.on('update_pepole_status',(data)=>{
             var myIndex =  this.getMyIndexFromRoomInfo(data);
-            console.log('myindex is ',myIndex)
             this.statusNode.getComponent('status').setStatusData(myIndex,data);
        })
 
@@ -685,10 +682,8 @@ cc.Class({
     setCommonFolds(foldsNode,folds,index){
         var gameInfoFolds = this.getGameInfoFoldsByIndex(index);
         var len = gameInfoFolds.length;
-         console.log(this.gameInfo,gameInfoFolds,folds);
         if (folds.length === len) return;
         else if (folds.length < len){ //被吃了 
-            console.log('被吃了',folds,len)
             foldsNode.children[len - 1].getComponent('pai').setPaiSpriteFrame(null);
         }
         else{
@@ -720,7 +715,6 @@ cc.Class({
         var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
     
         for (var i = 0;i < chis.length;i++){
-            console.log(chis,i,gameInfoChiResult)
             if (!force && gameInfoChiResult[i] && gameInfoChiResult[i].type){ //这里主要为了由碰转杠
                 if (chis[i].type === gameInfoChiResult[i].type) continue;
             }
@@ -757,7 +751,6 @@ cc.Class({
 
     setTingPaiResult(tingMap){
         if (tingMap.length === 0){
-            console.log('tingmap hide',tingMap)
             this.hideTingPaiNode();
             return;
         }else{
