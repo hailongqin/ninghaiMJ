@@ -75,7 +75,14 @@ class Game {
     }
 
     calcFanShu(roomInfo){
+        for (var i = 0; i < roomInfo.seats;i++){
+            var seat = roomInfo.seats[i];
+            Util.setHoldsHuShu(seat);
+            Util.setChisHuShu(seat);
+            Util.setHuasHuShu(seat);
+        }
 
+        return;
     }
 
     initSeats(roomInfo){
@@ -87,7 +94,9 @@ class Game {
             seat.huas = [];
             seat.op = {};
             seat.tingMap = [];
-            seat.countMap = {}
+            seat.countMap = {};
+            seat.huShu = 0;
+            seat.fanShu = 1;
           }
     }
 

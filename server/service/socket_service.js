@@ -310,6 +310,8 @@ exports.start = function(){
                 }
          
                 Game.clearOperation(roomInfo);
+
+                Game.calcFanShu(roomInfo);//计算hushu
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
 
