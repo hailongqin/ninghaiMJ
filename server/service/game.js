@@ -394,7 +394,7 @@ class Game {
         })
 
         var interval = setInterval(()=>{
-                for (var i = 0; i <otherSeats;i++){
+                for (var i = 0; i <otherSeats.length;i++){
                     let op = otherSeats[i].op;
                     if (check(op)){
                         opTag = true;

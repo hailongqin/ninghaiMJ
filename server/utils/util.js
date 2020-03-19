@@ -49,7 +49,7 @@ function calcGangResult(pai,seat){
 }
 
 //获取手牌的fanshu
-function setFoldsHuShu(seat){
+function setHoldsHuShu(seat){
     for (var _key in seat.countMap){
         var key = parseInt(_key);
         if (seat.countMap(key) >= 3){
