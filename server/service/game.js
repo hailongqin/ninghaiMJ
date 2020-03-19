@@ -4,15 +4,35 @@ var Room = require('./room')
 
 var Log = require('../utils/log');
 
+var CONST = require('../utils/const');
+
+var Util = require('../utils/util');
+
 
 class Game {
     constructor() {
     }
 
+    setFengIndex(roomInfo){
+        var zhuangIndex = roomInfo.zhuangIndex;
+        var seats = roomInfo.seats;
+        for (var i = 0; i < seats.length;i++){
+            if (i === zhuangIndex){
+                seats[i].fengIndex = 0;
+            }else if (Util.checkIsLeftIndex(zhuangIndex,i,seats)){
+                seats[i].fengIndex = 3;
+            }else if (Util.checkIsRightIndex(zhuangIndex,i,seats)){
+                seats[i].fengIndex = 1;
+            }else if (Util.checkIsUpIndex(zhuangIndex,i,seats)){
+                seats[i].fengIndex = 2;
+            }
+            
+        }
+    }
 
     //开始一局新的
     begin(roomInfo){
-        roomInfo.process = 'start';
+        roomInfo.gameStatus = CONST.GAME_STATUS_START;
         if (roomInfo.count === 0){ //如果是第一局
             roomInfo.zhuangIndex = 0;
         }else{
@@ -20,6 +40,7 @@ class Game {
         }
         roomInfo.turn = roomInfo.zhuangIndex;
         this.initSeats(roomInfo);
+        this.setFengIndex(roomInfo);
         roomInfo.mjLists = [];
         this.initMjList(roomInfo.mjLists);
         this.shuffle(roomInfo.mjLists)
@@ -51,6 +72,10 @@ class Game {
         }
 
         
+    }
+
+    calcFanShu(roomInfo){
+
     }
 
     initSeats(roomInfo){
@@ -521,7 +546,18 @@ class Game {
         socket.emit('update_table',roomInfo)
     }
 
-     //未开始的时候，更新人员状态
+    
+    sendUserInfo(roomInfo){
+        if (!roomInfo){
+            Log.error('no find roominfo in sendUserInfo')
+            return 
+        }
+        Room.broacastInRoom('send_user_info',roomInfo.seats);
+    }
+
+    
+
+     //刚进来的时候，获取一次用户状态信息
     updatePepoleStatus(roomInfo){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
@@ -533,8 +569,6 @@ class Game {
         Room.broacastInRoom('update_pepole_status',roomInfo.roomId,roomInfo)
     }
 
-
-    
     //通知新的人进来了，只是要求出个提示语
     notifyNewUserLogin(roomInfo,userId){
         if (!roomInfo){

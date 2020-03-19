@@ -51,20 +51,12 @@ cc.Class({
         if (roomInfo.turn === this.turn) return;
         var zhuangIndex = this.zhuangIndex;
         var seats = roomInfo.seats;
-        var turn = roomInfo.turn
+        var turn = roomInfo.turn;
+        var fengIndex = seats[turn].fengIndex;
         this.hideAllChildren();
-        if (cc.vv.Common.checkIsMySelfIndex(zhuangIndex,turn,seats)){
-            this.node.children[0].active = true;
-        }
-        if (cc.vv.Common.checkIsLeftIndex(zhuangIndex,turn,seats)){
-            this.node.children[3].active = true;
-        }
-        if (cc.vv.Common.checkIsRightIndex(zhuangIndex,turn,seats)){
-            this.node.children[1].active = true;
-        }
-        if (cc.vv.Common.checkIsUpIndex(zhuangIndex,turn,seats)){
-            this.node.children[2].active = true;
-        }
+       
+        this.node.children[fengIndex].active = true;
+        
         this.turn = turn;
     },
 

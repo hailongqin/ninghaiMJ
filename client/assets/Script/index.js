@@ -80,6 +80,8 @@ cc.Class({
         cc.vv.Common = new Common();
         cc.vv.User = require('user');
 
+        cc.vv.CONST = require('const');
+
         var param = this.urlParse();
 
         if (cc.vv.storage.getStorage('userId')){

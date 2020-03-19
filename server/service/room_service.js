@@ -12,6 +12,8 @@ var {
 
 var Util = require('../utils/util');
 
+var CONST = require('../../utils/const')
+
 var creatingRoom = {};
 
 
@@ -89,7 +91,7 @@ router.post('/create_room', function(req, res, next){
                         zhuangIndex:0, //庄家
                         turn:0, //轮到第几个出牌
                         count:0,//第几局了
-                        process:'end'
+                        gameStatus:CONST.GAME_STATUS_NO_START
 
                     }
                     roomModel.create(condition,  (err, doc) => {

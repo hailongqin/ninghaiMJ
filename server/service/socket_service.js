@@ -15,6 +15,8 @@ var User = require('./user')
 
 var Log = require('../utils/log');
 
+var CONST = require('../utils/const')
+
 exports.start = function(){
     const server = require('http').createServer(app);
     const io = require('socket.io')(server);
@@ -121,9 +123,10 @@ exports.start = function(){
                     return seatUserIds.indexOf(item.userId) === -1;
                 })
 
-                Game.updatePepoleStatus(roomInfo);
+                Room.broacastInRoom('new_user_set_ready',roomInfo.roomId,{index:seats.length - 1,roomInfo})
                 if (conf.userCount === seats.length){
-                    roomInfo.gameStart = true;
+                    roomInfo.gameStatus = CONST.GAME_STATUS_START;
+                    Room.setRoomInfoToDB(roomInfo)
                     Game.begin(roomInfo);
                 }
             });
@@ -158,9 +161,7 @@ exports.start = function(){
                         break;
                     }
                 }
-
-                Game.updatePepoleStatus(roomInfo);
-
+                Room.broacastInRoom('user_game_ready',roomInfo.roomId,{index:index,roomInfo})
                 if (allReady){
                     if (roomInfo.timer){
                         clearTimeout(roomInfo.timer);
@@ -189,7 +190,7 @@ exports.start = function(){
                     return;
                 }
 
-                if (roomInfo.gameStart) return;
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
 
                 var seats = roomInfo.seats;//坐下的人
                 var players = roomInfo.players;
@@ -203,8 +204,6 @@ exports.start = function(){
                     players.push(seat);
                     Game.updatePepoleStatus(roomInfo);
                 }
-
-             
             })
         })
 
@@ -314,7 +313,7 @@ exports.start = function(){
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
 
-                roomInfo.process = 'end';
+                roomInfo.gameStatus = CONST.GAME_STATUS_ONE_OVER;
 
                 roomInfo.timer = setTimeout(() => {
                                      Game.begin(roomInfo);
@@ -613,6 +612,36 @@ exports.start = function(){
 				return;
 			}
 			socket.emit('ping_result');
+        });
+
+        socket.on('dismiss_room',(data)=>{
+
+            var userId = socket.userId;
+            var roomId = socket.roomId;
+            
+            if (!userId || !roomId){
+                Log.error('socket dismiss_room param is error',roomId,userId)
+                socket.emit('guo_result',{code:-1,message:"参数错误"});
+                return;
+            }   
+
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket guo get roominfo is error',err)
+                    socket.emit('guo_result',err)
+                    return;
+                }
+                
+                roomInfo.status = 
+
+                var seats = roomInfo.seats;
+                var index = Game.getIndexByUserId(seats,userId)
+                if (index === undefined || index === null){
+                    Log.error('socket guo getIndexByUserId is error',index)
+                    return;
+                }
+            })
+
         });
         
         socket.on('disconnect',()=>{

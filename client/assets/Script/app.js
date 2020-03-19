@@ -281,6 +281,23 @@ cc.Class({
       
     },
 
+    getMyIndexFromRoomInfo(roomInfo){
+        var players = roomInfo.players;
+        var seats = roomInfo.seats;
+        var userId = cc.vv.userId;
+
+        var seatUserIds = seats.map((s)=>{return s.userId});
+        var playerUserIds = players.map((s)=>{return s.userId});
+        var myIndex = -1;
+        if (playerUserIds.indexOf(userId) !== -1){
+            myIndex = seats.length;
+        }else if (seatUserIds.indexOf(userId) !== -1){
+            myIndex = seatUserIds.indexOf(userId)
+        }
+
+        return myIndex;
+    },
+
 
     initHander(){
 
@@ -317,41 +334,23 @@ cc.Class({
 
        })
 
-       // 未开始的时候，更新各个用户的状态
+       // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次
        this.node.on('update_pepole_status',(data)=>{
-
-            var gameStart = data.gameStart;
-            if (gameStart){
-                this.hideNode(this.readyBtn);
-                this.hideNode(this.unReadyBtn);
-            }
-
-            var seats = data.seats;
-            var userId = cc.vv.userId;
-      
-            var players = data.players;
-
-            var seatUserIds = seats.map((s)=>{return s.userId});
-            var playerUserIds = players.map((s)=>{return s.userId});
-            var myIndex = -1;
-            if (playerUserIds.indexOf(userId) !== -1){
-                myIndex = seats.length;
-                if (!gameStart && data.conf.userCount !== seats.length){
-                    this.showNode(this.readyBtn);
-                    this.hideNode(this.unReadyBtn);
-                }
- 
-            }else if (seatUserIds.indexOf(userId) !== -1){
-                myIndex = seatUserIds.indexOf(userId)
-                if (!gameStart){
-                    this.showNode(this.unReadyBtn);
-                    this.hideNode(this.readyBtn);
-                }
-     
-            }
-
+            var myIndex =  this.getMyIndexFromRoomInfo(data);
             this.statusNode.getComponent('status').setStatusData(myIndex,data);
+       })
 
+        //刚进来用户准备
+       this.node.on('new_user_set_ready',(data)=>{
+        var myIndex =  this.getMyIndexFromRoomInfo(data.roomInfo);
+        this.statusNode.getComponent('status').setUserInfo(data.index,myIndex,data.roomInfo.seats);
+        this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
+       })
+
+        //游戏结束后准备
+       this.node.on('user_game_ready',(data)=>{
+        var myIndex =  this.getMyIndexFromRoomInfo(data,roomInfo);
+        this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
        })
 
        // 只给个提示
@@ -701,15 +700,13 @@ cc.Class({
     setCommonChiResults(chiRootResultNode,chis,index,force = false){
 
         var base = 0;
-        if (!force){
-            var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
-            if (gameInfoChiResult.length === chis.length) return;
-            base = chis.length - gameInfoChiResult.length - 1;
-        }
-      
-       
-
+        var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
+        base = chis.length - gameInfoChiResult.length - 1;
+    
         for (var i = base;i < chis.length;i++){
+            if (!force){
+                if (chis[i].length === gameInfoChiResult[i].length) continue;
+            }
             var type = chis[i].type;
             var pai = chis[i].pai;
             var resultNode = chiRootResultNode.children[i];

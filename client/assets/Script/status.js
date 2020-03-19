@@ -35,54 +35,54 @@ cc.Class({
     },
 
     setStatusData(myIndex,roomInfo){
-        var seat = ''
-        var seats = roomInfo.seats;
-        var node = '';
-        var selected = [];
-        for (var i = 0; i < seats.length;i++){
-            seat = seats[i];
-            node = '';
-            if (cc.vv.Common.checkIsMySelfIndex(myIndex,i,seats)) selected.push({index:0,seat:seat});     
-            if (cc.vv.Common.checkIsLeftIndex(myIndex,i,seats))   selected.push({index:3,seat:seat})      
-            if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)) selected.push({index:1,seat:seat})  
-            if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats))   selected.push({index:2,seat:seat})  
+        for (var i = 0 ; i < roomInfo.seats;i++){
+            this.setUserInfo(i,myIndex,roomInfo.seats);
+            this.setUserReadyStatus(i,myIndex,roomInfo);
         }
+    },
 
-        var indexLists = selected.map((s)=>{return s.index})
+    setUserInfo(seatIndex,myIndex,seats){
 
-        for (var i = 0; i < this.node.children.length;i++){
-            var index = indexLists.indexOf(i);
-            if (index !== -1){
-                node = this.node.children[i];
-                node.active = true;
-                this.setUserInfo(node,selected[index].seat.userInfo);
-                this.setReadySign(node,roomInfo,selected[index].seat);
-            }else{
-                this.node.children[i].active = false;
+        var nodeIndex = -1;
+        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
+        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
+        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
+        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;   
+
+        if (nodeIndex !== -1){
+            var node = this.node.children[nodeIndex];
+            var userInfo = seats[seatIndex].userName;
+            if (userInfo.userName){
+                node.getChildByName('userName').getComponent(cc.Label).string = userInfo.userName
+            }
+            if (userInfo.header){
+                cc.loader.load({url: userInfo.header, type: 'png'}, function (err, tex) {        
+                    node.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
+                });
             }
         }
     },
 
-    setUserInfo(node,userInfo){
-        if (userInfo.userName){
-            node.getChildByName('userName').getComponent(cc.Label).string = userInfo.userName
-        }
-        if (userInfo.header){
-            cc.loader.load({url: userInfo.header, type: 'png'}, function (err, tex) {        
-                node.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
-            });
-        }
-    },
 
-    setReadySign(node,roomInfo,seat){
-        if ((!roomInfo.gameStart || (roomInfo.gameStart && roomInfo.process === 'end')) && seat.ready) {
-            //游戏未开始或者这轮已经结束
-            node.getChildByName('ready_sign').active = true;
-        }else{
-            node.getChildByName('ready_sign').active = false;
-        }
+    setUserReadyStatus(seatIndex,myIndex,roomInfo){
+        var nodeIndex = -1;
+        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
+        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
+        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
+        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;   
 
-        return;
+        if (nodeIndex !== -1){
+            var node = this.node.children[nodeIndex];
+            var seat = roomInfo.seats[seatIndex];
+            const CONST = cc.vv.CONST;
+            if ((roomInfo.gameStatus === CONST.GAME_STATUS_NO_START || roomInfo.gameStatus === CONST.GAME_STATUS_ONE_OVER) && seat.ready ) {
+                //游戏未开始或者这轮已经结束
+                node.getChildByName('ready_sign').active = true;
+            }else{
+                node.getChildByName('ready_sign').active = false;
+            }
+    
+        }
     },
 
     clearAllReadySign(){
@@ -90,9 +90,6 @@ cc.Class({
             this.node.children[i].getChildByName('ready_sign').active = false;
         }
     },
-
-
-
 
     onClose(){
         this.node.active = false;

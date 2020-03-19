@@ -37,6 +37,17 @@ class roomList {
     }
 
 
+    setRoomInfoToDB(roomInfo){
+        var roomId = roomInfo.roomId;
+        roomModel.updateOne({roomId},{...roomInfo})
+            .exec((err) => {
+                if (err) {
+                    Log.error('setRoomInfofromDB err',err)
+                    return;
+                } 
+            })
+    }
+
     addAndUpdateRoom(roomId,info){
         if (!roomId){
             Log.error('addAndUpdateRoom roomid is empty')
