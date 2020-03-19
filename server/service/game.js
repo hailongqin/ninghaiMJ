@@ -203,6 +203,10 @@ class Game {
         })
     }
 
+
+    notifyRoomHasDismiss(roomInfo){
+        Room.broacastInRoom('room_has_dismiss',roomInfo.roomId,{})
+    }
     getCountMap(holds){
         var countMap = {};
         if (!holds || !holds.length){
@@ -564,7 +568,19 @@ class Game {
         Room.broacastInRoom('send_user_info',roomInfo.seats);
     }
 
-    
+    sendPepoleStatus(roomInfo,userId){
+        if (!roomInfo || !userId){
+            Log.error('sendPepoleStatus',roomInfo,userId)
+            return;
+        }
+        var socket = User.getSocketByUser(userId);
+        if (!socket){
+            Log.error('sendPepoleStatus',socket)
+            return;
+        }
+
+        socket.emit('update_pepole_status',roomInfo)
+    }
 
      //刚进来的时候，获取一次用户状态信息
     updatePepoleStatus(roomInfo){
@@ -573,9 +589,17 @@ class Game {
             return 
         }
         
-        var statusList = roomInfo.se
-
         Room.broacastInRoom('update_pepole_status',roomInfo.roomId,roomInfo)
+    }
+
+    notifyCanSetReady(userId){
+        var socket = User.getSocketByUser(userId);
+        if (!socket){
+            Log.error('notifyCanSetReady',socket)
+            return;
+        }
+
+        socket.emit('can_set_ready_notify',{})
     }
 
     //通知新的人进来了，只是要求出个提示语

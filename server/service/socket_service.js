@@ -25,7 +25,8 @@ exports.start = function(){
             var roomId = data.roomId;
             var userId = data.userId;
             socket.roomId = roomId;
-            socket.userId = userId
+            socket.userId = userId;
+            console.log('receive login')
             if (!userId || !roomId){
                 Log.error('socket login param is error',roomId,userId)
                 socket.emit('login_result',{code:-1,message:"参数错误"});
@@ -38,30 +39,34 @@ exports.start = function(){
                     return;
                 }
 
+                User.bindUserAndSocket(userId,socket);
+
                 if (roomInfo.roomStatus === CONST.ROOM_STATUS_DISMISS){
-                    socket.emit('show_dialog','房间已解散');
+                    socket.emit('room_has_dismiss','房间已解散');
                     return
                 }
 
-                if (!roomInfo.dismissTimer && roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
-                    roomInfo.dismissTimer = setTimeout(() => {
-                        roomInfo.roomStatus = CONST.ROOM_STATUS_DISMISS;
-                        Room.setRoomInfoToDB(roomInfo);
-                        roomInfo.dismissTimer = null;
-                    },CONST.ROOM_DISMISS_EXPIERED_TIME);
-                }
+                // if (!roomInfo.dismissTimer && roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
+                //     roomInfo.dismissTimer = setTimeout(() => {
+                //         roomInfo.roomStatus = CONST.ROOM_STATUS_DISMISS;
+                //         Room.setRoomInfoToDB(roomInfo);
+                //         roomInfo.dismissTimer = null;
+                //         Game.notifyRoomHasDismiss(roomInfo);
+                //         Room.deleteRoom(roomInfo.roomId);
+                //     },CONST.ROOM_DISMISS_EXPIERED_TIME);
+                // }
+
 
                 var seats = roomInfo.seats;//坐下的人
                 var seatUserIds = seats.map((s)=>{return s.userId});
                 var seatIndex = seatUserIds.indexOf(userId) 
 
                 if (seatIndex !== -1){ //已经是坐下的人
-                    User.bindUserAndSocket(userId,socket);
                     var mySeat = seats[seatIndex];
                     mySeat.onLine = true;
+                    Game.sendPepoleStatus(roomInfo,userId);
                     socket.emit('game_start',roomInfo);
-                    if (roomInfo.gameStart){ //游戏已经开始了
-                       Game.updateTable(roomInfo);
+                    if (roomInfo.gameStatus === CONST.GAME_STATUS_START){ //游戏已经开始了
                        if (Game.checkMyselfHasOp(mySeat)){
                            Game.notifyOneSeatOperation(mySeat);
                        }else if (roomInfo.turn === seatIndex){
@@ -70,12 +75,13 @@ exports.start = function(){
                     }
                     return;
                 }
-
+                console.log(234)
                 var players = roomInfo.players;//观看的人
                 var playersUserIds = players.map((s)=>{return s.userId});
                 if (playersUserIds.indexOf(userId) !== -1){ //已经是看客
-                    User.bindUserAndSocket(userId,socket);
-                    Game.updatePepoleStatus(roomInfo);
+                    Game.sendPepoleStatus(roomInfo,userId);
+                    if (roomInfo.gameStatus !== CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
+                             Game.notifyCanSetReady(userId);
                     return;
                 }
 
@@ -84,13 +90,13 @@ exports.start = function(){
                     userInfo:data.userInfo || {}
                 })
 
-                User.bindUserAndSocket(userId,socket);
                 Room.addAndUpdateRoom(roomId,roomInfo);
-
-                Game.updatePepoleStatus(roomInfo);
-                Game.notifyNewUserLogin(roomInfo,userId)
+                Game.sendPepoleStatus(roomInfo,userId);
+                Game.notifyNewUserLogin(roomInfo,userId);
+                if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
+                    Game.notifyCanSetReady(userId);
             })
-            return;
+     
         })
         socket.on('set_ready', function (data) {
             var roomId = socket.roomId;
@@ -115,7 +121,7 @@ exports.start = function(){
                 var seatUserIds = seats.map((s)=>{return s.userId});
 
                 if (seatUserIds.indexOf(userId) !== -1){ //已经坐着了
-                    Game.updatePepoleStatus(roomInfo);
+                    Game.updatePepoleStatus(roomInfo); 
                     return;
                 }
 
@@ -137,14 +143,11 @@ exports.start = function(){
                     return seatUserIds.indexOf(item.userId) === -1;
                 })
 
-                Room.broacastInRoom('new_user_set_ready',roomInfo.roomId,{index:seats.length - 1,roomInfo})
+                Room.broacastInRoom('new_user_set_ready',roomInfo.roomId,{index:seats.length - 1,roomInfo});
+                Game.updatePepoleStatus(roomInfo);
                 if (conf.userCount === seats.length){
                     roomInfo.gameStatus = CONST.GAME_STATUS_START;
                     Room.setRoomInfoToDB(roomInfo);
-                    if (roomInfo.dismissTimer){
-                        clearTimeout(roomInfo.dismissTimer)
-                        roomInfo.dismissTimer = null;
-                    }
                     Game.begin(roomInfo);
                 }
             });
@@ -169,6 +172,7 @@ exports.start = function(){
                 Log.info('receive game_ready data is ',roomInfo)
 
                 var index = Game.getIndexByUserId(userId);
+                var seats = roomInfo.seats;
 
                 seats[index].ready = true;
 
@@ -335,11 +339,10 @@ exports.start = function(){
 
                 roomInfo.gameStatus = CONST.GAME_STATUS_ONE_OVER;
 
-                roomInfo.timer = setTimeout(() => {
-                                     Game.begin(roomInfo);
-                                     roomInfo.timer = null;
-                                 }, 10*1000);
-                                })
+                setTimeout(() => {
+                        Game.begin(roomInfo);
+                    }, 10*1000);
+                })
          })
 
         
@@ -616,7 +619,7 @@ exports.start = function(){
                         Game.notifyChupai(roomInfo) //通知出牌
                         return
                      }
-                    if (roomInfo.turn === fromTurn){ //这个通知不是自己的，来自其他人
+                    else { //这个通知不是自己的，来自其他人
                         Game.moveToNextTurn(roomInfo)
                         Game.fapai(roomInfo);
                      }
@@ -653,14 +656,9 @@ exports.start = function(){
                     return;
                 }
                 
-                roomInfo.status = 
+                roomInfo.status = CONST.ROOM_STATUS_DISMISS;
 
-                var seats = roomInfo.seats;
-                var index = Game.getIndexByUserId(seats,userId)
-                if (index === undefined || index === null){
-                    Log.error('socket guo getIndexByUserId is error',index)
-                    return;
-                }
+                Game.notifyRoomHasDismiss(roomInfo);
             })
 
         });

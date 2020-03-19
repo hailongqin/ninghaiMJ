@@ -3,7 +3,7 @@ var io = require('socket-io')
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:"192.168.0.100:1000",
+        ip:"192.168.0.101:1000",
         sio:null,
         pingTimer:null,
         handlerNode:null,
@@ -48,7 +48,7 @@ cc.Class({
 
             var events = [
                 'update_table','update_pepole_status','new_user_login_notify','new_user_ready_notify','op_notify','op_action_notify',
-                'chupai_action_notify','tingpai_notigy','game_start','chupai_notify','clear_op_notify'
+                'chupai_action_notify','tingpai_notigy','game_start','chupai_notify','clear_op_notify','can_set_ready_notify','user_game_ready'
             ]
 
             events.map((e)=>{

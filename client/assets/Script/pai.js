@@ -28,15 +28,14 @@ cc.Class({
         paiAltas:{
             default:null,
             type:cc.SpriteAtlas
-        }
-
+        },
     },
 
     // LIFE-CYCLE CALLBACKS:
 
-    // onLoad () {
-        
-    //  },
+    onLoad () {
+        this.eventObj = new cc.Event.EventCustom("chupai",true)
+     },
 
     start () {
 
@@ -58,7 +57,8 @@ cc.Class({
 
     clickChuPai(){
         console.log(this.node.pai);
-        cc.vv.net.send('chupai',{pai:this.node.pai});
+        this.eventObj.detail = this.node.pai;
+        this.node.dispatchEvent(this.eventObj);
     },
 
     hide(){

@@ -12,7 +12,7 @@ var {
 
 var Util = require('../utils/util');
 
-var CONST = require('../../utils/const')
+var CONST = require('../utils/const')
 
 var creatingRoom = {};
 
@@ -102,8 +102,7 @@ router.post('/create_room', function(req, res, next){
                             res.json({code:-2,message:"插入数据错误"});
                         } else {
                             delete creatingRoom[roomId];
-                            Room.addAndUpdateRoom(roomId,condition)
-                         
+                            Room.addAndUpdateRoom(roomId,condition);
                             res.json({code:0,roomId})
                         }
                     })

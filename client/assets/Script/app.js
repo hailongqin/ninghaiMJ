@@ -114,7 +114,21 @@ cc.Class({
     },
 
     // LIFE-CYCLE CALLBACKS:
-  
+    
+    showReadyBtnNode(){
+        this.hideNode(this.unReadyBtn);
+        this.showNode(this.readyBtn);
+    },
+
+    showUnReadyBtnNode(){
+        this.hideNode(this.readyBtn);
+        this.showNode(this.unReadyBtn);
+    },
+
+    hideAllReadyBtn(){
+        this.hideNode(this.readyBtn);
+        this.hideNode(this.unReadyBtn);
+    },
    
     init(){
 
@@ -138,16 +152,8 @@ cc.Class({
         cc.vv.net.close();
     },
 
-    addTouchEvent(node){
-        node.on(cc.Node.EventType.TOUCH_START,()=>{
-            console.log(this.gameInfo.canChupai); 
-            if (!this.gameInfo.canChupai) return; //是否有出牌的权利
-            this.gameInfo.canChupai = false;
-            var chupai = node.pai;
-            cc.vv.net.send('chupai',{pai:chupai})
-
-        })
-    },
+    // chupai(pai){
+      
 
     clickResultReadyBtn(){
         cc.vv.net.send('game_ready');
@@ -214,7 +220,6 @@ cc.Class({
           this.huResultModalNode.getComponent('huResult').reset();
 
           function hidePaiNode(node){
-              console.log(node);
             for(var i = 0; i < node.children.length; ++i){
                  node.children[i].getComponent('pai').hide();
              }  
@@ -306,6 +311,14 @@ cc.Class({
                 'chupai_action_notify','tingpai_notigy' delay_ms
        */ 
 
+       this.node.on('chupai',(event)=>{
+           console.log(event.detail);
+           console.log(this.gameInfo.canChupai); 
+           if (!this.gameInfo.canChupai) return; //是否有出牌的权利
+           this.gameInfo.canChupai = false;
+           cc.vv.net.send('chupai',{pai:event.detail})
+       })
+
        this.node.on('delay_ms',(data)=>{
            this.delayMsLabel.string = data;
        })
@@ -337,7 +350,13 @@ cc.Class({
        // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次
        this.node.on('update_pepole_status',(data)=>{
             var myIndex =  this.getMyIndexFromRoomInfo(data);
+            console.log('myindex is ',myIndex)
             this.statusNode.getComponent('status').setStatusData(myIndex,data);
+       })
+
+        //进来的时候，接受是否可以准备了
+       this.node.on('can_set_ready_notify',()=>{
+           this.showReadyBtnNode();
        })
 
         //刚进来用户准备
@@ -379,8 +398,7 @@ cc.Class({
             
        // 游戏开始
         this.node.on('game_start',(data) => {
-            this.readyBtn.active = false;
-            this.unReadyBtn.active = false;
+            this.hideAllReadyBtn();
             this.statusNode.getComponent('status').clearAllReadySign();
             var userId = cc.vv.userId;
             var seats = data.seats;
@@ -440,6 +458,7 @@ cc.Class({
 
     onClickReady(){
         cc.vv.net.send('set_ready',{userInfo:cc.vv.userInfo});
+        this.showUnReadyBtnNode();
     },
 
     onClickCancleReady(){
@@ -698,14 +717,12 @@ cc.Class({
 
 
     setCommonChiResults(chiRootResultNode,chis,index,force = false){
-
-        var base = 0;
         var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
-        base = chis.length - gameInfoChiResult.length - 1;
     
-        for (var i = base;i < chis.length;i++){
-            if (!force){
-                if (chis[i].length === gameInfoChiResult[i].length) continue;
+        for (var i = 0;i < chis.length;i++){
+            console.log(chis,i,gameInfoChiResult)
+            if (!force && gameInfoChiResult[i] && gameInfoChiResult[i].type){ //这里主要为了由碰转杠
+                if (chis[i].type === gameInfoChiResult[i].type) continue;
             }
             var type = chis[i].type;
             var pai = chis[i].pai;

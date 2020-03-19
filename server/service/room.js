@@ -36,16 +36,22 @@ class roomList {
         this.roomList = {}
     }
 
+    deleteRoom(roomId){
+        if (this.roomList[roomId]){
+            delete this.roomList[roomId];
+        }
+    }
 
     setRoomInfoToDB(roomInfo){
         var roomId = roomInfo.roomId;
-        roomModel.updateOne({roomId},{...roomInfo})
-            .exec((err) => {
-                if (err) {
-                    Log.error('setRoomInfofromDB err',err)
-                    return;
-                } 
-            })
+        
+        roomModel.updateOne({roomId},roomInfo,(err)=>{
+            if (err) {
+                Log.error('setRoomInfofromDB err',err)
+                return;
+            } 
+        })
+       
     }
 
     addAndUpdateRoom(roomId,info){

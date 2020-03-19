@@ -81,6 +81,7 @@ cc.Class({
         cc.vv.User = require('user');
 
         cc.vv.CONST = require('const');
+        console.log(cc.vv.CONST)
 
         var param = this.urlParse();
 
