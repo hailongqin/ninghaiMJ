@@ -37,6 +37,20 @@ exports.start = function(){
                     socket.emit('login_result',err);
                     return;
                 }
+
+                if (roomInfo.roomStatus === CONST.ROOM_STATUS_DISMISS){
+                    socket.emit('show_dialog','房间已解散');
+                    return
+                }
+
+                if (!roomInfo.dismissTimer && roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
+                    roomInfo.dismissTimer = setTimeout(() => {
+                        roomInfo.roomStatus = CONST.ROOM_STATUS_DISMISS;
+                        Room.setRoomInfoToDB(roomInfo);
+                        roomInfo.dismissTimer = null;
+                    },CONST.ROOM_DISMISS_EXPIERED_TIME);
+                }
+
                 var seats = roomInfo.seats;//坐下的人
                 var seatUserIds = seats.map((s)=>{return s.userId});
                 var seatIndex = seatUserIds.indexOf(userId) 
@@ -126,7 +140,11 @@ exports.start = function(){
                 Room.broacastInRoom('new_user_set_ready',roomInfo.roomId,{index:seats.length - 1,roomInfo})
                 if (conf.userCount === seats.length){
                     roomInfo.gameStatus = CONST.GAME_STATUS_START;
-                    Room.setRoomInfoToDB(roomInfo)
+                    Room.setRoomInfoToDB(roomInfo);
+                    if (roomInfo.dismissTimer){
+                        clearTimeout(roomInfo.dismissTimer)
+                        roomInfo.dismissTimer = null;
+                    }
                     Game.begin(roomInfo);
                 }
             });
@@ -319,6 +337,7 @@ exports.start = function(){
 
                 roomInfo.timer = setTimeout(() => {
                                      Game.begin(roomInfo);
+                                     roomInfo.timer = null;
                                  }, 10*1000);
                                 })
          })
