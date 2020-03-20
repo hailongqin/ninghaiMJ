@@ -68,5 +68,12 @@ exports.CLIENT_CHUPAI_NOTIFY = 'CLIENT_CHUPAI_NOTIFY';
 exports.CLIENT_DISMISS_ROOM_NOTIFY = 'CLIENT_DISMISS_ROOM_NOTIFY';
 
 
+exports.MJ_TYPE = {
+    0:'幺半三',
+    1:'幺半四',
+    2:'幺半六'
+}
+
+
 
 

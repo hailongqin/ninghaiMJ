@@ -142,5 +142,6 @@ module.exports = {
     checkIsMySelfIndex,
     checkIsLeftIndex,
     checkIsRightIndex,
-    checkIsUpIndex
+    checkIsUpIndex,
+    test
 }

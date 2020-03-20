@@ -584,7 +584,7 @@ class Game {
             return;
         }
 
-        socket.emit(CONST.SERVER_ROOM_SEND_BASE_INFO,{conf:roomInfo.conf})
+        socket.emit(CONST.SERVER_ROOM_SEND_BASE_INFO,{conf:roomInfo.conf,count:roomInfo.count})
 
     }
 

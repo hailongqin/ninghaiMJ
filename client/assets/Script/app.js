@@ -115,6 +115,11 @@ cc.Class({
             type:cc.Node
         },
 
+        headerNode:{
+            default:null,
+            type:cc.Node
+        },
+
         gameInfo:null
     },
 
@@ -424,7 +429,11 @@ cc.Class({
 
        this.node.on(CONST.SERVER_ROOM_SEND_BASE_INFO,(data)=>{
            var conf = data.conf;
-           
+           var currentCount = data.count;
+           var type = conf.type;
+           this.headerNode.getChildByName('type').getComponent(cc.Label).string = cc.vv.CONST.MJ_TYPE[type];
+           this.headerNode.getChildByName('jushu').getComponent(cc.Label).string = '总共'+conf.jushu+'局';
+           this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(conf.jushu - currentCount)+'局';
        })
             
        // 游戏开始
@@ -483,6 +492,8 @@ cc.Class({
             this.setTables(seats);
             this.showRemainNumberNode();
             this.setRemainNumber(data);
+
+            this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(data.conf.jushu - data.count)+'局';
         })
 
        
@@ -514,7 +525,8 @@ cc.Class({
     showResultModal(data){
         var roomInfo = data.roomInfo;
         var seats = roomInfo.seats;
-        for (var i = 0; i < seats.length;i++){
+        var i = 0
+        for (; i < seats.length;i++){
             var node = this.huResultModalNode.getChildByName('list'+i);
             var seat = seats[i]
             var holds = seat.holds;
@@ -538,6 +550,9 @@ cc.Class({
             }else{
                 this.hideNode(huShowNode);
             }
+        }
+        for (; i < 4;i++){
+            this.huResultModalNode.getChildByName('list'+i).active = false;
         }
         this.showNode(this.huResultModalNode);
     },
