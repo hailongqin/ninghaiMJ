@@ -15,7 +15,9 @@ var User = require('./user')
 
 var Log = require('../utils/log');
 
-var CONST = require('../utils/const')
+var CONST = require('../utils/const');
+
+var Timer = require('../utils/timer')
 
 exports.start = function(){
     const server = require('http').createServer(app);
@@ -40,19 +42,23 @@ exports.start = function(){
                 User.bindUserAndSocket(userId,socket);
 
                 if (roomInfo.roomStatus === CONST.ROOM_STATUS_DISMISS){
-                    Game.sendRoomStatus( CONST.ROOM_STATUS_DISMISS)
+                    Game.sendRoomStatus(roomId, CONST.ROOM_STATUS_DISMISS)
                     return
                 }
 
-                // if (!roomInfo.dismissTimer && roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
-                //     roomInfo.dismissTimer = setTimeout(() => {
-                //         roomInfo.roomStatus = CONST.ROOM_STATUS_DISMISS;
-                //         Room.setRoomInfoToDB(roomInfo);
-                //         roomInfo.dismissTimer = null;
-                //         Game.notifyRoomHasDismiss(roomInfo);
-                //         Room.deleteRoom(roomInfo.roomId);
-                //     },CONST.ROOM_DISMISS_EXPIERED_TIME);
-                // }
+                var timer = Timer.getTimerById(roomId);
+
+                if (!timer && roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
+                    timer = setTimeout(() => {
+                        roomInfo.roomStatus = CONST.ROOM_STATUS_DISMISS;
+                        Room.setRoomInfoToDB(roomInfo);
+                        Timer.deleteTimer(roomId)
+                        Game.sendRoomStatus(roomId, CONST.ROOM_STATUS_DISMISS)
+                        Room.deleteRoom(roomInfo.roomId);
+                    },CONST.ROOM_DISMISS_EXPIERED_TIME); 
+
+                    Timer.saveTimer(roomId,timer);
+                }
 
 
                 var seats = roomInfo.seats;//坐下的人
@@ -146,6 +152,7 @@ exports.start = function(){
                 if (conf.userCount === seats.length){
                     roomInfo.gameStatus = CONST.GAME_STATUS_START;
                     Room.setRoomInfoToDB(roomInfo);
+                    Timer.deleteTimer(roomId)
                     Game.begin(roomInfo);
                 }
             });
@@ -184,14 +191,10 @@ exports.start = function(){
                     }
                 }
                 Room.broacastInRoom(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,roomInfo.roomId,{index:index,roomInfo})
-                // if (allReady){
-                //     if (roomInfo.timer){
-                //         clearTimeout(roomInfo.timer);
-                //         roomInfo.timer = null
-                //     }
-
-                //     Game.beigin(roomInfo);
-                // }
+                if (allReady){
+                    Timer.deleteTimer(roomId);
+                    Game.beigin(roomInfo);
+                }
             })
         })
         socket.on(CONST.CLIENT_CANCEL_READY, function () {
@@ -335,10 +338,13 @@ exports.start = function(){
 
                 roomInfo.gameStatus = CONST.GAME_STATUS_ONE_OVER;
 
-                setTimeout(() => {
+                var timer = setTimeout(() => {
+                        Timer.deleteTimer(roomId);
                         Game.begin(roomInfo);
                     }, 10*1000);
                 })
+
+                Timer.saveTimer(roomId,timer)
          })
 
         

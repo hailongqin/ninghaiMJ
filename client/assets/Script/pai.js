@@ -34,7 +34,7 @@ cc.Class({
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
-        this.eventObj = new cc.Event.EventCustom("chupai",true)
+        this.eventObj = new cc.Event.EventCustom("cocos_inner_chupai_dispatch",true)
      },
 
     start () {

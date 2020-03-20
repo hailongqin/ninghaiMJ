@@ -306,12 +306,18 @@ cc.Class({
 
     initHander(){
 
-       /*
-       *                 'update_table','update_pepole_status','new_user_login_notify','op_notify','op_action_notify',
-                'chupai_action_notify','tingpai_notigy' delay_ms
-       */ 
+    
+
 
        var CONST = cc.vv.CONST;
+
+       this.node.on('cocos_inner_chupai_dispatch',(event)=>{
+            console.log(event.detail);
+            console.log(this.gameInfo.canChupai); 
+            if (!this.gameInfo.canChupai) return; //是否有出牌的权利
+            this.gameInfo.canChupai = false;
+            cc.vv.net.send(CONST.CLIENT_CHUPAI_NOTIFY,{pai:event.detail})
+        })
 
        this.node.on('delay_ms',(data)=>{
            this.delayMsLabel.string = data;

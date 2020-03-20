@@ -422,16 +422,13 @@ class Game {
        return false
     }
 
-    sendRoomStatus(userId,status){
-        if (!userId){
+    sendRoomStatus(roomId,status){
+        if (!roomId || !status){
             Log.error('no userid')
             return;
         }
-        var socket = User.getSocketByUser(userId);
-        if (!socket){
-            Log.error('no socket');
-        }
-        socket.broacastInRoom(CONST.ROOM_STATUS_NOTIFY,status)
+        
+        Room.broacastInRoom(CONST.ROOM_STATUS_NOTIFY,roomId,status)
     }
 
     checkMyselfHasOp(seat){
