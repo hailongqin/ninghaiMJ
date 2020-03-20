@@ -21,7 +21,7 @@ exports.start = function(){
     const server = require('http').createServer(app);
     const io = require('socket.io')(server);
     io.on('connection',function(socket) {
-        socket.on('login',function(data){
+        socket.on(CONST.CLIENT_LOGIN,function(data){
             var roomId = data.roomId;
             var userId = data.userId;
             socket.roomId = roomId;
@@ -29,20 +29,18 @@ exports.start = function(){
             console.log('receive login')
             if (!userId || !roomId){
                 Log.error('socket login param is error',roomId,userId)
-                socket.emit('login_result',{code:-1,message:"参数错误"});
                 return;
             }
 
             Room.getRoomInfo(roomId,(err,roomInfo)=> {
                 if (err) {
-                    socket.emit('login_result',err);
                     return;
                 }
 
                 User.bindUserAndSocket(userId,socket);
 
                 if (roomInfo.roomStatus === CONST.ROOM_STATUS_DISMISS){
-                    socket.emit('room_has_dismiss','房间已解散');
+                    Game.sendRoomStatus( CONST.ROOM_STATUS_DISMISS)
                     return
                 }
 
@@ -65,7 +63,7 @@ exports.start = function(){
                     var mySeat = seats[seatIndex];
                     mySeat.onLine = true;
                     Game.sendPepoleStatus(roomInfo,userId);
-                    socket.emit('game_start',roomInfo);
+                    socket.emit(CONST.SERVER_GAME_START_NOTIFY,roomInfo);
                     if (roomInfo.gameStatus === CONST.GAME_STATUS_START){ //游戏已经开始了
                        if (Game.checkMyselfHasOp(mySeat)){
                            Game.notifyOneSeatOperation(mySeat);
@@ -98,7 +96,7 @@ exports.start = function(){
             })
      
         })
-        socket.on('set_ready', function (data) {
+        socket.on(CONST.CLIENT_SET_READY, function (data) {
             var roomId = socket.roomId;
             var userId = socket.userId;
 
@@ -143,7 +141,7 @@ exports.start = function(){
                     return seatUserIds.indexOf(item.userId) === -1;
                 })
 
-                Room.broacastInRoom('new_user_set_ready',roomInfo.roomId,{index:seats.length - 1,roomInfo});
+                Room.broacastInRoom(CONST.SERVER_ROOM_NEW_USER_SET_READY,roomInfo.roomId,{index:seats.length - 1,roomInfo});
                 Game.updatePepoleStatus(roomInfo);
                 if (conf.userCount === seats.length){
                     roomInfo.gameStatus = CONST.GAME_STATUS_START;
@@ -155,7 +153,7 @@ exports.start = function(){
 
         });
 
-        socket.on('game_ready', function (data) {
+        socket.on(CONST.CLIENT_NEXT_JU_READY, function (data) {
             var roomId = socket.roomId;
             var userId = socket.userId;
 
@@ -175,6 +173,7 @@ exports.start = function(){
                 var index = Game.getIndexByUserId(seats,userId);
           
 
+                
                 seats[index].ready = true;
 
                 var allReady = true;
@@ -184,7 +183,7 @@ exports.start = function(){
                         break;
                     }
                 }
-                Room.broacastInRoom('user_game_ready',roomInfo.roomId,{index:index,roomInfo})
+                Room.broacastInRoom(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,roomInfo.roomId,{index:index,roomInfo})
                 // if (allReady){
                 //     if (roomInfo.timer){
                 //         clearTimeout(roomInfo.timer);
@@ -195,13 +194,12 @@ exports.start = function(){
                 // }
             })
         })
-        socket.on('cancel_ready', function () {
+        socket.on(CONST.CLIENT_CANCEL_READY, function () {
             var roomId = socket.roomId;
             var userId = socket.userId;
 
             if (!userId || !roomId){
                 Log.error('socket cancel_ready param is error',roomId,userId)
-                socket.emit('cancel_ready_result',{code:-1,message:"参数错误"});
                 return;
             }
 
@@ -209,7 +207,6 @@ exports.start = function(){
 
                 if (err){
                     Log.error('socket cancel_ready get roominfo is error',err)
-                    socket.emit('cancel_ready_result',err)
                     return;
                 }
 
@@ -230,7 +227,7 @@ exports.start = function(){
             })
         })
 
-        socket.on('chupai',function(data){
+        socket.on(CONST.CLIENT_CHUPAI_NOTIFY,function(data){
             console.log('receive chupai',data)
             var roomId = socket.roomId;
             var userId = socket.userId;
@@ -293,19 +290,17 @@ exports.start = function(){
         })
 
          
-        socket.on('hu',(data)=>{
+        socket.on(CONST.CLIENT_HU_NOTIFY,(data)=>{
             var roomId = socket.roomId;
             var userId = socket.userId;      
             if (!userId || !roomId){
                 Log.error('socket gang param is error',roomId,userId)
-                socket.emit('chi_result',{code:-1,message:"参数错误"});
                 return;
             }   
 
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket hu get roominfo is error',err)
-                    socket.emit('chi_result',err)
                     return;
                 }
                 Log.info('receive hu data is ',roomInfo)
@@ -347,22 +342,20 @@ exports.start = function(){
          })
 
         
-        socket.on('gang',(data)=>{
+        socket.on(CONST.CLIENT_GANG_NOTIFY,(data)=>{
             var roomId = socket.roomId;
             var userId = socket.userId;
             if (!userId || !roomId){
                 Log.error('socket gang param is error',roomId,userId)
-                socket.emit('chi_result',{code:-1,message:"参数错误"});
                 return;
             }   
 
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket gang get roominfo is error',err)
-                    socket.emit('chi_result',err)
                     return;
                 }
-                Log.info('gang hu data is ',roomInfo)
+                Log.info('gang gang data is ',roomInfo)
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -434,20 +427,18 @@ exports.start = function(){
         })
             
 
-        socket.on('peng',(data)=>{
+        socket.on(CONST.CLIENT_PENG_NOTIFY,(data)=>{
             var roomId = socket.roomId;
             var userId = socket.userId;
 
             if (!userId || !roomId){
                 Log.error('socket peng param is error',roomId,userId)
-                socket.emit('peng_result',{code:-1,message:"参数错误"});
                 return;
             }   
 
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket peng get roominfo is error',err)
-                    socket.emit('peng_result',err)
                     return;
                 }
                 Log.info('receive peng data is ',roomInfo);
@@ -508,7 +499,7 @@ exports.start = function(){
             })
         })
 
-        socket.on('chi',(data)=>{
+        socket.on(CONST.CLIENT_CHI_NOTIGY,(data)=>{
 
             console.log('receive chi data ',data)
             var roomId = socket.roomId;
@@ -516,14 +507,12 @@ exports.start = function(){
 
             if (!userId || !roomId){
                 Log.error('socket chi param is error',roomId,userId)
-                socket.emit('chi_result',{code:-1,message:"参数错误"});
                 return;
             }   
 
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket chi get roominfo is error',err)
-                    socket.emit('chi_result',err)
                     return;
                 }
                 Log.info('receive chi data is ',roomInfo)
@@ -593,21 +582,19 @@ exports.start = function(){
             })    
         })
 
-        socket.on('guo',(data)=>{
+        socket.on(CONST.CLIENT_GUO_NOTIFY,(data)=>{
             var roomId = socket.roomId;
             var userId = socket.userId;
 
 
             if (!userId || !roomId){
                 Log.error('socket guo param is error',roomId,userId,fromTurn)
-                socket.emit('guo_result',{code:-1,message:"参数错误"});
                 return;
             }   
 
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket guo get roominfo is error',err)
-                    socket.emit('guo_result',err)
                     return;
                 }
                 Log.info('roomInfo',roomInfo);
@@ -646,36 +633,34 @@ exports.start = function(){
             }) 
         })
 
-        socket.on('ping',(data) => {
+        socket.on(CONST.CLIENT_PING,(data) => {
 			var userId = socket.userId;
 			if(!userId){
                 Log.error('socket ping param is error',roomId,userId)
 				return;
 			}
-			socket.emit('ping_result');
+			socket.emit(CONST.SERVER_PING_RESULT_REPLY);
         });
 
-        socket.on('dismiss_room',(data)=>{
+        socket.on(CONST.CLIENT_DISMISS_ROOM_NOTIFY,(data)=>{
 
             var userId = socket.userId;
             var roomId = socket.roomId;
             
             if (!userId || !roomId){
                 Log.error('socket dismiss_room param is error',roomId,userId)
-                socket.emit('guo_result',{code:-1,message:"参数错误"});
                 return;
             }   
 
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket guo get roominfo is error',err)
-                    socket.emit('guo_result',err)
                     return;
                 }
                 
                 roomInfo.status = CONST.ROOM_STATUS_DISMISS;
 
-                Game.notifyRoomHasDismiss(roomInfo);
+                // Game.notifyRoomHasDismiss(roomInfo);
             })
 
         });
@@ -693,7 +678,6 @@ exports.start = function(){
             Room.getRoomInfo(roomId,(err,roomInfo)=>{
                 if (err){
                     Log.error('socket guo get roominfo is error',err)
-                    socket.emit('guo_result',err)
                     return;
                 }
 

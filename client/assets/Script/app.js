@@ -143,7 +143,7 @@ cc.Class({
           this.initHander();
           var param = {userId:cc.vv.userId,roomId:cc.vv.roomId};
             param.userInfo =  cc.vv.userInfo
-          cc.vv.net.send('login',param)
+          cc.vv.net.send(cc.vv.CONST.CLIENT_LOGIN,param)
       },this.node);
     },
 
@@ -156,7 +156,7 @@ cc.Class({
       
 
     clickResultReadyBtn(){
-        cc.vv.net.send('game_ready');
+        cc.vv.net.send(cc.vv.CONST.CLIENT_NEXT_JU_READY);
         this.clearTable();
     },
    
@@ -311,27 +311,23 @@ cc.Class({
                 'chupai_action_notify','tingpai_notigy' delay_ms
        */ 
 
-       this.node.on('chupai',(event)=>{
-           if (!this.gameInfo.canChupai) return; //是否有出牌的权利
-           this.gameInfo.canChupai = false;
-           cc.vv.net.send('chupai',{pai:event.detail})
-       })
+       var CONST = cc.vv.CONST;
 
        this.node.on('delay_ms',(data)=>{
            this.delayMsLabel.string = data;
        })
 
-       this.node.on('chupai_notify',()=>{
+       this.node.on(CONST.SERVER_GAME_CHUPAI_NOTIFY,()=>{
            this.gameInfo.canChupai = true
        })
 
        //显示tingpai 的节点
-       this.node.on('tingpai_notigy',(data)=>{
+       this.node.on(CONST.SERVER_GAME_TINGPAI_NOTIFY,(data)=>{
             this.setTingPaiResult(data);
        })
 
        //值给个声音，或者显示文案
-       this.node.on('op_action_notify',(data)=>{
+       this.node.on(CONST.SERVER_GAME_OP_ACTION_NOTIFY,(data)=>{
             if (data.type === 'hu'){
                 this.setHuNodePosition(data.index);
                 setTimeout(() => {
@@ -340,42 +336,38 @@ cc.Class({
             }
        })
 
-       // 只给个声音
-       this.node.on('chupai_action_notify',(data)=>{
-
-       })
-
        // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次
-       this.node.on('update_pepole_status',(data)=>{
+       this.node.on(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,(data)=>{
             var myIndex =  this.getMyIndexFromRoomInfo(data);
             this.statusNode.getComponent('status').setStatusData(myIndex,data);
        })
 
         //进来的时候，接受是否可以准备了
-       this.node.on('can_set_ready_notify',()=>{
+       this.node.on(CONST.SERVER_GAME_CAN_SET_READY,()=>{
            this.showReadyBtnNode();
        })
 
         //刚进来用户准备
-       this.node.on('new_user_set_ready',(data)=>{
+       this.node.on(CONST.SERVER_ROOM_NEW_USER_SET_READY,(data)=>{
         var myIndex =  this.getMyIndexFromRoomInfo(data.roomInfo);
         this.statusNode.getComponent('status').setUserInfo(data.index,myIndex,data.roomInfo.seats);
         this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
        })
 
         //游戏结束后准备
-       this.node.on('user_game_ready',(data)=>{
+       this.node.on(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,(data)=>{
         var myIndex =  this.getMyIndexFromRoomInfo(data,roomInfo);
         this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
        })
+       
 
        // 只给个提示
-       this.node.on('new_user_login_notify',(data)=>{
+       this.node.on(CONST.SERVER_GAME_NEW_USER_LOGIN_NOTIFY,(data)=>{
        // this.setTipConetnt(data)
        })
 
        //更新手牌，出牌，花牌，持牌等
-       this.node.on('update_table',(data)=>{
+       this.node.on(CONST.SERVER_GAME_UPDATE_TABLE,(data)=>{
          // 更新table
          var seats = data.seats;
          this.fengNode.getComponent('feng').setTurn(data)
@@ -383,18 +375,18 @@ cc.Class({
         this.setRemainNumber(data)
        })
 
-       this.node.on('clear_op_notify',(data)=>{
+       this.node.on(CONST.SERVER_GAME_CLEAR_OP_NOTIFY,(data)=>{
             this.gameInfo.op = {};
             this.opNode.getComponent('operation').hide();
        })
        // 操作通知
-       this.node.on('op_notify',(data)=>{
+       this.node.on(CONST.SERVER_GAME_OP_NOTIFY,(data)=>{
         this.opNode.getComponent('operation').showOperation(data.op)
 
        })
             
        // 游戏开始
-        this.node.on('game_start',(data) => {
+        this.node.on(CONST.SERVER_GAME_STATUS_START,(data) => {
             this.hideAllReadyBtn();
             this.statusNode.getComponent('status').clearAllReadySign();
             var userId = cc.vv.userId;
@@ -454,12 +446,12 @@ cc.Class({
     },
 
     onClickReady(){
-        cc.vv.net.send('set_ready',{userInfo:cc.vv.userInfo});
+        cc.vv.net.send(cc.vv.CONST.CLIENT_SET_READY,{userInfo:cc.vv.userInfo});
         this.showUnReadyBtnNode();
     },
 
     onClickCancleReady(){
-        cc.vv.net.send('cancel_ready');
+        cc.vv.net.send(cc.vv.CONST.CLIENT_CANCEL_READY);
     },
 
     showResultModal(data){

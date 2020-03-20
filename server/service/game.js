@@ -47,7 +47,7 @@ class Game {
         this.initEveryOnePai(roomInfo);
  
         roomInfo.count++;
-        Room.broacastInRoom('game_start',roomInfo.roomId,roomInfo);
+        Room.broacastInRoom(CONST.GAME_START_NOTIFY,roomInfo.roomId,roomInfo);
 
         var isTianHu = false
         for (var i = 0; i < roomInfo.seats.length;i++){
@@ -203,10 +203,6 @@ class Game {
         })
     }
 
-
-    notifyRoomHasDismiss(roomInfo){
-        Room.broacastInRoom('room_has_dismiss',roomInfo.roomId,{})
-    }
     getCountMap(holds){
         var countMap = {};
         if (!holds || !holds.length){
@@ -377,7 +373,7 @@ class Game {
         for (var i = 0;i< roomInfo.seats.length;i++){
             roomInfo.seats[i].op = {};
         }
-        Room.broacastInRoom('clear_op_notify',roomInfo.roomId,{})
+        Room.broacastInRoom(CONST.GAME_CLEAR_OP_NOTIFY,roomInfo.roomId,{})
     }
 
     waitOtherOperation(seats,index,level,callback){
@@ -424,6 +420,18 @@ class Game {
            if (op.canHu || op.canGang || op.canPeng || op.canChi) return true
        }
        return false
+    }
+
+    sendRoomStatus(userId,status){
+        if (!userId){
+            Log.error('no userid')
+            return;
+        }
+        var socket = User.getSocketByUser(userId);
+        if (!socket){
+            Log.error('no socket');
+        }
+        socket.broacastInRoom(CONST.ROOM_STATUS_NOTIFY,status)
     }
 
     checkMyselfHasOp(seat){
@@ -527,7 +535,7 @@ class Game {
             Log.error('no find roominfo in updateTable')
             return 
         }
-        Room.broacastInRoom('update_table',roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.GAME_UPDATE_TABLE,roomInfo.roomId,roomInfo)
     }
 
     updateOneTable(roomInfo,userId){
@@ -542,7 +550,7 @@ class Game {
             return 
         }
 
-        socket.emit('update_table',roomInfo)
+        socket.emit(CONST.SERVER_GAME_UPDATE_TABLE,roomInfo)
     }
 
     
@@ -551,7 +559,7 @@ class Game {
             Log.error('no find roominfo in sendUserInfo')
             return 
         }
-        Room.broacastInRoom('send_user_info',roomInfo.seats);
+        Room.broacastInRoom(CONST.SERVER_ROOM_SEND_USER_INFO,roomInfo.seats);
     }
 
     sendPepoleStatus(roomInfo,userId){
@@ -565,7 +573,7 @@ class Game {
             return;
         }
 
-        socket.emit('update_pepole_status',roomInfo)
+        socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo)
     }
 
      //刚进来的时候，获取一次用户状态信息
@@ -575,7 +583,7 @@ class Game {
             return 
         }
         
-        Room.broacastInRoom('update_pepole_status',roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.GAME_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
     }
 
     notifyCanSetReady(userId){
@@ -585,7 +593,7 @@ class Game {
             return;
         }
 
-        socket.emit('can_set_ready_notify',{})
+        socket.emit(CONST.SERVER_GAME_CAN_SET_READY,{})
     }
 
     //通知新的人进来了，只是要求出个提示语
@@ -595,7 +603,7 @@ class Game {
             return 
         }   
 
-        Room.broacastInRoom('new_user_login_notify',roomInfo.roomId,userId,[userId])
+        Room.broacastInRoom(CONST.GAME_NEW_USER_LOGIN_NOTIFY,roomInfo.roomId,userId,[userId])
     }
 
 
@@ -626,7 +634,7 @@ class Game {
                 return;
             }
 
-            socket.emit('op_notify',{op})
+            socket.emit(CONST.SERVER_GAME_OP_NOTIFY,{op})
         }
 
         return hasOp;
@@ -639,7 +647,7 @@ class Game {
             return 
         }   
 
-        Room.broacastInRoom('op_action_notify',roomInfo.roomId,data,excludeUsers)
+        Room.broacastInRoom(CONST.GAME_OP_ACTION_NOTIFY,roomInfo.roomId,data,excludeUsers)
     }
 
     //通知前端出牌
@@ -652,17 +660,7 @@ class Game {
         var seats = roomInfo.seats;
         var turn = roomInfo.turn;
         var socket = User.getSocketByUser(seats[turn].userId);
-        socket.emit('chupai_notify');
-    }
-
-    //播放声音
-    notifyChupaiAction(roomInfo,operationResult,userId){
-        if (!roomInfo){
-            Log.error('no find roominfo in updateSeatStatus')
-            return 
-        }   
-
-        Room.broacastInRoom('chupai_action_notify',roomInfo.roomId,operationResult,[userId])
+        socket.emit(CONST.SERVER_GAME_CHUPAI_NOTIFY);
     }
 
     notifyTingPai(seat){
@@ -672,7 +670,7 @@ class Game {
             return
         }
 
-        socket.emit('tingpai_notigy',seat.tingMap)
+        socket.emit(CONST.SERVER_GAME_TINGPAI_NOTIFY,seat.tingMap)
     }
 
     checkCanTingPai(seat){

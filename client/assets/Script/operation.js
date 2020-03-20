@@ -70,8 +70,10 @@ cc.Class({
         var keys = [
             {
                 action:'canChi',
-                type:'chi'
-            },{action:'canPeng',type:'peng'},{action:'canGang',type:'gang'},{action:"canHu",type:'hu'}];
+                type:cc.vv.CONST.CLIENT_CHI_NOTIGY
+            },{action:'canPeng',type:cc.vv.CONST.CLIENT_CHI_NOTIGY},
+            {action:'canGang',type:cc.vv.CONST.CLIENT_GANG_NOTIGY},
+            {action:"canHu",type:cc.vv.CONST.CLIENT_HU_NOTIGY}];
 
         keys.forEach((k)=>{
             if (op[k.action]){
@@ -91,7 +93,7 @@ cc.Class({
         console.log('clickchiitem',param);
         if (!this.op || !this.op.canChi) return
         var index = parseInt(param);
-        cc.vv.net.send('chi',{chiIndex:index})
+        cc.vv.net.send(cc.vv.CONST.CLIENT_CHI_NOTIGY,{chiIndex:index})
     },
 
     clearOp(){
@@ -108,7 +110,7 @@ cc.Class({
             }
 
             if (node.opType === 'guo'){
-                cc.vv.net.send('guo');
+                cc.vv.net.send(cc.vv.CONST.CLIENT_GUO_NOTIFY);
                 return;
             }
 
@@ -121,7 +123,7 @@ cc.Class({
                     }
                     this.node.getChildByName('chilist').active = true;
                 }else{
-                    cc.vv.net.send('chi',{chiIndex:0})
+                    cc.vv.net.send(cc.vv.CONST.CLIENT_CHI_NOTIGY,{chiIndex:0})
                 }
 
                 return;

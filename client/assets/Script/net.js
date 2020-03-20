@@ -20,7 +20,7 @@ cc.Class({
 
             var self = this;
             var opts = {
-                'reconnection':true,
+                'reconnection':false,
                 'force new connection': true,
                 'transports':['websocket', 'polling']
             }
@@ -45,10 +45,27 @@ cc.Class({
                 console.log('connect_failed');
             });
 
-
+            var CONST = cc.vv.CONST;
             var events = [
-                'update_table','update_pepole_status','new_user_login_notify','new_user_ready_notify','op_notify','op_action_notify',
-                'chupai_action_notify','tingpai_notigy','game_start','chupai_notify','clear_op_notify','can_set_ready_notify','user_game_ready'
+                CONST.SERVER_GAME_STATUS_NO_START,
+                CONST.SERVER_GAME_STATUS_START,
+                CONST.SERVER_GAME_STATUS_ONE_OVER,
+                CONST.SERVER_GAME_STATUS_END,
+                CONST.SERVER_GAME_START_NOTIFY , //游戏开始通知
+                CONST.SERVER_PING_RESULT_REPLY, //ping回复
+                CONST.SERVER_GAME_UPDATE_TABLE , //更新桌面
+                CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS , //更新人员状态
+                CONST.SERVER_GAME_CAN_SET_READY , //刚进来是否可以进行准备
+                CONST.SERVER_GAME_NEW_USER_LOGIN_NOTIFY , //新用户登录
+                CONST.SERVER_GAME_OP_NOTIFY , //操作通知
+                CONST.SERVER_GAME_CHUPAI_NOTIFY , //出牌通知
+                CONST.SERVER_GAME_TINGPAI_NOTIFY ,//听牌通知
+                CONST.SERVER_GAME_OP_ACTION_NOTIFY , //操作结果通知
+                CONST.SERVER_GAME_CLEAR_OP_NOTIFY , //清除通知
+                CONST.SERVER_ROOM_STATUS_NOTIFY , //房间状态通知
+                CONST.SERVER_ROOM_SEND_USER_INFO , //用户信息通知
+                CONST.SERVER_ROOM_NEW_USER_SET_READY , //新用户准备
+                CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY , //下一句准备
             ]
 
             events.map((e)=>{
@@ -63,26 +80,19 @@ cc.Class({
             var lastSendTime = '';
             var lastReceiveTime = '';
             var delayMs = 0;
-            this.sig.on('ping_result',()=>{
+            this.sig.on(cc.vv.CONST.SERVER_PING_RESULT_REPLY,()=>{
                 lastReceiveTime = Date.now();
                 delayMs = lastReceiveTime - lastSendTime;
                 this.dispatchEvent('delay_ms',delayMs)
             })
             this.pingTimer = setInterval(()=>{
                 lastSendTime = Date.now();
-                this.send('ping');
+                this.send(cc.vv.CLIENT_PING);
             },5000)
         },
         send:function(event,data){
             if(this.sio.connected){
                 this.sio.emit(event,data);
-            }
-        },
-
-        ping:function(){
-            if(this.sio){
-                this.lastSendTime = Date.now();
-                this.send('game_ping');
             }
         },
 
