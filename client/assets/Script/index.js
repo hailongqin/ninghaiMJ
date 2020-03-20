@@ -66,6 +66,7 @@ cc.Class({
      onLoad () {
         cc.vv = {};
         cc.vv.alertScript =  cc.find("alert").getComponent("alert");
+        cc.vv.audio =  cc.find("audio").getComponent("audioPlay");
 
         cc.vv.Util = require('utils');
 

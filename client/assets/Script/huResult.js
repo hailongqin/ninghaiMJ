@@ -35,6 +35,7 @@ cc.Class({
     },
 
     reset(){
+        console.log('reset result')
         var keys = ['list0','list1','list2','list3'];
         keys.forEach((k)=>{
             var node = this.node.getChildByName(k);

@@ -47,7 +47,7 @@ class Game {
         this.initEveryOnePai(roomInfo);
  
         roomInfo.count++;
-        Room.broacastInRoom(CONST.GAME_START_NOTIFY,roomInfo.roomId,roomInfo);
+        Room.broacastInRoom(CONST.SERVER_GAME_START_NOTIFY,roomInfo.roomId,roomInfo);
 
         var isTianHu = false
         for (var i = 0; i < roomInfo.seats.length;i++){
@@ -373,7 +373,7 @@ class Game {
         for (var i = 0;i< roomInfo.seats.length;i++){
             roomInfo.seats[i].op = {};
         }
-        Room.broacastInRoom(CONST.GAME_CLEAR_OP_NOTIFY,roomInfo.roomId,{})
+        Room.broacastInRoom(CONST.SERVER_GAME_CLEAR_OP_NOTIFY,roomInfo.roomId,{})
     }
 
     waitOtherOperation(seats,index,level,callback){
@@ -532,7 +532,7 @@ class Game {
             Log.error('no find roominfo in updateTable')
             return 
         }
-        Room.broacastInRoom(CONST.GAME_UPDATE_TABLE,roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_TABLE,roomInfo.roomId,roomInfo)
     }
 
     updateOneTable(roomInfo,userId){
@@ -573,6 +573,21 @@ class Game {
         socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo)
     }
 
+    sendRoomBaseInfo(roomInfo,userId){
+        if (!roomInfo || !userId){
+            Log.error('sendPepoleStatus',roomInfo,userId)
+            return;
+        }
+        var socket = User.getSocketByUser(userId);
+        if (!socket){
+            Log.error('sendPepoleStatus',socket)
+            return;
+        }
+
+        socket.emit(CONST.SERVER_ROOM_SEND_BASE_INFO,{conf:roomInfo.conf})
+
+    }
+
      //刚进来的时候，获取一次用户状态信息
     updatePepoleStatus(roomInfo){
         if (!roomInfo){
@@ -580,7 +595,7 @@ class Game {
             return 
         }
         
-        Room.broacastInRoom(CONST.GAME_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.SERVER_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
     }
 
     notifyCanSetReady(userId){
@@ -600,7 +615,7 @@ class Game {
             return 
         }   
 
-        Room.broacastInRoom(CONST.GAME_NEW_USER_LOGIN_NOTIFY,roomInfo.roomId,userId,[userId])
+        Room.broacastInRoom(CONST.SERVER_GAME_NEW_USER_LOGIN_NOTIFY,roomInfo.roomId,userId,[userId])
     }
 
 
@@ -644,7 +659,7 @@ class Game {
             return 
         }   
 
-        Room.broacastInRoom(CONST.GAME_OP_ACTION_NOTIFY,roomInfo.roomId,data,excludeUsers)
+        Room.broacastInRoom(CONST.SERVER_GAME_OP_ACTION_NOTIFY,roomInfo.roomId,data,excludeUsers)
     }
 
     //通知前端出牌

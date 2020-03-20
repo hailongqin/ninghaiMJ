@@ -43,7 +43,7 @@ cc.Class({
 
 
     start () {
-        this.node.getChildByName('op1').opType = 'guo';
+        this.node.getChildByName('op1').opType = cc.vv.CONST.CLIENT_GUO_NOTIFY;
     },
     show(){
         this.node.active = true;
@@ -70,10 +70,10 @@ cc.Class({
         var keys = [
             {
                 action:'canChi',
-                type:cc.vv.CONST.CLIENT_CHI_NOTIGY
-            },{action:'canPeng',type:cc.vv.CONST.CLIENT_CHI_NOTIGY},
-            {action:'canGang',type:cc.vv.CONST.CLIENT_GANG_NOTIGY},
-            {action:"canHu",type:cc.vv.CONST.CLIENT_HU_NOTIGY}];
+                type:cc.vv.CONST.CLIENT_CHI_NOTIFY
+            },{action:'canPeng',type:cc.vv.CONST.CLIENT_PENG_NOTIFY},
+            {action:'canGang',type:cc.vv.CONST.CLIENT_GANG_NOTIFY},
+            {action:"canHu",type:cc.vv.CONST.CLIENT_HU_NOTIFY}];
 
         keys.forEach((k)=>{
             if (op[k.action]){
@@ -93,14 +93,10 @@ cc.Class({
         console.log('clickchiitem',param);
         if (!this.op || !this.op.canChi) return
         var index = parseInt(param);
-        cc.vv.net.send(cc.vv.CONST.CLIENT_CHI_NOTIGY,{chiIndex:index})
+        cc.vv.net.send(cc.vv.CONST.CLIENT_CHI_NOTIFY,{chiIndex:index})
     },
-
-    clearOp(){
-        this.op = null;
-    },
-
     clickOpAction(event){
+        console.log(event);
             var node = event.currentTarget;
             var op = this.op;
             console.log('clickOpAction',op,node.opType)
@@ -109,12 +105,12 @@ cc.Class({
                 return;
             }
 
-            if (node.opType === 'guo'){
+            if (node.opType === cc.vv.CONST.CLIENT_GUO_NOTIFY){
                 cc.vv.net.send(cc.vv.CONST.CLIENT_GUO_NOTIFY);
                 return;
             }
 
-            if (node.opType === 'chi'){
+            if (node.opType === cc.vv.CONST.CLIENT_CHI_NOTIFY){
                 if (!op.canChi) return;
                 var pai = op.pai;
                 if (op.chiList.length > 1){
@@ -123,13 +119,13 @@ cc.Class({
                     }
                     this.node.getChildByName('chilist').active = true;
                 }else{
-                    cc.vv.net.send(cc.vv.CONST.CLIENT_CHI_NOTIGY,{chiIndex:0})
+                    cc.vv.net.send(cc.vv.CONST.CLIENT_CHI_NOTIFY,{chiIndex:0})
                 }
 
                 return;
             }
 
-            if (!op.canHu && !op.canChi && !op.canPeng && !op.canGang) return;
+            if (!op.canHu && !op.canPeng && !op.canGang) return;
             cc.vv.net.send(node.opType)
     },
 

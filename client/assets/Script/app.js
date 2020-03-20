@@ -110,6 +110,11 @@ cc.Class({
             type:cc.Node
         },
 
+        zhuangIconNode:{
+            default:null,
+            type:cc.Node
+        },
+
         gameInfo:null
     },
 
@@ -129,6 +134,12 @@ cc.Class({
         this.hideNode(this.readyBtn);
         this.hideNode(this.unReadyBtn);
     },
+
+    hideAllZhuangIcon(){
+        for (var i = 0; i < this.zhuangIconNode.children.length;i++){
+            this.zhuangIconNode.children[i].active = false;
+        }
+    },
    
     init(){
 
@@ -138,6 +149,7 @@ cc.Class({
       }else{
           return;
       }
+      this.gameInfo = {};
       this.initEveryNode();
       cc.vv.net.connect(()=>{
           this.initHander();
@@ -156,7 +168,9 @@ cc.Class({
       
 
     clickResultReadyBtn(){
+        console.log('click result ready')
         cc.vv.net.send(cc.vv.CONST.CLIENT_NEXT_JU_READY);
+        console.log('clearTabel');
         this.clearTable();
     },
    
@@ -196,17 +210,19 @@ cc.Class({
         var gameInfo = this.gameInfo;
         if(index === gameInfo.myIndex){
             this.huShowNode.x = 0;
-            this.huShowNode.y =  -this.huShowNode.parent.height*(2/3);
+            this.huShowNode.y =  -this.huShowNode.parent.height*(2/6);
         }else if(index === gameInfo.leftIndex){
-            this.huShowNode.x = -this.huShowNode.parent.width*(2/3);
+            this.huShowNode.x = -this.huShowNode.parent.width*(2/6);
             this.huShowNode.y = 0
         }else if(index === gameInfo.rightIndex){
-            this.huShowNode.x = this.huShowNode.parent.width*(2/3);
+            this.huShowNode.x = this.huShowNode.parent.width*(2/6);
             this.huShowNode.y = 0
         }else if(index === gameInfo.upIndex){
             this.huShowNode.x = 0;
-            this.huShowNode.y = this.huShowNode.parent.height*(2/3);
+            this.huShowNode.y = this.huShowNode.parent.height*(2/6);
         }
+
+        console.log('hushownode',index,this.huShowNode)
 
         this.showNode(this.huShowNode)
     },
@@ -218,6 +234,7 @@ cc.Class({
           this.hideRemainNumber();
           this.hideNode(this.huShowNode);
           this.huResultModalNode.getComponent('huResult').reset();
+
 
           function hidePaiNode(node){
             for(var i = 0; i < node.children.length; ++i){
@@ -335,10 +352,24 @@ cc.Class({
        //值给个声音，或者显示文案
        this.node.on(CONST.SERVER_GAME_OP_ACTION_NOTIFY,(data)=>{
             if (data.type === 'hu'){
+                cc.vv.audio.playSFX('hu')
                 this.setHuNodePosition(data.index);
                 setTimeout(() => {
                     this.showResultModal(data);
                 }, 3000);
+            }
+
+            if (data.type === 'chupai'){
+                cc.vv.audio.playSFX(data.pai)
+            }
+            if (data.type === 'chi'){
+                cc.vv.audio.playSFX('chi')
+            }
+            if (data.type === 'peng'){
+                cc.vv.audio.playSFX('peng')
+            }
+            if (data.type === 'gang'){
+                cc.vv.audio.playSFX('gang')
             }
        })
 
@@ -362,7 +393,7 @@ cc.Class({
 
         //游戏结束后准备
        this.node.on(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,(data)=>{
-        var myIndex =  this.getMyIndexFromRoomInfo(data,roomInfo);
+        var myIndex =  this.getMyIndexFromRoomInfo(data.roomInfo);
         this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
        })
        
@@ -390,9 +421,14 @@ cc.Class({
         this.opNode.getComponent('operation').showOperation(data.op)
 
        })
+
+       this.node.on(CONST.SERVER_ROOM_SEND_BASE_INFO,(data)=>{
+           var conf = data.conf;
+           
+       })
             
        // 游戏开始
-        this.node.on(CONST.SERVER_GAME_STATUS_START,(data) => {
+        this.node.on(CONST.SERVER_GAME_START_NOTIFY,(data) => {
             this.hideAllReadyBtn();
             this.statusNode.getComponent('status').clearAllReadySign();
             var userId = cc.vv.userId;
@@ -442,13 +478,28 @@ cc.Class({
             }
 
             this.fengNode.getComponent('feng').setFengDirection(myIndex,data);
-            this.fengNode.getComponent('feng').setTurn(data)
+            this.fengNode.getComponent('feng').setTurn(data);
+            this.setZhuangIconPosition(data.zhuangIndex)
             this.setTables(seats);
             this.showRemainNumberNode();
             this.setRemainNumber(data);
         })
 
        
+    },
+
+    setZhuangIconPosition(index){
+        var gameInfo = this.gameInfo;
+        this.hideAllZhuangIcon();
+        if (index === gameInfo.myIndex){
+            this.zhuangIconNode.children[0].active = true;
+        }else if (index === gameInfo.leftIndex){
+            this.zhuangIconNode.children[3].active = true;
+        }else if (index === gameInfo.rightIndex){
+            this.zhuangIconNode.children[1].active = true;
+        }else if (index === gameInfo.upIndex){
+            this.zhuangIconNode.children[2].active = true;
+        }
     },
 
     onClickReady(){

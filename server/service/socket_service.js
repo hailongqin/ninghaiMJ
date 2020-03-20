@@ -17,7 +17,7 @@ var Log = require('../utils/log');
 
 var CONST = require('../utils/const');
 
-var Timer = require('../utils/timer')
+var Timer = require('./timer')
 
 exports.start = function(){
     const server = require('http').createServer(app);
@@ -97,6 +97,7 @@ exports.start = function(){
                 Room.addAndUpdateRoom(roomId,roomInfo);
                 Game.sendPepoleStatus(roomInfo,userId);
                 Game.notifyNewUserLogin(roomInfo,userId);
+                Game.sendRoomBaseInfo(roomInfo,userId);
                 if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
                     Game.notifyCanSetReady(userId);
             })
@@ -193,7 +194,7 @@ exports.start = function(){
                 Room.broacastInRoom(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,roomInfo.roomId,{index:index,roomInfo})
                 if (allReady){
                     Timer.deleteTimer(roomId);
-                    Game.beigin(roomInfo);
+                    Game.begin(roomInfo);
                 }
             })
         })
@@ -254,6 +255,8 @@ exports.start = function(){
                 if (roomInfo.turn !== seatIndex){ //断线重连的时候，一方万一
                     return; //不是该人出
                 }
+                Game.notifyOperationAction(roomInfo,{type:'chupai',pai:pai})
+
                 var holds = seats[seatIndex].holds;
                 var folds = seats[seatIndex].folds;
                 var index = holds.indexOf(pai);
@@ -333,6 +336,10 @@ exports.start = function(){
                 Game.clearOperation(roomInfo);
 
                 Game.calcFanShu(roomInfo);//计算hushu
+
+                for (var item of seats){
+                    item.ready = false
+                }
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
 
@@ -342,10 +349,10 @@ exports.start = function(){
                         Timer.deleteTimer(roomId);
                         Game.begin(roomInfo);
                     }, 10*1000);
-                })
 
                 Timer.saveTimer(roomId,timer)
-         })
+             })
+        })
 
         
         socket.on(CONST.CLIENT_GANG_NOTIFY,(data)=>{
@@ -377,6 +384,8 @@ exports.start = function(){
                 if (!mySeat.op.canGang) { //有人胡了可能，没得碰
                     return;
                 }
+
+                Game.notifyOperationAction(roomInfo,{type:'gang'})
                 var myOp = mySeat.op;
                 var gangPai = myOp.pai;
                 var fromTurn = myOp.fromTurn;
@@ -467,7 +476,7 @@ exports.start = function(){
                     if (!mySeat.op.canPeng) { //有人胡了可能，没得碰
                         return;
                     }
-                   
+                    Game.notifyOperationAction(roomInfo,{type:'peng'})
                     Game.moveToNextTurn(roomInfo,index);
                     //每人可以胡，就开始碰
                     var myOp = mySeat.op;
@@ -505,7 +514,7 @@ exports.start = function(){
             })
         })
 
-        socket.on(CONST.CLIENT_CHI_NOTIGY,(data)=>{
+        socket.on(CONST.CLIENT_CHI_NOTIFY,(data)=>{
 
             console.log('receive chi data ',data)
             var roomId = socket.roomId;

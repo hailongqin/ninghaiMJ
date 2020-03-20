@@ -47,10 +47,6 @@ cc.Class({
 
             var CONST = cc.vv.CONST;
             var events = [
-                CONST.SERVER_GAME_STATUS_NO_START,
-                CONST.SERVER_GAME_STATUS_START,
-                CONST.SERVER_GAME_STATUS_ONE_OVER,
-                CONST.SERVER_GAME_STATUS_END,
                 CONST.SERVER_GAME_START_NOTIFY , //游戏开始通知
                 CONST.SERVER_PING_RESULT_REPLY, //ping回复
                 CONST.SERVER_GAME_UPDATE_TABLE , //更新桌面
@@ -66,6 +62,7 @@ cc.Class({
                 CONST.SERVER_ROOM_SEND_USER_INFO , //用户信息通知
                 CONST.SERVER_ROOM_NEW_USER_SET_READY , //新用户准备
                 CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY , //下一句准备
+                CONST.SERVER_ROOM_SEND_BASE_INFO
             ]
 
             events.map((e)=>{

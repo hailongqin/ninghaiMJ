@@ -47,6 +47,8 @@ cc.Class({
      onLoad () {
 
        // cc.vv.Util.setFitSreenMode();
+      console.log(cc.vv.audio)
+      //  cc.vv.audio.playBigMusic();
 
         this.onCickConfirmCreateRoom = cc.vv.Util.throttle(this._onCickConfirmCreateRoom, 2000, { 'leading': true, 'trailing': false })
 
