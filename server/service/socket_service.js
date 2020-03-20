@@ -192,6 +192,7 @@ exports.start = function(){
                     }
                 }
                 Room.broacastInRoom(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,roomInfo.roomId,{index:index,roomInfo})
+                Log.info(Timer.timeList);
                 if (allReady){
                     Timer.deleteTimer(roomId);
                     Game.begin(roomInfo);
@@ -344,6 +345,8 @@ exports.start = function(){
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
 
                 roomInfo.gameStatus = CONST.GAME_STATUS_ONE_OVER;
+
+                Util.test(roomInfo)
 
                 var timer = setTimeout(() => {
                         Timer.deleteTimer(roomId);

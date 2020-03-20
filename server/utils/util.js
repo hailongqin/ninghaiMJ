@@ -112,6 +112,30 @@ function checkIsUpIndex(myIndex,compareIndex,seats){
     return false;
 }
 
+function test(roomInfo){
+    var seats = roomInfo.seats;
+    var all = roomInfo.mjLists;
+    for (var i = 0; i < seats.length;i++){
+        all = all.concat(seats[i].holds).concat(seats[i].folds).concat(seats[i].huas);
+    }
+
+    var countMap =  all.reduce(function(map, word) {
+        map[word] = ++map[word] || 1 // increment or initialize to 1
+        return map
+      }, {}) 
+
+      for (var key of countMap){
+          if (countMap[key] !== 4){
+              console.log('mjLists total is error',all,key)
+              return;
+          }
+      }
+
+      console.log('mjlists total is OK')
+
+
+}
+
 module.exports = {
     generateRoomId,
     generateUserId,
