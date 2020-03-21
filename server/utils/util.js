@@ -1,5 +1,6 @@
 
 var CONST  = require('./const');
+var LOG = require('./log')
 
 function generateRoomId(){
     var roomId = "";
@@ -23,7 +24,7 @@ function checkIsFengResult(pai){
 }
 
 function checkIsMySelfFengpai(pai,seat){
-    CONST.BIGFENGLISTS.indexOf(key) !== -1 || (pai - 31) === seat.fengIndex
+    CONST.BIGFENGLISTS.indexOf(pai) !== -1 || (pai - 31) === seat.fengIndex
 }
 
 function calcPengResult(pai,seat,perCount){
@@ -54,6 +55,9 @@ function setHoldsHuShu(seat){
         var key = parseInt(_key);
         if (seat.countMap[key] >= 3){
             calcPengResult(key,seat,4)
+        }
+        if (seat.countMap[key] === 2 && checkIsMySelfFengpai(key,seat)){
+            seat.huShu += 2;
         }
     }
 }
@@ -125,7 +129,7 @@ function test(roomInfo){
       }, {}) 
 
       for (var key in countMap){
-          if ((parseInt(key) <=48 && parseInt(key)>=41) && countMap[key] !== 2){
+          if ((parseInt(key) <=48 && parseInt(key)>=41) && countMap[key] !== 1){
               console.log('mjLists total is error',all,key,countMap[key])
               LOG.error('mjLists total is error',all,key,countMap[key])
               return;

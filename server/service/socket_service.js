@@ -141,7 +141,8 @@ exports.start = function(){
                     userId:userId,
                     userInfo:data && data.userInfo?data.userInfo:{},
                     onLine:true,
-                    ready:true
+                    ready:true,
+                    totalScore:0
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -338,7 +339,7 @@ exports.start = function(){
          
                 Game.clearOperation(roomInfo);
 
-                Game.calcFanShu(roomInfo);//计算hushu
+                Game.calcHuShu(roomInfo);//计算hushu
 
                 for (var item of seats){
                     item.ready = false

@@ -3,7 +3,7 @@ var io = require('socket-io')
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:"192.168.0.101:1000",
+        ip:"www.ccnet.site:1000",
         sio:null,
         pingTimer:null,
         handlerNode:null,
@@ -20,7 +20,7 @@ cc.Class({
 
             var self = this;
             var opts = {
-                'reconnection':false,
+                'reconnection':true,
                 'force new connection': true,
                 'transports':['websocket', 'polling']
             }
@@ -71,20 +71,23 @@ cc.Class({
                     this.dispatchEvent(e,data)
                 }); 
             })
+
+            this.startHearbeat();
         },
 
         startHearbeat:function(){
             var lastSendTime = '';
             var lastReceiveTime = '';
             var delayMs = 0;
-            this.sig.on(cc.vv.CONST.SERVER_PING_RESULT_REPLY,()=>{
+            this.sio.on(cc.vv.CONST.SERVER_PING_RESULT_REPLY,()=>{
+                console.log('receive ping result')
                 lastReceiveTime = Date.now();
                 delayMs = lastReceiveTime - lastSendTime;
                 this.dispatchEvent('delay_ms',delayMs)
             })
             this.pingTimer = setInterval(()=>{
                 lastSendTime = Date.now();
-                this.send(cc.vv.CLIENT_PING);
+                this.send(cc.vv.CONST.CLIENT_PING);
             },5000)
         },
         send:function(event,data){

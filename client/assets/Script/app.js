@@ -5,7 +5,6 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { threadId } from "worker_threads";
 
 var maxHoldLength = 14;
 
@@ -43,29 +42,7 @@ cc.Class({
             type:cc.Node
         },
 
-        myHoldsAltas:{
-            default:null,
-            type:cc.SpriteAtlas
-        },
-        myBottomAltas:{
-            default:null,
-            type:cc.SpriteAtlas
-        },
-        LeftAltas:{ // 左边的手牌
-            default:null,
-            type:cc.SpriteAtlas
-        },
- 
-        rightAltas:{ //右边的牌
-            default:null,
-            type:cc.SpriteAtlas
-        },
-
-        upAltas:{
-            default:null,
-            type:cc.SpriteAtlas
-        },
-
+    
         actionAltas:{
             default:null,
             type:cc.SpriteAtlas
@@ -73,7 +50,7 @@ cc.Class({
 
         delayMsLabel:{
             default:null,
-            type:cc.Label
+            type:cc.Node
         },
 
         remainNumberNode:{
@@ -342,8 +319,18 @@ cc.Class({
         })
 
        this.node.on('delay_ms',(data)=>{
-           this.delayMsLabel.string = data;
-       })
+    
+           if (data <= 100){
+               console.log('green color')
+            this.delayMsLabel.color = new cc.color(47,230,130,255);
+           }
+           else if (data > 100 && data < 200){
+               this.delayMsLabel.color = new cc.color(215,230,47,255);
+           }else{
+            this.delayMsLabel.color = new cc.color(255,0,0,255);
+           }
+           this.delayMsLabel.getComponent(cc.Label).string = data+'ms';
+        })
 
        this.node.on(CONST.SERVER_GAME_CHUPAI_NOTIFY,()=>{
            this.gameInfo.canChupai = true
@@ -431,7 +418,7 @@ cc.Class({
            var conf = data.conf;
            var currentCount = data.count;
            var type = conf.type;
-           this.headerNode.getChildByName('type').getComponent(cc.Label).string = cc.vv.CONST.MJ_TYPE[type];
+           this.headerNode.getChildByName('type').getComponent(cc.Label).string = cc.vv.CONST.MJ_TYPE[type].title;
            this.headerNode.getChildByName('jushu').getComponent(cc.Label).string = '总共'+conf.jushu+'局';
            this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(conf.jushu - currentCount)+'局';
        })

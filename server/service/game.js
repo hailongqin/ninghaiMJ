@@ -45,7 +45,7 @@ class Game {
         this.initMjList(roomInfo.mjLists);
         this.shuffle(roomInfo.mjLists)
         this.initEveryOnePai(roomInfo);
- 
+    // this.initTestEveryOnePai(roomInfo);
         roomInfo.count++;
         Room.broacastInRoom(CONST.SERVER_GAME_START_NOTIFY,roomInfo.roomId,roomInfo);
 
@@ -74,12 +74,35 @@ class Game {
         
     }
 
-    calcFanShu(roomInfo){
+    calcHuShu(roomInfo,index){
+        var conf = roomInfo.conf;
+        var baseScore = CONST.MJ_TYPE[conf.type].baseScore;
         for (var i = 0; i < roomInfo.seats.length;i++){
             var seat = roomInfo.seats[i];
             Util.setHoldsHuShu(seat);
             Util.setChisHuShu(seat);
             Util.setHuasHuShu(seat);
+            if (i === index){
+                seats[index].huShu+=baseScore;
+            }
+
+            var score = seats[i].huShu * seats[i].fanShu;
+            var zhengshu = score/10;
+
+            score = Math.ceil(zhengshu) *10;
+            seats[i].score = score;
+
+            seats[i].totalScore+=score;
+
+
+        }
+
+
+
+
+        for (var i = 0; i < roomId.seats.length;i++){
+            var zhengshu = seats[i].huShu/10;
+
         }
 
         return;
@@ -148,6 +171,18 @@ class Game {
             data[index] = data[i];
             data[i] = temp;
         }
+    }
+
+    initTestEveryOnePai(roomInfo){
+        var seats = roomInfo.seats;
+        seats[0].holds = [1,2,3,4,5,6,7,8,9,11,12,13,14,15]
+        seats[1].holds = [3,4,5,6,7,8,9,11,12,14,15,16,17];
+        seats[2].holds = [2,2,3,3,4,4,12,12,13,13,21,21,22];
+
+        seats[0].countMap = this.getCountMap(seats[0].holds);
+        seats[1].countMap = this.getCountMap(seats[1].holds);
+        seats[2].countMap = this.getCountMap(seats[2].holds);
+
     }
 
     //初始化每个人的手牌

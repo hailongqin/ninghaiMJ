@@ -69,9 +69,9 @@ exports.CLIENT_DISMISS_ROOM_NOTIFY = 'CLIENT_DISMISS_ROOM_NOTIFY';
 
 
 exports.MJ_TYPE = {
-    0:'幺半三',
-    1:'幺半四',
-    2:'幺半六'
+    0:{title:'幺半三',baseScore:30},
+    1:{title:'幺半四',baseScore:40},
+    2:{title:'幺半六',baseScore:60},
 }
 
 
