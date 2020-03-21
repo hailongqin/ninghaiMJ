@@ -80,7 +80,7 @@ exports.start = function(){
                     }
                     return;
                 }
-                console.log(234)
+         
                 var players = roomInfo.players;//观看的人
                 var playersUserIds = players.map((s)=>{return s.userId});
                 if (playersUserIds.indexOf(userId) !== -1){ //已经是看客

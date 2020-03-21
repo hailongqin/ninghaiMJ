@@ -75,7 +75,7 @@ class Game {
     }
 
     calcFanShu(roomInfo){
-        for (var i = 0; i < roomInfo.seats;i++){
+        for (var i = 0; i < roomInfo.seats.length;i++){
             var seat = roomInfo.seats[i];
             Util.setHoldsHuShu(seat);
             Util.setChisHuShu(seat);

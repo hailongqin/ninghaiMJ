@@ -52,7 +52,7 @@ function calcGangResult(pai,seat){
 function setHoldsHuShu(seat){
     for (var _key in seat.countMap){
         var key = parseInt(_key);
-        if (seat.countMap(key) >= 3){
+        if (seat.countMap[key] >= 3){
             calcPengResult(key,seat,4)
         }
     }
@@ -124,10 +124,14 @@ function test(roomInfo){
         return map
       }, {}) 
 
-      for (var key of countMap){
-          if (countMap[key] !== 4){
-              console.log('mjLists total is error',all,key)
+      for (var key in countMap){
+          if ((parseInt(key) <=48 && parseInt(key)>=41) && countMap[key] !== 2){
+              console.log('mjLists total is error',all,key,countMap[key])
+              LOG.error('mjLists total is error',all,key,countMap[key])
               return;
+          }else if ( countMap[key] !== 4){
+            console.log('mjLists total is error',all,key,countMap[key])
+            LOG.error('mjLists total is error',all,key,countMap[key])
           }
       }
 
@@ -143,5 +147,8 @@ module.exports = {
     checkIsLeftIndex,
     checkIsRightIndex,
     checkIsUpIndex,
+    setChisHuShu,
+    setHoldsHuShu,
+    setHuasHuShu,
     test
 }
