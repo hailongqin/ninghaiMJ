@@ -85,15 +85,20 @@ cc.Class({
         console.log(cc.vv.CONST)
 
         var param = this.urlParse();
+        console.log('url param is ',param,cc.vv.storage.getStorage('aaa'))
 
-        if (cc.vv.storage.getStorage('userId')){
+        var userId = cc.vv.storage.getStorage('userId')
+        if (userId && userId !== 'null'){
             cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
-            console.log('get Storage user id is ',cc.vv.userId)
             cc.vv.http.sendRequest('/user/get_user_info',{userId:cc.vv.userId},(data)=>{
                 console.log('login data is ',data)
                 cc.vv.userInfo = data.data;
+                cc.director.loadScene(this.hallScen.name);
+            },(err)=>{
+                cc.vv.storage.setStorage('userId',null)
+                cc.director.loadScene(this.loginScen.name);
+
             })
-            cc.director.loadScene(this.hallScen.name);
             // if (param.roomId){
             //     cc.vv.roomId = ret.roomId
             //     cc.director.loadScene(this.roomSecen.name); 

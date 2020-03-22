@@ -53,6 +53,9 @@ cc.Class({
         console.log(param)
         cc.vv.userId = param
         cc.vv.storage.setStorage('userId',param)
+        // cc.vv.http.sendRequest('/user/login',{userId:cc.vv.userId},(data)=>{
+        //     cc.vv.userInfo = data.data;
+        // })
         cc.director.loadScene(this.hallScen.name);
         this.getUserInfo();
     },

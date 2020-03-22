@@ -1,7 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-var Room  = require('./room')
+var Room  = require('./room');
+var Log = require('../utils/log')
 
 
 var {
@@ -88,9 +89,17 @@ router.post('/get_user_info',function(req,res,next){
             return;
         }
 
-        res.json({
-            code:0,data:ret
-        })
+        console.log('ret',ret)
+        if (ret && ret.userId){
+            res.json({
+                code:0,data:ret
+            })
+        }else{
+            res.json({
+                code:-2,message:"账号不存在，请重新登录"
+            })
+        }
+
     })
 })
 

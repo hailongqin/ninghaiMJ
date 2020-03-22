@@ -613,6 +613,8 @@
     "content": {
       "__id__": 8
     },
+    "confirmCallback": null,
+    "cancelCallback": null,
     "_id": "14iesy4QFKIIEauHHKTHa2"
   },
   {
@@ -804,7 +806,7 @@
       "array": [
         0,
         0,
-        568.8713623517192,
+        578.6781853803611,
         0,
         0,
         0,

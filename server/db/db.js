@@ -2,7 +2,8 @@
 let config = require('../config').config
 
 let mongoose = require("mongoose");
-mongoose.connect('mongodb://'+config.DBHOST+'/'+config.DBNAME);
+// mongoose.connect('mongodb://'+config.DBHOST+'/'+config.DBNAME);
+mongoose.connect(`mongodb://${config.DBUSERNAME}:${config.DBPWD}@127.0.0.1:27017/db_jc`, {auto_reconnect: true});
 var db = mongoose.connection;
 
 

@@ -28,7 +28,9 @@ cc.Class({
         content:{
             default:null,
             type:cc.Label
-        }
+        },
+        confirmCallback:null,
+        cancelCallback:null,
     },
 
     // LIFE-CYCLE CALLBACKS:
@@ -38,14 +40,23 @@ cc.Class({
         this.node.active = false;
     },
 
-    alert(content){
+    alert(content,confirmCallback = null,cancelCallback){
         this.node.active = true;
         this.content.string = content;
-     
+        this.confirmCallback = confirmCallback;
+        this.cancelCallback = cancelCallback;
+    },
+
+    onConfirmClick(){
+        this.node.active = false;
+        if (this.confirmCallback){
+            this.confirmCallback();
+        }
     },
 
     onClose(){
         this.node.active = false;
+
     },
 
     start () {
