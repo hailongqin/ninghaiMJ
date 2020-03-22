@@ -41,6 +41,24 @@ cc.Class({
         }
     },
 
+    setScoreData(roomInfo,myIndex){
+        var seats = roomInfo.seats;
+        var nodeIndex = -1;
+        for (var i = 0; i < seats.length;i++){
+            if (cc.vv.Common.checkIsMySelfIndex(myIndex,i,seats)) nodeIndex = 0;   
+            if (cc.vv.Common.checkIsLeftIndex(myIndex,i,seats))   nodeIndex = 3;       
+            if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)) nodeIndex = 1;   
+            if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats))   nodeIndex = 2;   
+
+            if (nodeIndex !== -1){
+                var node = this.node.children[nodeIndex];
+                node.getChildByName('score').getComponent(cc.Label).string = seats[i].totalScore;
+                node.active = true;
+            }
+        }
+       
+    },
+
     setUserInfo(seatIndex,myIndex,seats){
 
         var nodeIndex = -1;

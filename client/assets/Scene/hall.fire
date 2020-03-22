@@ -3535,7 +3535,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 105,
+      "width": 70,
       "height": 44.1
     },
     "_anchorPoint": {
@@ -3586,8 +3586,8 @@
       }
     ],
     "_useOriginalSize": false,
-    "_string": "幺半三",
-    "_N$string": "幺半三",
+    "_string": "幺二",
+    "_N$string": "幺二",
     "_fontSize": 35,
     "_lineHeight": 35,
     "_enableWrapText": true,
@@ -3712,7 +3712,7 @@
         "__id__": 80
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 82
@@ -4156,7 +4156,7 @@
         "__id__": 89
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 91

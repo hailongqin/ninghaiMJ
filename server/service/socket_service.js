@@ -339,7 +339,7 @@ exports.start = function(){
          
                 Game.clearOperation(roomInfo);
 
-                Game.calcHuShu(roomInfo);//计算hushu
+                Game.calcHuShu(roomInfo,index,fromTurn);//计算hushu
 
                 for (var item of seats){
                     item.ready = false
@@ -427,7 +427,8 @@ exports.start = function(){
                     mySeat.chis.push({
                         type:'gang',
                         pai:gangPai,
-                        fromTurn
+                        fromTurn,
+                        list:[gangPai,gangPai,gangPai,gangPai]
                     });
                     mySeat.countMap[gangPai] -=maxCount;
                 }
@@ -507,7 +508,8 @@ exports.start = function(){
                     // 更新countMap
                     mySeat.chis.push({
                         type:'peng',
-                        pai:pengPai
+                        pai:pengPai,
+                        list:[pengPai,pengPai,pengPai]
                     });
                     mySeat.countMap[pengPai] -=2;
                     seats[fromTurn].folds.splice(-1,1);

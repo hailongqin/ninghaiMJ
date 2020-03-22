@@ -74,37 +74,78 @@ class Game {
         
     }
 
-    calcHuShu(roomInfo,index){
+     calcHuShu(roomInfo,index,fromTurn){
         var conf = roomInfo.conf;
-        var baseScore = CONST.MJ_TYPE[conf.type].baseScore;
-        for (var i = 0; i < roomInfo.seats.length;i++){
-            var seat = roomInfo.seats[i];
-            Util.setHoldsHuShu(seat);
-            Util.setChisHuShu(seat);
-            Util.setHuasHuShu(seat);
-            if (i === index){
-                seats[index].huShu+=baseScore;
+        var type = conf.type;
+        var seats = roomInfo.seats;
+        var zhuangIndex = roomInfo.zhuangIndex;
+        var baseScore = CONST.MJ_TYPE[type].baseScore;
+    
+        if (conf.type === 0){
+    
+            var huSeat = seats[index];
+    
+            //检查是不是特殊3摊牌
+            Util.calcuHuSeatFanshu(huSeat)
+            
+            huSeat.fanShu = huSeat.fanShu > 8?8:huSeat.fanShu
+          
+            
+            if (index === fromTurn){
+                huSeat.currentScore = huSeat.fanShu*((seats.length - 1)*baseScore);
+            }else{
+                huSeat.currentScore = huSeat.fanShu*(1*baseScore + (seats.length - 2)*(baseScore/2))
             }
 
-            var score = seats[i].huShu * seats[i].fanShu;
-            var zhengshu = score/10;
+            console.log('huseats current socres is ',huSeat.currentScore)
+        
+            //计算其他人的胡数
+           Util.caclOtherSeatFanshuAndHushu(seats,index);
+    
+            //和非胡的人进行比较
+            for (var i = 0; i < seats.length;i++){
+                    if (i === index) continue;
+                   console.log('####',i,index,fromTurn,seats[i].currentScore)
+                    if (i === fromTurn || index === fromTurn){
+                        seats[i].currentScore -= seats[index].fanShu*baseScore
+                    }else{
+                        seats[i].currentScore -= seats[index].fanShu*(baseScore/2)
+                    }
+    
+                for (var j = i+1;j < seats.length;j++){
+                    if (j === index) continue;
+                    var diff = seats[i].huShu - seats[j].huShu
+                    if (i === zhuangIndex || j === zhuangIndex){
+                        var diffZhengshu = Math.abs(diff);
+                        var unit = diff < 0?-1:1;
+                        while(diffZhengshu > 0){
+                            seats[i].currentScore+=((baseScore/2)*unit);
+                            seats[j].currentScore+=((baseScore/2)*(-unit));
+                            diffZhengshu -= 30;
+                        }
+                    }else {
+                        var diffZhengshu = Math.abs(diff);
+                        var unit = diff < 0?-1:1;
+                        while(diffZhengshu > 0){
+                            seats[i].currentScore+=((baseScore/2)*unit);
+                            seats[j].currentScore+=((baseScore/2)*(-unit));
+                            diffZhengshu -= 50;
+                        }
+                    }
+        
+                }
 
-            score = Math.ceil(zhengshu) *10;
-            seats[i].score = score;
-
-            seats[i].totalScore+=score;
-
-
-        }
-
-
-
-
-        for (var i = 0; i < roomId.seats.length;i++){
-            var zhengshu = seats[i].huShu/10;
-
-        }
-
+                console.log('current'+i,seats[i].currentScore)
+            }
+    
+             //将分数加到总额里
+            for (var i = 0; i < seats.length;i++){
+                seats[i].totalScore += seats[i].currentScore;
+                console.log('total current'+i,seats[i].currentScore)
+            }
+       
+    }
+    
         return;
     }
 
@@ -120,6 +161,7 @@ class Game {
             seat.countMap = {};
             seat.huShu = 0;
             seat.fanShu = 1;
+            seat.currentScore = 0;
           }
     }
 
@@ -179,9 +221,9 @@ class Game {
         seats[1].holds = [3,4,5,6,7,8,9,11,12,14,15,16,17];
         seats[2].holds = [2,2,3,3,4,4,12,12,13,13,21,21,22];
 
-        seats[0].countMap = this.getCountMap(seats[0].holds);
-        seats[1].countMap = this.getCountMap(seats[1].holds);
-        seats[2].countMap = this.getCountMap(seats[2].holds);
+        seats[0].countMap = Util.getCountMap(seats[0].holds);
+        seats[1].countMap = Util.getCountMap(seats[1].holds);
+        seats[2].countMap = Util.getCountMap(seats[2].holds);
 
     }
 
@@ -221,7 +263,7 @@ class Game {
         // 将手牌排序
         for (var i = 0;i < seats.length;i++){
             this.sortPai(seats[i].holds)
-            seats[i].countMap = this.getCountMap(seats[i].holds);
+            seats[i].countMap = Util.getCountMap(seats[i].holds);
         }
 
         // 将花色排序
@@ -238,22 +280,6 @@ class Game {
         })
     }
 
-    getCountMap(holds){
-        var countMap = {};
-        if (!holds || !holds.length){
-            Log.error('getCountMap holds is null',holds)
-            return;
-        }
-
-        countMap =  holds.reduce(function(map, word) {
-            map[word] = ++map[word] || 1 // increment or initialize to 1
-            return map
-          }, {}) 
-
-
-
-        return countMap;
-    }
 
     getNextChuPaiIndex(seats,index){
         if (index === seats.length -1) return 0;
@@ -344,26 +370,26 @@ class Game {
 
         var superNext = pai + 2;
 
-        var range = this.getMjRange(pai)
+        var range = Util.getMjRange(pai)
 
         var op = seatData.op;
         op.chiList = [];
 
 
            //A A+1 A+2
-        if (this.checkPaiInRange(superNext,range) && this.checkPaiInRange(next,range) && countMap[superNext] && countMap[next]){
+        if (Util.checkPaiInRange(superNext,range) && Util.checkPaiInRange(next,range) && countMap[superNext] && countMap[next]){
             op.canChi = true;
             op.chiList.push([pai,next,superNext]);
         }
     
         //A-1 A A+1
-        if (this.checkPaiInRange(prev,range) && this.checkPaiInRange(next,range) && countMap[prev] && countMap[next]){
+        if (Util.checkPaiInRange(prev,range) && Util.checkPaiInRange(next,range) && countMap[prev] && countMap[next]){
             op.canChi = true;
             op.chiList.push([prev,pai,next]);
         }
 
          //A-2 A-1 A
-         if (this.checkPaiInRange(superPrev,range) && this.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
+         if (Util.checkPaiInRange(superPrev,range) && Util.checkPaiInRange(prev,range) && countMap[superPrev] && countMap[prev]){
             op.canChi = true;
             op.chiList.push([superPrev,prev,pai]); 
         }
@@ -377,32 +403,7 @@ class Game {
         return;
     }
 
-    checkPaiInRange(pai,range){
-        if (range[0] <= pai && range[1] >= pai) return true;
-        return false;
-    }
-
-    getMjRange(pai){
-        if (pai >= 1 && pai <= 9){
-            return [1,9]
-        }
-
-        if (pai >= 11 && pai <= 19){
-            return [11,19]
-        }
-
-        if (pai >= 21 && pai <= 31){
-            return [21,31]
-        }
-
-        if (pai >= 31 && pai <= 38){ //东南西北
-            return [31,38]
-        }
-
-        if (pai >= 41 && pai<= 48){ //花色
-            return [41,48]
-        }
-    }
+    
 
     clearOperation(roomInfo){
         for (var i = 0;i< roomInfo.seats.length;i++){
@@ -779,12 +780,6 @@ class Game {
             }
         }
     }
-
-    checkPaiInRange(pai,range){
-        if (range[0] <= pai && range[1] >= pai) return true;
-        return false;
-    }
-
   
     checkSingleTingPai(countMap,start,end){
         var selected = -1;
@@ -795,7 +790,7 @@ class Game {
            if (cc === -1){
                console.log('here ',cc,key)
            }
-            if (cc && this.checkPaiInRange(key,[start,end])){
+            if (cc && Util.checkPaiInRange(key,[start,end])){
                 selected = key;
                 break;
             }

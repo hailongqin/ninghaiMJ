@@ -18,76 +18,136 @@ function generateUserId(){
     return userId;
 }
 
+function getCountMap(lists){
+    var countMap = {};
+    if (!lists || !lists.length){
+        Log.error('getCountMap lists is null',holds)
+        return;
+    }
+
+    countMap =  lists.reduce(function(map, word) {
+        map[word] = ++map[word] || 1 // increment or initialize to 1
+        return map
+      }, {}) 
+
+
+
+    return countMap;
+}
 
 function checkIsFengResult(pai){
     return CONST.FENGPAILISTS.indexOf(pai) !== -1
 }
 
 function checkIsMySelfFengpai(pai,seat){
-    CONST.BIGFENGLISTS.indexOf(pai) !== -1 || (pai - 31) === seat.fengIndex
+    return CONST.BIGFENGLISTS.indexOf(pai) !== -1 || (pai - 31) === seat.fengIndex || (pai - 41) === seat.fengIndex || (pai - 45) === seat.fengIndex
 }
 
-function calcPengResult(pai,seat,perCount){
-    if (!checkIsFengResult(pai)){
-        seat.huShu += perCount;
-    }else{
-        seat.huShu += 2*perCount;
-        if (checkIsMySelfFengpai(pai,seat)){
-            seat.fanShu*=2;
-        }
+function checkPaiInRange(pai,range){
+    if (range[0] <= pai && range[1] >= pai) return true;
+    return false;
+}
+
+function getMjRange(pai){
+    if (pai >= 1 && pai <= 9){
+        return [1,9]
+    }
+
+    if (pai >= 11 && pai <= 19){
+        return [11,19]
+    }
+
+    if (pai >= 21 && pai <= 31){
+        return [21,31]
+    }
+
+    if (pai >= 31 && pai <= 38){ //东南西北
+        return [31,38]
+    }
+
+    if (pai >= 41 && pai<= 48){ //花色
+        return [41,48]
     }
 }
 
-function calcGangResult(pai,seat){
-    if (checkIsFengResult(pai)){
-        seat+=32;
-        if (checkIsMySelfFengpai(pai,seat)){
-            seat.fanShu *=2;
-        }
-    }else{
-        seat+=16
-    }
-}
+function composeAllPai(seat){
+    var list = [];
+    var countMap = getCountMap(seat.holds);
 
-//获取手牌的fanshu
-function setHoldsHuShu(seat){
-    for (var _key in seat.countMap){
+    for (var _key in countMap){
         var key = parseInt(_key);
-        if (seat.countMap[key] >= 3){
-            calcPengResult(key,seat,4)
-        }
-        if (seat.countMap[key] === 2 && checkIsMySelfFengpai(key,seat)){
-            seat.huShu += 2;
+        if (countMap[key] >= 3){
+            list.push({
+                type:'peng',
+                pai:key
+            })
         }
     }
-}
-
-//获取持牌的fanshu
-function setChisHuShu(seat){
-    var chis = seat.chis;
-    var lists = chis.filter((c)=>{
-        return c.type !== 'chi'
+    seat.chis.forEach((c)=>{
+        if(c.type !== 'chi')
+            list = list.concat(c)
     })
+    return list
+}
 
-    for (var item of lists){
-        if (item.type === 'peng'){
-            calcPengResult(item.pai,seat,2)
+function calcuHuSeatFanshu(seat){
+    var hasHuaFanshu = false;
+    for (var hua of seat.huas){
+        if (checkIsMySelfFengpai(hua,seat)){
+            seat.fanShu *= 2;
+            hasHuaFanshu = true;
         }
-        if (item.type === 'gang'){
-            calcGangResult(item.pai,seat);
+    }
+
+    var list = composeAllPai(seat);
+
+    //检查是不是一色
+    var match = true;
+
+    //检查是不是对对胡
+
+    for (var i = 0; i < list.length;i++){
+        if (checkIsMySelfFengpai(list[i].pai,seat)){
+            seat.fanShu *= 2;
         }
     }
 }
 
+function caclOtherSeatFanshuAndHushu(seats,huIndex){
 
-function setHuasHuShu(seat){
-    var huas = seat.huas;
-    for (var item of huas){
-        seat.huShu += 4;
-        if ((item-41) === seat.fengIndex || (item-45) === seat.fengIndex){
-            seat.fanShu *= 2
+    for (var k = 0; k < seats.length;k++){
+        if (k === huIndex) continue;
+        var seat = seats[k];
+        var list = composeAllPai(seat);
+
+        for (var i = 0; i < list.length;i++){
+            if (list[i].type === 'peng'){
+                if (checkIsFengResult(list[i].pai)){
+                    seat.huShu+=4
+                    if (checkIsMySelfFengpai(list[i].pai,seat)) seat.fanShu *= 2;
+                }else{
+                    seat.huShu+=2
+                }
+            }else if (list[i].type === 'gang'){
+                if (checkIsFengResult(list[i].pai)){
+                    seat.huShu+= list[i].fromTurn === i?32:16
+                    if (checkIsMySelfFengpai(list[i].pai,seat)) seat.fanShu *= 2;
+                }else{
+                    seat.huShu+= list[i].fromTurn === i?16:8
+                } 
+            }
         }
+
+        for (var hua of seat.huas){
+            seat.huShu += 4;
+            if (checkIsMySelfFengpai(hua,seat)){
+                seat.fanShu *= 2;
+            }
+        }
+        var totalHushu = seat.huShu * seat.fanShu;
+        seat.huShu = Math.ceil(totalHushu/10)*10;
     }
+
 }
 
 
@@ -98,7 +158,6 @@ function checkIsMySelfIndex(myIndex,compareIndex){
 
 function checkIsLeftIndex(myIndex,compareIndex,seats){
     var ret = false;
-    console.log(seats);
     if (myIndex > compareIndex && Math.abs(myIndex -compareIndex) === 1)   ret = true;
     if (compareIndex === seats.length - 1 && myIndex === 0 && seats.length === 4) ret = true;
     return ret;
@@ -117,29 +176,29 @@ function checkIsUpIndex(myIndex,compareIndex,seats){
 }
 
 function test(roomInfo){
-    var seats = roomInfo.seats;
-    var all = roomInfo.mjLists;
-    for (var i = 0; i < seats.length;i++){
-        all = all.concat(seats[i].holds).concat(seats[i].folds).concat(seats[i].huas);
-    }
+    // var seats = roomInfo.seats;
+    // var all = roomInfo.mjLists;
+    // for (var i = 0; i < seats.length;i++){
+    //     all = all.concat(seats[i].holds).concat(seats[i].folds).concat(seats[i].huas);
+    // }
 
-    var countMap =  all.reduce(function(map, word) {
-        map[word] = ++map[word] || 1 // increment or initialize to 1
-        return map
-      }, {}) 
+    // var countMap =  all.reduce(function(map, word) {
+    //     map[word] = ++map[word] || 1 // increment or initialize to 1
+    //     return map
+    //   }, {}) 
 
-      for (var key in countMap){
-          if ((parseInt(key) <=48 && parseInt(key)>=41) && countMap[key] !== 1){
-              console.log('mjLists total is error',all,key,countMap[key])
-              LOG.error('mjLists total is error',all,key,countMap[key])
-              return;
-          }else if ( countMap[key] !== 4){
-            console.log('mjLists total is error',all,key,countMap[key])
-            LOG.error('mjLists total is error',all,key,countMap[key])
-          }
-      }
+    //   for (var key in countMap){
+    //       if ((parseInt(key) <=48 && parseInt(key)>=41) && countMap[key] !== 1){
+    //           console.log('mjLists total is error',all,key,countMap[key])
+    //           LOG.error('mjLists total is error',all,key,countMap[key])
+    //           return;
+    //       }else if ( countMap[key] !== 4){
+    //         console.log('mjLists total is error',all,key,countMap[key])
+    //         LOG.error('mjLists total is error',all,key,countMap[key])
+    //       }
+    //   }
 
-      console.log('mjlists total is OK')
+    //   console.log('mjlists total is OK')
 
 
 }
@@ -151,8 +210,10 @@ module.exports = {
     checkIsLeftIndex,
     checkIsRightIndex,
     checkIsUpIndex,
-    setChisHuShu,
-    setHoldsHuShu,
-    setHuasHuShu,
+    calcuHuSeatFanshu,
+    caclOtherSeatFanshuAndHushu,
+    getCountMap,
+    checkPaiInRange,
+    getMjRange,
     test
 }

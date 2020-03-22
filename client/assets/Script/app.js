@@ -346,6 +346,7 @@ cc.Class({
             if (data.type === 'hu'){
                 cc.vv.audio.playSFX('hu')
                 this.setHuNodePosition(data.index);
+                this.statusNode.getComponent('status').setScoreData(data.roomInfo,this.gameInfo.myIndex);
                 setTimeout(() => {
                     this.showResultModal(data);
                 }, 3000);
@@ -524,6 +525,9 @@ cc.Class({
             var chiRootResultNode = node.getChildByName('chiresultNode');
             var huShowNode = node.getChildByName('canHu');
             var nameNode = node.getChildByName('name');
+            var scoreNode = node.getChildByName('score');
+
+            scoreNode.getComponent(cc.Label).string = seat.currentScore;
 
             if (seat.userInfo && seat.userInfo.userName){
                 nameNode.getComponent(cc.Label).string = seat.userInfo.userName
