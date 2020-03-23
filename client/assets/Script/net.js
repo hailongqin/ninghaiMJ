@@ -62,7 +62,8 @@ cc.Class({
                 CONST.SERVER_ROOM_SEND_USER_INFO , //用户信息通知
                 CONST.SERVER_ROOM_NEW_USER_SET_READY , //新用户准备
                 CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY , //下一句准备
-                CONST.SERVER_ROOM_SEND_BASE_INFO
+                CONST.SERVER_ROOM_SEND_BASE_INFO,
+                CONST.SERVER_GAME_OVER, //游戏结束
             ]
 
             events.map((e)=>{

@@ -40,13 +40,13 @@ exports.start = function(){
                 }
 
                 User.bindUserAndSocket(userId,socket);
-
+                    
                 if (roomInfo.roomStatus === CONST.ROOM_STATUS_DISMISS){
                     Game.sendRoomStatus(roomId, CONST.ROOM_STATUS_DISMISS)
                     return
                 }
 
-                if (roomInfo.gameStatus === CONST.GAME_STATUS_END){
+                if (roomInfo.gameStatus === CONST.GAME_STATUS_END || roomInfo.gameStatus === CONST.GAME_STATUS_LIU_JU){
                     socket.emit(CONST.SERVER_GAME_OVER,roomInfo)
                     return;
                 }
@@ -70,7 +70,7 @@ exports.start = function(){
                 var seatUserIds = seats.map((s)=>{return s.userId});
                 var seatIndex = seatUserIds.indexOf(userId) 
 
-                if (seatIndex !== -1){ //已经是坐下的人
+                if (seatIndex !== -1){ //已经是坐下的人,断线重连
                     var mySeat = seats[seatIndex];
                     mySeat.onLine = true;
                     Room.broacastInRoom(CONST.SERVER_GAME_USER_ONLINE,seatIndex);
@@ -85,17 +85,6 @@ exports.start = function(){
                     }
                     return;
                 }
-         
-                var players = roomInfo.players;//观看的人
-                var playersUserIds = players.map((s)=>{return s.userId});
-                if (playersUserIds.indexOf(userId) !== -1){ //已经是看客
-                    Game.sendPepoleStatus(roomInfo,userId);
-                    Game.sendRoomBaseInfo(roomInfo,userId);
-                    if (roomInfo.gameStatus !== CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
-                             Game.notifyCanSetReady(userId);
-                    return;
-                }
-
                 players.push({
                     userId,
                     userInfo:data.userInfo || {}
@@ -107,6 +96,9 @@ exports.start = function(){
                 Game.sendRoomBaseInfo(roomInfo,userId);
                 if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
                     Game.notifyCanSetReady(userId);
+                else{
+                    socket.emit(CONST.SERVER_GAME_START_NOTIFY,roomInfo);
+                }
             })
      
         })
@@ -189,7 +181,10 @@ exports.start = function(){
                 var index = Game.getIndexByUserId(seats,userId);
                 seats[index].ready = true;
 
-                if (roomInfo.gameStatus === CONST.GAME_STATUS_END) return;
+                if (roomInfo.gameStatus === CONST.GAME_STATUS_END){
+                    Game.sendGameEnd(roomInfo);
+                    return;
+                } 
 
                 var allReady = true;
                 for (var item of seats){
@@ -350,11 +345,6 @@ exports.start = function(){
                 }
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
-
-                roomInfo.gameStatus = CONST.GAME_STATUS_ONE_OVER;
-
-                Util.test(roomInfo)
-
                 if (roomInfo.count >= roomInfo.conf.jushu){
                     roomInfo.gameStatus = CONST.GAME_STATUS_END
                     return;
@@ -722,9 +712,13 @@ exports.start = function(){
                 
                 var index = Game.getIndexByUserId(roomInfo.seats,userId);
                 if (index !== null && index !== undefined){
-                    var seats = roomInfo.seats;
-                    seats[index].onLine = false;
-                    Room.broacastInRoom(CONST.SERVER_GAME_USER_OFFLINE,index)
+                    if (roomInfo.gameStatus === CONST.GAME_STATUS_START){
+                        var seats = roomInfo.seats;
+                        seats[index].onLine = false;
+                        Room.broacastInRoom(CONST.SERVER_GAME_USER_OFFLINE,index)
+                    }else{
+                        roomInfo.seats.splice(index,1);
+                    }
                 }
 
                 index = Game.getIndexByUserId(roomInfo.players,userId);

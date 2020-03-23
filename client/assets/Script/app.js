@@ -459,7 +459,9 @@ cc.Class({
                turn:data.turn,
                op:{},
 
-               roomId:data.roomId
+               roomId:data.roomId,
+               myIndex:myIndex,
+               isKanke:false
            };
            cc.vv.roomId = data.roomId;
             for (var i = 0; i < seats.length;i++){
@@ -474,6 +476,10 @@ cc.Class({
                 } 
             }
 
+            if (myIndex === -1){ //是看客
+                myIndex = 0; //上帝视角
+                this.gameInfo.isKanke = true;
+            }
             this.fengNode.getComponent('feng').setFengDirection(myIndex,data);
             this.fengNode.getComponent('feng').setTurn(data);
             this.setZhuangIconPosition(data.zhuangIndex)
@@ -704,10 +710,9 @@ cc.Class({
 
 
     setCommonHolds(holdsNode,holds,index){
-       
+       var isKanke = this.gameInfo.isKanke;
         function setPositionPai(i,pai){
-     
-            holdsNode.children[i].getComponent('pai').setPaiSpriteFrame(pai);
+            holdsNode.children[i].getComponent('pai').setPaiSpriteFrame(isKanke?-1:pai);
             holdsNode.children[i].pai = pai;
         }
         var start = 1; //hold开始位置

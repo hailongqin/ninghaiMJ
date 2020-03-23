@@ -94,15 +94,7 @@ cc.Class({
 
         if (nodeIndex !== -1){
             var node = this.node.children[nodeIndex];
-            var seat = roomInfo.seats[seatIndex];
-            const CONST = cc.vv.CONST;
-            if ((roomInfo.gameStatus === CONST.GAME_STATUS_NO_START || roomInfo.gameStatus === CONST.GAME_STATUS_ONE_OVER) && seat.ready ) {
-                //游戏未开始或者这轮已经结束
-                node.getChildByName('ready_sign').active = true;
-            }else{
-                node.getChildByName('ready_sign').active = false;
-            }
-    
+            node.getChildByName('ready_sign').active = true;
             node.active = true;
         }
     },
