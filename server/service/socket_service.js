@@ -73,7 +73,7 @@ exports.start = function(){
                 if (seatIndex !== -1){ //已经是坐下的人
                     var mySeat = seats[seatIndex];
                     mySeat.onLine = true;
-                    Game.sendPepoleStatus(roomInfo,userId);
+                    Room.broacastInRoom(CONST.SERVER_GAME_USER_ONLINE,seatIndex);
                     Game.sendRoomBaseInfo(roomInfo,userId);
                     socket.emit(CONST.SERVER_GAME_START_NOTIFY,roomInfo);
                     if (roomInfo.gameStatus === CONST.GAME_STATUS_START){ //游戏已经开始了
@@ -724,7 +724,7 @@ exports.start = function(){
                 if (index !== null && index !== undefined){
                     var seats = roomInfo.seats;
                     seats[index].onLine = false;
-                    Game.updatePepoleStatus(roomInfo)
+                    Room.broacastInRoom(CONST.SERVER_GAME_USER_OFFLINE,index)
                 }
 
                 index = Game.getIndexByUserId(roomInfo.players,userId);
