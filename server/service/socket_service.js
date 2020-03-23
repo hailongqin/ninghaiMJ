@@ -46,6 +46,11 @@ exports.start = function(){
                     return
                 }
 
+                if (roomInfo.gameStatus === CONST.GAME_STATUS_END){
+                    socket.emit(CONST.SERVER_GAME_OVER,roomInfo)
+                    return;
+                }
+
                 var timer = Timer.getTimerById(roomId);
 
                 if (!timer && roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
@@ -182,10 +187,9 @@ exports.start = function(){
 
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
-          
-
-                
                 seats[index].ready = true;
+
+                if (roomInfo.gameStatus === CONST.GAME_STATUS_END) return;
 
                 var allReady = true;
                 for (var item of seats){
@@ -350,6 +354,12 @@ exports.start = function(){
                 roomInfo.gameStatus = CONST.GAME_STATUS_ONE_OVER;
 
                 Util.test(roomInfo)
+
+                if (roomInfo.count >= roomInfo.conf.jushu){
+                    roomInfo.gameStatus = CONST.GAME_STATUS_END
+                    return;
+                }
+
 
                 var timer = setTimeout(() => {
                         Timer.deleteTimer(roomId);

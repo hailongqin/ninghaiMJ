@@ -8,4 +8,7 @@ exports.config =  {
     DBPWD:"xukaijie311700_",
 
     SOCKET_PORT:1000,
+
+
+    PRIVATE_KEY:"#$%%#####FFGGG$!~"
 }

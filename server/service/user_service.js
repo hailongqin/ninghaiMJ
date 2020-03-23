@@ -19,6 +19,7 @@ router.post('/create_user', function(req, res, next){
     var userName = body.userName;
     var password = body.password;
 
+    if (!Crypto.checkSign(body)) return;
     createUser();
     function createUser(){
         var userId = Util.generateUserId();
@@ -79,7 +80,8 @@ router.post('/get_user_info',function(req,res,next){
         return
     }
 
-    
+    if (!Crypto.checkSign(body)) return;
+
     userModel.findOne({userId})
     .select("-_id header userName")
     .exec((err,ret)=> {

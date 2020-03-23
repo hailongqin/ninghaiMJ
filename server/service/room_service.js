@@ -12,7 +12,9 @@ var {
 
 var Util = require('../utils/util');
 
-var CONST = require('../utils/const')
+var CONST = require('../utils/const');
+
+var Crypto = require('../utils/crypto');
 
 var creatingRoom = {};
 
@@ -59,6 +61,8 @@ router.post('/create_room', function(req, res, next){
         res.json({code:-1,message:"参数错误"});
         return;
     }
+
+    if (!Crypto.checkSign(body)) return;
 
 
     createRoom();
@@ -126,6 +130,9 @@ router.post('/check_room_exit', function(req, res, next){
         res.json({code:-1,message:"参数错误"});
         return;
     }
+
+    if (!Crypto.checkSign(body)) return;
+
 
     roomModel.findOne({
         roomId,

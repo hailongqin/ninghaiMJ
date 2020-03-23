@@ -94,7 +94,7 @@ class roomList {
             return;
         }
            
-        var players = roomInfo.players;
+   
         for(var i = 0; i < roomInfo.seats.length; i++){
             var rs = roomInfo.seats[i];
             var userId =rs.userId
@@ -108,7 +108,11 @@ class roomList {
                 socket.emit(event,data);
             }
         }
+    };
 
+    broacastInRoomV2(event,roomId,data,excludeUsers = []){
+        this.broacastInRoom(event,roomId,data,excludeUsers);
+        var players = roomInfo.players;
         for(var i = 0; i < players.length; i++){
             var rs = players[i];
             var userId =rs.userId;
@@ -121,8 +125,7 @@ class roomList {
                 socket.emit(event,data);
             }
         }
-
-    };
+    }
 
 }
 

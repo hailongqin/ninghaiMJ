@@ -467,6 +467,16 @@ class Game {
         Room.broacastInRoom(CONST.ROOM_STATUS_NOTIFY,roomId,status)
     }
 
+    // 发送游戏状态
+    sendGameEnd(roomInfo){
+        if (!roomInfo){
+            Log.error('no roomInfo')
+            return;
+        }
+        
+        Room.broacastInRoom(CONST.SERVER_GAME_OVER,roomInfo.roomId,roomInfo)
+    }
+
     checkMyselfHasOp(seat){
         var op = seat.op;
         if (op.canHu || op.canGang || op.canPeng || op.canChi) return true
@@ -624,14 +634,14 @@ class Game {
 
     }
 
-     //刚进来的时候，获取一次用户状态信息
+     //更新用户状态，离开，坐下，进入房间时候
     updatePepoleStatus(roomInfo){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }
         
-        Room.broacastInRoom(CONST.SERVER_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
+        Room.broacastInRoomV2(CONST.SERVER_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
     }
 
     notifyCanSetReady(userId){
