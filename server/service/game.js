@@ -615,20 +615,7 @@ class Game {
         Room.broacastInRoom(CONST.SERVER_ROOM_SEND_USER_INFO,roomInfo.seats);
     }
 
-    sendPepoleStatus(roomInfo,userId){
-        if (!roomInfo || !userId){
-            Log.error('sendPepoleStatus',roomInfo,userId)
-            return;
-        }
-        var socket = User.getSocketByUser(userId);
-        if (!socket){
-            Log.error('sendPepoleStatus',socket)
-            return;
-        }
-
-        socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo)
-    }
-
+   
     sendRoomBaseInfo(roomInfo,userId){
         if (!roomInfo || !userId){
             Log.error('sendPepoleStatus',roomInfo,userId)
@@ -665,12 +652,12 @@ class Game {
     }
 
     //通知新的人进来了，只是要求出个提示语
-    notifyTip(roomInfo,userId){
+    notifyTip(roomInfo,tip){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
-        Room.broacastInRoom(CONST.SERVER_GAME_SEND_TIP,roomInfo.roomId,userId+'进入房间')
+        Room.broacastInRoom(CONST.SERVER_GAME_SEND_TIP,roomInfo.roomId,tip)
     }
 
 

@@ -24,7 +24,6 @@ cc.Class({
                 'force new connection': true,
                 'transports':['websocket', 'polling']
             }
-            console.log('this ip is ',this.ip,io)
   
             this.sio = io.connect(this.ip,opts);
             this.sio.on('reconnect',function(){
@@ -38,7 +37,7 @@ cc.Class({
             this.sio.on('disconnect',function(data){
                 console.log("disconnect");
                 self.sio.connected = false;
-                self.close();
+                //self.close();
             });
             
             this.sio.on('connect_failed',function (){
@@ -52,7 +51,7 @@ cc.Class({
                 CONST.SERVER_GAME_UPDATE_TABLE , //更新桌面
                 CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS , //更新人员状态
                 CONST.SERVER_GAME_CAN_SET_READY , //刚进来是否可以进行准备
-                CONST.SERVER_GAME_NEW_USER_LOGIN_NOTIFY , //新用户登录
+                CONST.SERVER_GAME_SEND_TIP , //tip提示
                 CONST.SERVER_GAME_OP_NOTIFY , //操作通知
                 CONST.SERVER_GAME_CHUPAI_NOTIFY , //出牌通知
                 CONST.SERVER_GAME_TINGPAI_NOTIFY ,//听牌通知
@@ -102,10 +101,6 @@ cc.Class({
             if(this.sio){
                 this.sio.disconnect();
                 this.sio = null;
-            }
-
-            if (this.sio.connected){
-                this.sio.connected = false;
             }
 
             if (this.pingTimer){

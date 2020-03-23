@@ -107,11 +107,19 @@ cc.Class({
             type:cc.SceneAsset
         },
 
+        tipNode:{
+            default:null,
+            type:cc.Node,
+        },
+
         gameInfo:null
     },
 
     // LIFE-CYCLE CALLBACKS:
     
+    showTip(content){
+        this.tipNode.getComponent('tip').showTip(content);
+    },
     showReadyBtnNode(){
         this.hideNode(this.unReadyBtn);
         this.showNode(this.readyBtn);
@@ -410,7 +418,7 @@ cc.Class({
 
        // 只给个提示
        this.node.on(CONST.SERVER_GAME_SEND_TIP,(data)=>{
-       // this.setTipConetnt(data)
+         this.showTip(data)
        })
 
        //更新手牌，出牌，花牌，持牌等
