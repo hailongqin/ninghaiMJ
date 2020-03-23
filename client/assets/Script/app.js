@@ -97,6 +97,11 @@ cc.Class({
             type:cc.Node
         },
 
+        gameOverNode:{
+            default:null,
+            type:cc.Node
+        },
+
         gameInfo:null
     },
 
@@ -422,6 +427,10 @@ cc.Class({
            this.headerNode.getChildByName('type').getComponent(cc.Label).string = cc.vv.CONST.MJ_TYPE[type].title;
            this.headerNode.getChildByName('jushu').getComponent(cc.Label).string = '总共'+conf.jushu+'局';
            this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(conf.jushu - currentCount)+'局';
+       })
+
+       this.node.ong(CONST.SERVER_GAME_OVER,(data)=>{
+
        })
             
        // 游戏开始

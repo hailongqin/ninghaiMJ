@@ -139,7 +139,12 @@ exports.start = function(){
                     userInfo:data && data.userInfo?data.userInfo:{},
                     onLine:true,
                     ready:true,
-                    totalScore:0
+                    totalScore:0,
+                    zimocishu:0,
+                    fangpaocishu:0,
+                    lazipaishu:0,
+                    shuangtaicishu:0,
+                    pinghucishu:0
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -334,6 +339,9 @@ exports.start = function(){
                     console.log('zimo from Turn is ',fromTurn,seats);
                     seat.holds.unshift(pai);
                     seats[fromTurn].folds.splice(-1,1);
+                    seats[fromTurn].fangpaocishu++;
+                }else{
+                    seat.zomocishu++;
                 }
          
                 Game.clearOperation(roomInfo);

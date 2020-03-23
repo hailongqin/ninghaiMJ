@@ -88,9 +88,19 @@ class Game {
             //检查是不是特殊3摊牌
             Util.calcuHuSeatFanshu(huSeat)
             
-            huSeat.fanShu = huSeat.fanShu > 8?8:huSeat.fanShu
-          
-            
+            var huFanshu = huSeat.fanShu = huSeat.fanShu > 8?8:huSeat.fanShu
+
+            huSeat.totalhucishu++;
+            if (huFanshu === 8){
+                huSeat.lazicishu++
+            }
+            if (huFanshu === 4){
+                huSeat.shuangtaicishu++;
+            }
+            if (huFanshu === 1){
+                huSeat.pinghucishu++;
+            }
+
             if (index === fromTurn){
                 huSeat.currentScore = huSeat.fanShu*((seats.length - 1)*baseScore);
             }else{
@@ -464,7 +474,7 @@ class Game {
             return;
         }
         
-        Room.broacastInRoom(CONST.ROOM_STATUS_NOTIFY,roomId,status)
+        Room.broacastInRoom(CONST.SERVER_ROOM_STATUS_NOTIFY,roomId,status)
     }
 
     // 发送游戏状态
