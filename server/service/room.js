@@ -109,24 +109,6 @@ class roomList {
             }
         }
     };
-
-    broacastInRoomV2(event,roomId,data,excludeUsers = []){
-        this.broacastInRoom(event,roomId,data,excludeUsers);
-        var players = roomInfo.players;
-        for(var i = 0; i < players.length; i++){
-            var rs = players[i];
-            var userId =rs.userId;
-            var socket = User.getSocketByUser(userId);
-            if (!socket){
-                Log.error('broacastInRoom get players socket is null')
-                return;
-            }
-            if(socket&& (excludeUsers.indexOf(userId) === -1)){
-                socket.emit(event,data);
-            }
-        }
-    }
-
 }
 
 module.exports = new roomList();

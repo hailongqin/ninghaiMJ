@@ -641,7 +641,7 @@ class Game {
             return 
         }
         
-        Room.broacastInRoomV2(CONST.SERVER_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.SERVER_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
     }
 
     notifyCanSetReady(userId){
