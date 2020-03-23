@@ -102,6 +102,11 @@ cc.Class({
             type:cc.Node
         },
 
+        hallSecen:{
+            default:null,
+            type:cc.SceneAsset
+        },
+
         gameInfo:null
     },
 
@@ -153,6 +158,13 @@ cc.Class({
 
     // chupai(pai){
       
+    backHall(){
+        if (this.gameInfo && this.gameInfo.gameStatus === cc.vv.CONST.GAME_STATUS_START){
+            cc.vv.alertScript('游戏已经开始，无法返回大厅哦~')
+            return;
+        }
+        cc.director.loadScene(this.hallSecen.name);
+    },
 
     clickResultReadyBtn(){
         console.log('click result ready')
@@ -397,7 +409,7 @@ cc.Class({
        
 
        // 只给个提示
-       this.node.on(CONST.SERVER_GAME_NEW_USER_LOGIN_NOTIFY,(data)=>{
+       this.node.on(CONST.SERVER_GAME_SEND_TIP,(data)=>{
        // this.setTipConetnt(data)
        })
 
@@ -429,8 +441,15 @@ cc.Class({
            this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(conf.jushu - currentCount)+'局';
        })
 
-       this.node.ong(CONST.SERVER_GAME_OVER,(data)=>{
+       this.node.on(CONST.SERVER_GAME_OVER,(data)=>{
+        var seats = data.seats;
 
+        for (var i = 0; i < seats.length;i++){
+            var seat = seats[i];
+            var node = this.gameOverNode.getChildByName('list'+i);
+            node.getChildByName('zimocishu').getComponent(cc.Label).string = seat.zimocishu;
+
+        }
        })
             
        // 游戏开始
@@ -470,7 +489,8 @@ cc.Class({
 
                roomId:data.roomId,
                myIndex:myIndex,
-               isKanke:false
+               isKanke:false,
+               gameStatus:roomInfo.gameStatus
            };
            cc.vv.roomId = data.roomId;
             for (var i = 0; i < seats.length;i++){
@@ -845,7 +865,9 @@ cc.Class({
      },
 
      onDestroy(){
-        // this.unInit();
+        console.log('ondestroy');
+        cc.vv.net.close();
+        cc.vv.roomId = null;
      },
 
     start () {

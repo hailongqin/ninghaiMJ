@@ -1,7 +1,6 @@
 var express = require('express');
 var router = express.Router();
 
-var Room  = require('./room');
 var Log = require('../utils/log')
 
 
@@ -18,8 +17,6 @@ router.post('/create_user', function(req, res, next){
     var body = req.body;
     var userName = body.userName;
     var password = body.password;
-
-    if (!Crypto.checkSign(body)) return;
     createUser();
     function createUser(){
         var userId = Util.generateUserId();
@@ -80,10 +77,9 @@ router.post('/get_user_info',function(req,res,next){
         return
     }
 
-    if (!Crypto.checkSign(body)) return;
-
+   
     userModel.findOne({userId})
-    .select("-_id header userName")
+    .select("-_id header userName userId")
     .exec((err,ret)=> {
         if (err){
             Log.error('post get_user_info read db is err',err)
@@ -103,6 +99,24 @@ router.post('/get_user_info',function(req,res,next){
         }
 
     })
+})
+
+var appInfo = {
+    appid:"wx37ae340f5b1d8bdd",
+    secret:"7434652a1dd949a1804a4ff2f16c816f",
+	
+};
+
+router.get('/token_check',function(req,res,next){
+    res.send(req.query.echostr)
+    return;
+})
+
+router.get('/wechat_login',function(req,res,next){
+    console.log(req.query);
+
+    res.send('123');
+    return;
 })
 
 module.exports = router;

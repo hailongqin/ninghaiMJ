@@ -85,6 +85,7 @@ exports.start = function(){
                     }
                     return;
                 }
+                var players = roomInfo.players;
                 players.push({
                     userId,
                     userInfo:data.userInfo || {}
@@ -144,7 +145,8 @@ exports.start = function(){
                     fangpaocishu:0,
                     lazipaishu:0,
                     shuangtaicishu:0,
-                    pinghucishu:0
+                    pinghucishu:0,
+                    totalhucishu:0
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -182,6 +184,7 @@ exports.start = function(){
                 }
                 Log.info('receive game_ready data is ',roomInfo)
 
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 seats[index].ready = true;
@@ -255,6 +258,8 @@ exports.start = function(){
                     return;
                 }
                 Log.info('receive chupai data is ',roomInfo)
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
+
                 //将牌从自己手中扣除
                 var seats = roomInfo.seats;
                 var seatsUserId = seats.map((s)=>{return s.userId});
@@ -318,6 +323,7 @@ exports.start = function(){
                     return;
                 }
                 Log.info('receive hu data is ',roomInfo)
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 //还要判断截胡 todo
 
@@ -383,6 +389,8 @@ exports.start = function(){
                     return;
                 }
                 Log.info('gang gang data is ',roomInfo)
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
+
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -473,7 +481,8 @@ exports.start = function(){
                 }
                 Log.info('receive peng data is ',roomInfo);
 
-                
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
+
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -547,6 +556,8 @@ exports.start = function(){
                     return;
                 }
                 Log.info('receive chi data is ',roomInfo)
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
+
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 if (index === undefined || index === null){
@@ -631,6 +642,7 @@ exports.start = function(){
                 Log.info('roomInfo',roomInfo);
 
                 
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId)
@@ -715,9 +727,7 @@ exports.start = function(){
                 if (!roomInfo){
                     return;
                 }
-
-                 console.log(roomInfo.seats)
-                
+              
                 var index = Game.getIndexByUserId(roomInfo.seats,userId);
                 if (index !== null && index !== undefined){
                     if (roomInfo.gameStatus === CONST.GAME_STATUS_START){
@@ -734,6 +744,8 @@ exports.start = function(){
                 if (index !== null && index !== undefined){
                     roomInfo.players.splice(index,1);
                 }
+
+                console.log('disconneted',roomInfo)
               
 
             })

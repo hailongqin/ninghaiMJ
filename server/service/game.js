@@ -665,13 +665,12 @@ class Game {
     }
 
     //通知新的人进来了，只是要求出个提示语
-    notifyNewUserLogin(roomInfo,userId){
+    notifyTip(roomInfo,userId){
         if (!roomInfo){
             Log.error('no find roominfo in updateSeatStatus')
             return 
         }   
-
-        Room.broacastInRoom(CONST.SERVER_GAME_NEW_USER_LOGIN_NOTIFY,roomInfo.roomId,userId,[userId])
+        Room.broacastInRoom(CONST.SERVER_GAME_SEND_TIP,roomInfo.roomId,userId+'进入房间')
     }
 
 

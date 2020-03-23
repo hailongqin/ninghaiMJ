@@ -1,5 +1,5 @@
 
-var URL = 'http://www.ccnet.site:4000';
+var URL = 'https://www.ccnet.site';
 
 function sendRequest(path, data, successCallback, failCallback) {
     var xhr = cc.loader.getXMLHttpRequest();

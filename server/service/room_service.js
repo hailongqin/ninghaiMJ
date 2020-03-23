@@ -62,7 +62,7 @@ router.post('/create_room', function(req, res, next){
         return;
     }
 
-    if (!Crypto.checkSign(body)) return;
+    // if (!Crypto.checkSign(body)) return;
 
 
     createRoom();
@@ -131,7 +131,7 @@ router.post('/check_room_exit', function(req, res, next){
         return;
     }
 
-    if (!Crypto.checkSign(body)) return;
+    // if (!Crypto.checkSign(body)) return;
 
 
     roomModel.findOne({

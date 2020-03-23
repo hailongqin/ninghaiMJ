@@ -98,12 +98,14 @@ cc.Class({
         },
 
         close:function(){
-            console.log('close');
             this.delayMS = null;
-            if(this.sio && this.sio.connected){
-                this.sio.connected = false;
+            if(this.sio){
                 this.sio.disconnect();
                 this.sio = null;
+            }
+
+            if (this.sio.connected){
+                this.sio.connected = false;
             }
 
             if (this.pingTimer){

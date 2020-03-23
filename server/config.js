@@ -10,5 +10,7 @@ exports.config =  {
     SOCKET_PORT:1000,
 
 
-    PRIVATE_KEY:"#$%%#####FFGGG$!~"
+    PRIVATE_KEY:"#$%%#####FFGGG$!~",
+
+    WECHAT_TOKEN:'fsdfds###~~~~!!!!@@@'
 }
