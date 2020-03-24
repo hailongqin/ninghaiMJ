@@ -89,7 +89,7 @@ router.post('/user_login_by_userId',function(req,res,next){
             return;
         }
 
-        res.json({code:0})
+        res.json({code:0,userName:ret.userName})
 
     })
 })

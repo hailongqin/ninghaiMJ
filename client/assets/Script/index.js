@@ -69,6 +69,7 @@ cc.Class({
         cc.vv.audio =  cc.find("audio").getComponent("audioPlay");
 
         cc.vv.Util = require('utils');
+        cc.vv.Crypto = require('md5')
 
         var Storage = require('storage');
         cc.vv.storage = new Storage();

@@ -1,5 +1,6 @@
 
 var URL = 'https://www.ccnet.site';
+var MD5_KEY = '#$%%#####FFGGG$!~'
 
 function sendRequest(path, data, successCallback, failCallback) {
     var xhr = cc.loader.getXMLHttpRequest();
@@ -8,9 +9,15 @@ function sendRequest(path, data, successCallback, failCallback) {
     xhr.open("POST", requestURL, true);
     xhr.setRequestHeader("Content-Type", "application/json");
 
-    if (data == null) {
-        data = {};
+    if (data ===  null || data === undefined) {
+        data =cc.vv.userId?{userId:cc.vv.userId}:{};
     }
+    var str = ''
+    for (var key in data){
+        str +=data[key];
+    }
+
+    data.sign = cc.vv.Crypto.hex_md5(str+MD5_KEY)
   
 
     xhr.onreadystatechange = function () {
@@ -52,7 +59,7 @@ function sendRequest(path, data, successCallback, failCallback) {
 
     console.log('data is ',data)
     try {
-        xhr.send(JSON.stringify({...data,userId:cc.vv.userId}));
+        xhr.send(JSON.stringify({...data}));
     }
     catch (e) {
         //setTimeout(retryFunc, 200);
