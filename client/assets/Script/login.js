@@ -35,6 +35,7 @@ cc.Class({
     // LIFE-CYCLE CALLBACKS:
 
      onLoad () {
+         window.open('./login.html')
      },
 
     start () {

@@ -91,13 +91,20 @@ cc.Class({
         var userId = cc.vv.storage.getStorage('userId')
         if (userId && userId !== 'null'){
             cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
-            cc.vv.http.sendRequest('/user/get_user_info',{userId:cc.vv.userId},(data)=>{
+            cc.vv.http.sendRequest('/user/user_login_by_userId',{userId:cc.vv.userId},(data)=>{
                 console.log('login data is ',data)
-                cc.vv.userInfo = data.data;
-                cc.director.loadScene(this.hallScen.name);
+                if (data.code === -3){
+                        cc.vv.storage.setStorage('userId',null)
+                        window.open('./login.html');
+
+                }else{
+                    cc.vv.userInfo = {userId,userName:data.userName};
+                    cc.director.loadScene(this.hallScen.name);
+                }
+ 
             },(err)=>{
                 cc.vv.storage.setStorage('userId',null)
-                cc.director.loadScene(this.loginScen.name);
+                window.open('./login.html');
 
             })
             // if (param.roomId){

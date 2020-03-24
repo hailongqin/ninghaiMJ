@@ -85,7 +85,7 @@ router.post('/user_login_by_userId',function(req,res,next){
         }
 
         if (!ret){
-            res.json({code:-1,message:'未找到该用户'});
+            res.json({code:-3,message:'未找到该用户'});
             return;
         }
 
@@ -105,10 +105,14 @@ router.post('/user_login_by_sms',function(req,res,next){
 
     var phone = body.phone;
 
+    console.log('phone is ',phone)
+
     if (!Util.checkPhoneIsValid(phone)){
         res.json({code:-1,message:'手机号格式错误'})
         return;
     }
+
+    console.log('get before')
 
      Redis.getRedis(`login_${phone}`,(code)=>{
         console.log('code is ',code)
@@ -169,7 +173,7 @@ router.post('/user_login_by_sms',function(req,res,next){
                             res.json({code:-2,message:"插入数据错误"});
                         } else {
                             delete creatingUser[userId]
-                            res.json({code:0,userId})
+                            res.json({code:0,userId,userName:phone.substr(-4,4)})
                         }
                     })
         

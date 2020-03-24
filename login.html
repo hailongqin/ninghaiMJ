@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录</title>
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <script src="./juery.min.js"></script>
+    <style>
+        *{
+            box-sizing: border-box;
+        }
+        html {
+            height: 100%;
+            width: 100%;
+            font-family: 'Heiti SC', 'Microsoft YaHei';
+            font-size: 20px;
+            overflow: hidden;
+            outline: 0;
+            -webkit-text-size-adjust:none;
+        }
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            -webkit-user-select: none;
+            position: relative;
+        }
+        header {
+            width: 100%;
+            line-height: 1.5rem;
+            font-size: 1rem;
+            color: #fff;
+            border: 1px solid #ccc;
+            text-align: center;
+            height: 5rem;
+            background: green;
+        }
+        .bd {
+            margin-top: 1rem;
+            margin-bottom: .5rem;
+            padding: .5rem;
+            font-size: 0.7rem;
+            padding-right: 1rem;
+        }
+
+
+        .flex{
+            display: flex;
+        }
+
+        .flex-center{
+            align-items: center;
+            justify-content: center;
+        }
+        .flex-direction-column{
+            flex-direction: column;
+        }
+
+        .phone-wrap{
+            width: 100%;
+        }
+        .code-wrap{
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .title{
+            width: 3rem;
+            margin-right: 0.1rem;
+        }
+        .input-wrap{
+            flex: 1;
+            width: 0px;
+        }
+
+        input{
+            border: none;
+            border-bottom: 1px solid #ccc;
+            outline: none;
+            font-size: 0.7rem;
+        }
+
+        button{
+            border: none;
+            border-radius: 4px;
+            outline: none;
+        }
+        .btn{
+            background: green;
+            color: #fff;
+            margin-top: 2rem;
+
+            width: 10rem;
+            height: 1.5rem;
+            font-size: 0.7rem;
+        }
+
+        .btn:hover{
+            opacity: 0.7;
+        }
+
+        #code-btn{
+            width: 5rem;
+            height: 1.5rem;
+            flex-shrink: 0;
+            margin-left: 0.1rem;
+        }
+
+        #code-btn:hover{
+            opacity: 0.7;
+        }
+
+        .code-input{
+            width: 0px;
+            flex: 1;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<header class="flex flex-center">川川网络</header>
+
+
+<div class="bd flex flex-center flex-direction-column">
+
+    <div class="phone-wrap flex">
+        <div class="title">手机号</div>
+        <input placeholder="请输入手机号" class="input-wrap" id="phone" maxlength="11"/>
+    </div>
+
+    <div class="code-wrap flex">
+        <div class="title">验证码</div>
+        <div class="input-wrap flex">
+            <input placeholder="请输入验证码" class="code-input" id="code" maxlength="4"/>
+            <button id="code-btn">获取验证码</button>
+        </div>
+    </div>
+
+    <button class="btn" id="submit">登录</button>
+</div>
+
+
+
+<script>
+    (function (doc, win) {
+        var docEl = doc.documentElement,
+            resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+            recalc = function () {
+                var clientWidth = docEl.clientWidth;
+                if (!clientWidth) return;
+                docEl.style.fontSize = 20 * (clientWidth / 320) + 'px';
+            };
+
+        if (!doc.addEventListener) return;
+        win.addEventListener(resizeEvt, recalc, false);
+        doc.addEventListener('DOMContentLoaded', recalc, false);
+    })(document, window);
+
+    var eleCodeBtn = document.getElementById('code-btn');
+    var phoneEle = document.getElementById('phone');
+    var codeEle = document.getElementById('code');
+    var submitEle = document.getElementById('submit')
+    var HOST = 'https://www.ccnet.site'
+
+    var hasSendCode = false;
+    $('#code-btn').click(function(){
+        if (hasSendCode) return;
+        hasSendCode = true;
+        var phone = phoneEle.value;
+        if (!phone){
+            alert('请输入手机号码');
+            return;
+        }
+
+        var  reg = /^[1][3,4,5,7,8,9][0-9]{9}$/;
+        if (!reg.test(phone)){
+            alert('手机号格式不正确');
+            return;
+        }
+        console.log('开始发送请求')
+        $.ajax({
+            type: 'POST',
+            url: HOST+'/user/send_login_sms',
+            contentType: "application/json", //必须这样写
+            dataType:"json",
+            data: JSON.stringify({phone:phone}),
+            success: function(){
+
+            },
+
+        });
+
+        sendCode()
+
+    })
+
+    $('#submit').click(function(){
+        var phone = phoneEle.value;
+        var code = codeEle.value
+        if (!code){
+            alert('请输入验证码');
+            return;
+        }
+
+        if (code.length !== 4){
+            alert(('验证码错误'));
+            return;
+        }
+        $.ajax({
+            type: 'POST',
+            url: HOST+'/user/user_login_by_sms',
+            contentType: "application/json", //必须这样写
+            dataType:"json",
+            data: JSON.stringify({phone:phone,code:code}),
+            success: function(res){
+                if (res && res.code !== 0){
+                    alert(res.message || '登录失败')
+                }else{
+                    window.localStorage.setItem('userId',res.userId);
+                    window.close();da
+                }
+
+            },
+            fail:function(err){
+
+            }
+
+        });
+    })
+
+
+    function sendCode(){
+        var count = 60;
+        eleCodeBtn.innerHTML = count+'s';
+        var timer =  setInterval(function(){
+            count--;
+            eleCodeBtn.innerHTML = count+'s';
+            if (count <= 0){
+                clearTimeout(timer);
+                eleCodeBtn.innerHTML = '获取验证码';
+                hasSendCode = false;
+            }
+        },1000)
+    }
+</script>
+</body>
+
+</html>
