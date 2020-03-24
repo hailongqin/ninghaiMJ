@@ -115,7 +115,8 @@ cc.Class({
             // }
        
         }else{
-            cc.director.loadScene(this.loginScen.name);
+              cc.vv.storage.setStorage('userId',null)
+            window.open('./login.html');
         }
 
         
