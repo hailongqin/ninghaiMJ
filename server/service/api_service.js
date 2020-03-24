@@ -3,8 +3,6 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const os = require('os');
-
 
 var roomRouter = require('./room_service')
 var userRouter = require('./user_service');

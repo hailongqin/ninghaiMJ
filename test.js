@@ -48,7 +48,6 @@ var roomInfo = {
 }
 
 for (var item of roomInfo.seats){
-
     item.countMap = Util.getCountMap(item.holds)
 }
 

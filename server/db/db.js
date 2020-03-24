@@ -44,6 +44,7 @@ const userSchema = new Schema({
     userName:{type:String}, //用户名称
     password:{type:String} ,// 密码
     header:{type:String},// 头像路径
+    phone:{type:String},//手机号
     isFrom:{
         type:String,
         default:"self" // 来自自己创建
