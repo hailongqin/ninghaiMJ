@@ -194,7 +194,7 @@ exports.start = function(){
                     return;
                 } 
 
-                var currentXie = seats[i].xie;
+                var currentXie = seats[index].xie;
                 if (roomInfo.zhuangIndex === roomInfo.currentHuIndex){ // 庄家胡了才可以卸
                     if (data.xie){
                         if (currentXie.action){

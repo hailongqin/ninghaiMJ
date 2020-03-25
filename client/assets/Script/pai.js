@@ -57,6 +57,7 @@ cc.Class({
 
     clickChuPai(){
         console.log(this.node.pai);
+        if (this.node.pai === -1) return; //上帝视角
         this.eventObj.detail = this.node.pai;
         this.node.dispatchEvent(this.eventObj);
     },

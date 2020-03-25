@@ -95,7 +95,8 @@ router.post('/create_room', function(req, res, next){
                         zhuangIndex:0, //庄家
                         turn:0, //轮到第几个出牌
                         count:0,//第几局了
-                        lastHuIndex:-1,
+                        prevHuIndex:-1,
+                        currentHuIndex:-1,
                         gameStatus:CONST.GAME_STATUS_NO_START,
                         roomStatus:CONST.ROOM_STATUS_NORMAL
                     }

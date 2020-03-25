@@ -34,36 +34,20 @@ cc.Class({
 
     // LIFE-CYCLE CALLBACKS:
 
+    onClickUserLogin(){
+        window.open('./login.html')
+    },
+
      onLoad () {
-         window.open('./login.html')
+        
      },
 
     start () {
 
     },
 
-    getUserInfo(){
-        cc.vv.http.sendRequest('/user/get_user_info',{userId:cc.vv.userId},(data)=>{
-            cc.vv.userInfo = data.data;
-        })
-    },
-
  
 
-    onClickUserLogin(event,param){
-        // var url = encodeURI('https://www.ccnet.site/user/wechat_login')
-        // window.open(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx37ae340f5b1d8bdd&redirect_uri=${url}&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect`)
-
-        console.log(param)
-        cc.vv.userId = param
-        cc.vv.storage.setStorage('userId',param)
-        cc.vv.http.sendRequest('/user/get_user_info',{userId:cc.vv.userId},(data)=>{
-            cc.vv.userInfo = data.data;
-            cc.director.loadScene(this.hallScen.name);
-          
-        })
-   
-    },
 
     // update (dt) {},
 });

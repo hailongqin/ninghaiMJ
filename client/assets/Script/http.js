@@ -2,16 +2,15 @@
 var URL = 'https://www.ccnet.site';
 var MD5_KEY = '#$%%#####FFGGG$!~'
 
-function sendRequest(path, data, successCallback, failCallback) {
+function sendRequest(path, data = {}, successCallback, failCallback) {
     var xhr = cc.loader.getXMLHttpRequest();
     xhr.timeout = 30000;
     var requestURL = URL + path;
     xhr.open("POST", requestURL, true);
     xhr.setRequestHeader("Content-Type", "application/json");
 
-    if (data ===  null || data === undefined) {
-        data =cc.vv.userId?{userId:cc.vv.userId}:{};
-    }
+     data.userId = cc.vv.userId;
+    
     var str = ''
     for (var key in data){
         str +=data[key];

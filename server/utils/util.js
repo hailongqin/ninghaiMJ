@@ -8,6 +8,7 @@ class Util{
         var code = "";
         for(var i = 0; i < 4; ++i){
             code += Math.floor(Math.random()*10);
+            console.log('code'+i,code)
         }
         return code; 
     }
@@ -26,6 +27,12 @@ class Util{
             userId += Math.floor(Math.random()*10);
         }
         return userId;
+    }
+
+    checkInSeats(userId,seats){
+        var userIds = seats.map((s)=>{return s.userId})
+
+        return userIds.indexOf(userId) !== -1
     }
     
      getCountMap(lists){

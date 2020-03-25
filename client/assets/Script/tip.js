@@ -34,7 +34,7 @@ cc.Class({
 
     showTip(content){
         this.node.getComponent(cc.Label).string = content;
-        var jumpUp = cc.moveBy(2, cc.v2(0, 20)).easing(cc.easeCubicActionOut());
+        var jumpUp = cc.moveBy(2, cc.v2(-20, 0)).easing(cc.easeCubicActionOut());
         this.node.active = true;
         this.node.runAction(jumpUp);
 

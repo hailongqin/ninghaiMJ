@@ -60,6 +60,7 @@ router.post('/send_login_sms',function(req,res,next){
     }
 
     var code = Util.generateSmsCode();
+    console.log('sms code is ',code)
     Redis.setRedis(`login_${body.phone}`,code,5*60);
 
     SMS.sendLoginSms(body.phone,code);

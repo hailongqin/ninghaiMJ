@@ -94,17 +94,14 @@ cc.Class({
             cc.vv.http.sendRequest('/user/user_login_by_userId',{userId:cc.vv.userId},(data)=>{
                 console.log('login data is ',data)
                 if (data.code === -3){
-                        cc.vv.storage.setStorage('userId',null)
-                        window.open('./login.html');
-
+                    this.jumpToLogin();
                 }else{
                     cc.vv.userInfo = {userId,userName:data.userName};
                     cc.director.loadScene(this.hallScen.name);
                 }
  
             },(err)=>{
-                cc.vv.storage.setStorage('userId',null)
-                window.open('./login.html');
+                this.jumpToLogin();
 
             })
             // if (param.roomId){
@@ -115,11 +112,15 @@ cc.Class({
             // }
        
         }else{
-              cc.vv.storage.setStorage('userId',null)
-            window.open('./login.html');
+             this.jumpToLogin();
         }
 
         
+     },
+
+     jumpToLogin(){
+        cc.vv.storage.setStorage('userId',null)
+        cc.director.loadScene(this.loginScen.name);
      },
 
     start () {

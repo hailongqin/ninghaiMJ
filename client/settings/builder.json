@@ -8,7 +8,7 @@
   },
   "packageName": "org.cocos2d.helloworld",
   "startScene": "7cc9d1f7-dca2-4c2a-8f5b-9a81ff3363f7",
-  "title": "hello_world",
+  "title": "ccGame",
   "webOrientation": "landscape",
   "includeSDKBox": false,
   "inlineSpriteFrames": true,

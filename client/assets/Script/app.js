@@ -5,6 +5,8 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
+import { timingSafeEqual } from "crypto";
+
 
 var maxHoldLength = 14;
 
@@ -167,16 +169,20 @@ cc.Class({
     // chupai(pai){
       
     backHall(){
-        if (this.gameInfo && this.gameInfo.gameStatus === cc.vv.CONST.GAME_STATUS_START){
-            cc.vv.alertScript('游戏已经开始，无法返回大厅哦~')
+        if (this.gameInfo && !this.gameInfo.isKanke && this.gameInfo.gameStatus === cc.vv.CONST.GAME_STATUS_START){
+            cc.vv.alertScript.alert('游戏已经开始，无法返回大厅哦~')
             return;
         }
         cc.director.loadScene(this.hallSecen.name);
     },
 
-    clickResultReadyBtn(){
-        console.log('click result ready')
-        cc.vv.net.send(cc.vv.CONST.CLIENT_NEXT_JU_READY);
+    clickResultReadyBtn(event,xie){
+        console.log('click result ready',xie)
+        var param = {xie:false};
+        if (xie === 'true'){
+            param.xie = true
+        }
+        cc.vv.net.send(cc.vv.CONST.CLIENT_NEXT_JU_READY,param);
         console.log('clearTabel');
         this.clearTable();
     },
@@ -498,7 +504,7 @@ cc.Class({
                roomId:data.roomId,
                myIndex:myIndex,
                isKanke:false,
-               gameStatus:roomInfo.gameStatus
+               gameStatus:data.gameStatus
            };
            cc.vv.roomId = data.roomId;
             for (var i = 0; i < seats.length;i++){
@@ -514,7 +520,7 @@ cc.Class({
             }
 
             if (myIndex === -1){ //是看客
-                myIndex = 0; //上帝视角
+                this.gameInfo.myIndex = 0; //上帝视角
                 this.gameInfo.isKanke = true;
             }
             this.fengNode.getComponent('feng').setFengDirection(myIndex,data);
@@ -556,7 +562,15 @@ cc.Class({
     showResultModal(data){
         var roomInfo = data.roomInfo;
         var seats = roomInfo.seats;
-        var i = 0
+        var i = 0;
+        
+        var xieBtn = this.huResultModalNode.getChildByName('xiebtn');
+        var buxiebtn = this.huResultModalNode.getChildByName('buxiebtn');
+        var readyBtn = this.huResultModalNode.getChildByName('readyBtn');
+
+        this.hideNode(xieBtn);
+        this.hideNode(buxiebtn);
+        this.hideNode(readyBtn);
         for (; i < seats.length;i++){
             var node = this.huResultModalNode.getChildByName('list'+i);
             var seat = seats[i]
@@ -569,11 +583,29 @@ cc.Class({
             var huShowNode = node.getChildByName('canHu');
             var nameNode = node.getChildByName('name');
             var scoreNode = node.getChildByName('score');
+            var xieScore = node.getChildByName('xie');
+
+
+            if (data.index === i || data.index !== roomInfo.zhuangIndex){
+                this.showNode(readyBtn)
+            }else{
+                if (data.index === roomInfo.zhuangIndex){
+                    this.showNode(xieBtn);
+                    this.showNode(buxiebtn)
+                }
+            }
 
             scoreNode.getComponent(cc.Label).string = seat.currentScore;
 
             if (seat.userInfo && seat.userInfo.userName){
                 nameNode.getComponent(cc.Label).string = seat.userInfo.userName
+            }
+
+            if (seat.xieScore){
+                xieScore.getComponent(cc.Label).string = `(卸${seat.xieScore})`;
+                xieScore.active = true;
+            }else{
+                xieScore.active = false;
             }
 
             this.setCommonHolds(holdsNode,holds,i);

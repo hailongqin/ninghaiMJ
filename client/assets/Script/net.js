@@ -3,7 +3,7 @@ var io = require('socket-io')
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:"www.ccnet.site:1000",
+        ip:"www.ccnet.site",
         sio:null,
         pingTimer:null,
         handlerNode:null,
@@ -30,6 +30,7 @@ cc.Class({
                 console.log('reconnection');
             });
             this.sio.on('connect',(data)=>{
+                console.log('connect')
                 self.sio.connected = true;
                 this.setHandlerNode(node);
                 fnConnect(data);
@@ -97,6 +98,7 @@ cc.Class({
         },
 
         close:function(){
+            console.log('close')
             this.delayMS = null;
             if(this.sio){
                 this.sio.disconnect();
