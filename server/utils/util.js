@@ -99,28 +99,125 @@ class Util{
         })
         return list
     }
+
+    checkIsDuiDuiHu(seat){
+        var chis = seat.chis;
+        for (var i = 0; i < chis.length;i++){
+            if (chis.type === 'chi') return false
+        }
+        //对对胡牌有种情况
+        //1、N坎 + 2张双牌
+        var colCount = 0;
+        var pairCount = 0;
+        for(var _k in seat.countMap){
+            var k = parseInt(_k)
+            var c = seat.countMap[k];
+            if(c == 1){
+               return false
+            }
+            else if(c == 2){
+                pairCount++;
+            }
+            else if(c == 3){
+                colCount++;
+            }else if (c === 4){
+                return false;
+            }
+        }
+
+        if (pairCount >= 2){
+            return false;
+        }
+
+
+        return true;
+    }
+
+    checkIsAllTypePai(seat){
+        var allLists = [].concat(seat.holds);
+        seat.chis.forEach((c)=>{
+            allLists = allLists.concat(c.list)
+        })
+
+        var ret = {
+            result:true,
+            hasFeng:false
+        }
+        for (var i = 1; i < allLists.length;i++){
+            var pai = allLists[i];
+            if (CONST.ALLFENGLISTS.indexOf(pai) !== -1){
+                ret.hasFeng = true;
+                continue;
+            }
+
+            if (Math.floor(pai/10) !== Math.floor(allLists[i - 1]/10)){
+                ret.result = false;
+                break;
+            }
+
+
+        }
+
+        return ret;
+
+    }
     
      calcuHuSeatFanshu(seat){
-        var hasHuaFanshu = false;
+        var totalFanshuPaiList = [];
+        var otherFengpaiList = [];
+
         for (var hua of seat.huas){
-            if (checkIsMySelfFengpai(hua,seat)){
-                seat.fanShu *= 2;
-                hasHuaFanshu = true;
+            if (this.checkIsMySelfFengpai(hua,seat)){
+                totalFanshuPaiList.push(hua);
             }
         }
-    
-        var list = composeAllPai(seat);
-    
-        //检查是不是一色
-        var match = true;
-    
-        //检查是不是对对胡
-    
-        for (var i = 0; i < list.length;i++){
-            if (checkIsMySelfFengpai(list[i].pai,seat)){
-                seat.fanShu *= 2;
+
+        seat.chis.forEach((c)=>{
+            if ((c.type === 'peng' || c.type === 'gang')){
+                if (this.checkIsMySelfFengpai(c.pai,seat)){
+                    totalFanshuPaiList.push(c.pai)
+                }else{
+                    otherFengpaiList.push(c.pai)
+                }
+            }
+        })
+        for (var _key in seat.countMap){
+            var key = parseInt(_key);
+            if (this.checkIsMySelfFengpai(key,seat) && seat.countMap[key] === 3){
+                totalFanshuPaiList.push(key);
             }
         }
+
+        console.log('totoal fengpai is ',totalFanshuPaiList)
+
+        seat.fanShu = Math.pow(2,totalFanshuPaiList.length);
+        if (seat.fanShu >= 8){
+            return;
+        }
+
+        //检查是不是duiduihu
+        if (this.checkIsDuiDuiHu(seat)){
+            console.log('isduiduihu')
+            seat.fanShu  = 4;
+            if (totalFanshuPaiList.length){
+                seat.fanShu = 8;
+                return;
+            }
+        }
+
+        //检查是不是tongsepai
+        var ret = this.checkIsAllTypePai(seat);
+        if (ret.result){
+            console.log('yisepai')
+            seat.fanShu  = 4;
+            seat.fanShu = 4;
+            if (ret.hasFeng && totalFanshuPaiList.length > 1){
+                seat.fanShu = 8;
+                return;
+            }
+        }
+
+        return;
     }
     
      caclOtherSeatFanshuAndHushu(seats,huIndex){
