@@ -138,6 +138,7 @@ exports.start = function(){
                     userInfo:data && data.userInfo?data.userInfo:{},
                     onLine:true,
                     ready:true,
+            
                     totalScore:0,
                     zimocishu:0,
                     fangpaocishu:0,
@@ -194,15 +195,18 @@ exports.start = function(){
                 } 
 
                 var currentXie = seats[i].xie;
-                if (data.xie){
-                    if (currentXie.action){
-                        currentXie.score += seats[i].toHuSeatScore
+                if (roomInfo.zhuangIndex === roomInfo.currentHuIndex){ // 庄家胡了才可以卸
+                    if (data.xie){
+                        if (currentXie.action){
+                            currentXie.score += Math.abs(seats[i].fromHuSeatScore)
+                        }else{
+                            currentXie.score =  Math.abs(seats[i].fromHuSeatScore)
+                        }
                     }else{
-                        currentXie.score = seats[i].toHuSeatScore
+                        currentXie = {};
                     }
-                }else{
-                    currentXie = {};
                 }
+               
 
                 var allReady = true;
                 for (var item of seats){
@@ -367,6 +371,8 @@ exports.start = function(){
                 for (var item of seats){
                     item.ready = false
                 }
+
+                roomInfo.currentHuIndex = index;
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
                 if (roomInfo.count >= roomInfo.conf.jushu){

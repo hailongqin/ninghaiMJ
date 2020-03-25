@@ -82,7 +82,7 @@ class Util{
     
      composeAllPai(seat){
         var list = [];
-        var countMap = getCountMap(seat.holds);
+        var countMap = this.getCountMap(seat.holds);
     
         for (var _key in countMap){
             var key = parseInt(_key);
@@ -225,20 +225,20 @@ class Util{
         for (var k = 0; k < seats.length;k++){
             if (k === huIndex) continue;
             var seat = seats[k];
-            var list = composeAllPai(seat);
+            var list = this.composeAllPai(seat);
     
             for (var i = 0; i < list.length;i++){
                 if (list[i].type === 'peng'){
-                    if (checkIsFengResult(list[i].pai)){
+                    if (this.checkIsFengResult(list[i].pai)){
                         seat.huShu+=4
-                        if (checkIsMySelfFengpai(list[i].pai,seat)) seat.fanShu *= 2;
+                        if (this.checkIsMySelfFengpai(list[i].pai,seat)) seat.fanShu *= 2;
                     }else{
                         seat.huShu+=2
                     }
                 }else if (list[i].type === 'gang'){
-                    if (checkIsFengResult(list[i].pai)){
+                    if (this.checkIsFengResult(list[i].pai)){
                         seat.huShu+= list[i].fromTurn === i?32:16
-                        if (checkIsMySelfFengpai(list[i].pai,seat)) seat.fanShu *= 2;
+                        if (this.checkIsMySelfFengpai(list[i].pai,seat)) seat.fanShu *= 2;
                     }else{
                         seat.huShu+= list[i].fromTurn === i?16:8
                     } 
@@ -247,7 +247,7 @@ class Util{
     
             for (var hua of seat.huas){
                 seat.huShu += 4;
-                if (checkIsMySelfFengpai(hua,seat)){
+                if (this.checkIsMySelfFengpai(hua,seat)){
                     seat.fanShu *= 2;
                 }
             }

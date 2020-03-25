@@ -36,8 +36,15 @@ class Game {
         if (roomInfo.count === 0){ //如果是第一局
             roomInfo.zhuangIndex = 0;
         }else{
-            this.moveToNextZhuang(roomInfo);
+            if (roomInfo.currentHuIndex !== roomInfo.prevHuIndex){
+                this.moveToNextZhuang(roomInfo);
+                for (var i = 0; i < roomInfo.seats.length;i++){
+                    seats[i].xie = {};
+                }
+            }
         }
+        roomInfo.prevHuIndex = roomInfo.currentHuIndex;
+        roomInfo.currentHuIndex = -1;
         roomInfo.turn = roomInfo.zhuangIndex;
         this.initSeats(roomInfo);
         this.setFengIndex(roomInfo);
@@ -98,9 +105,14 @@ class Game {
             }
 
             if (index === fromTurn){
-                huSeat.currentScore = huSeat.fanShu*((seats.length - 1)*baseScore);
+                huSeat.fromOtherScore = huSeat.fanShu*((seats.length - 1)*baseScore);
             }else{
-                huSeat.currentScore = huSeat.fanShu*(1*baseScore + (seats.length - 2)*(baseScore/2))
+                huSeat.fromOtherScore = huSeat.fanShu*(1*baseScore + (seats.length - 2)*(baseScore/2))
+            }
+            if (huSeat.xie && huSeat.xie.action){ //把别人卸了
+                var prevHuIndex = roomInfo.prevHuIndex;
+                huSeat.xieScore += huSeat.xie.score;
+                seats[prevHuIndex].xieScore -= huSeat.xie.score
             }
 
 
@@ -111,13 +123,14 @@ class Game {
             for (var i = 0; i < seats.length;i++){
                     if (i === index) continue;
                    console.log('####',i,index,fromTurn,seats[i].currentScore)
-                    if (xie.action && index === roomInfo.lastHuIndex){
-                        seats[i].currentScore -= xie.score;
-                        seats[index].currentScore += xie.score;
+                   var xie = seat[i].xie;
+                    if (xie.action && index === roomInfo.prevHuIndex){ //卸着别人
+                        seats[i].xieScore -= xie.score;
+                        seats[index].xieScore += xie.score;
                     }
 
                     if (i === fromTurn || index === fromTurn){
-                        seats[i].toHuSeatScore = seats[i].currentScore -= seats[index].fanShu*baseScore
+                        seats[i].toHuSeatScore -= seats[index].fanShu*baseScore
                     }else{
                         seats[i].toHuSeatScore -= seats[index].fanShu*(baseScore/2)
                     }
@@ -129,29 +142,27 @@ class Game {
                         var diffZhengshu = Math.abs(diff);
                         var unit = diff < 0?-1:1;
                         while(diffZhengshu > 0){
-                            seats[i].currentScore+=((baseScore/2)*unit);
-                            seats[j].currentScore+=((baseScore/2)*(-unit));
+                            seats[i].fromOtherScore+=((baseScore/2)*unit);
+                            seats[j].fromOtherScore+=((baseScore/2)*(-unit));
                             diffZhengshu -= 30;
                         }
                     }else {
                         var diffZhengshu = Math.abs(diff);
                         var unit = diff < 0?-1:1;
                         while(diffZhengshu > 0){
-                            seats[i].currentScore+=((baseScore/2)*unit);
-                            seats[j].currentScore+=((baseScore/2)*(-unit));
+                            seats[i].fromOtherScore+=((baseScore/2)*unit);
+                            seats[j].fromOtherScore+=((baseScore/2)*(-unit));
                             diffZhengshu -= 50;
                         }
                     }
         
                 }
-
-                console.log('current'+i,seats[i].currentScore)
             }
     
              //将分数加到总额里
             for (var i = 0; i < seats.length;i++){
-                seats[i].totalScore += seats[i].currentScore;
-                console.log('total current'+i,seats[i].currentScore)
+                seats[i].totalScore += (seats[i].xieScore+seats[i].fromOtherScore+seats[i].toHuSeatScore);
+                console.log('total current'+i,seats[i].totalScore,seats[i].xieScore,seats[i].fromOtherScore,seats[i].toHuSeatScore)
             }
        
     }
@@ -171,7 +182,9 @@ class Game {
             seat.countMap = {};
             seat.huShu = 0;
             seat.fanShu = 1;
-            seat.currentScore = 0;
+            seat.fromHuSeatScore = 0;
+            seat.fromOtherScore = 0;
+            seat.xieScore = 0;
           }
     }
 
