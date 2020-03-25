@@ -31,6 +31,7 @@ var roomSchema = new Schema({
     zhuangIndex:{type:Number}, //庄家
     turn:{type:Number}, //轮到第几个出牌
     count:{type:Number}, //第几局了
+    lastHuIndex:{type:Number}, //最后胡的人
     gameStatus:{type:String}, //游戏过程中的状态
     roomStatus:{type:String}, //房间状态
 }, {timestamps: {createdAt: 'created', updatedAt: 'updated'}});

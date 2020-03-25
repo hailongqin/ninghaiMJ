@@ -80,16 +80,12 @@ class Game {
         var seats = roomInfo.seats;
         var zhuangIndex = roomInfo.zhuangIndex;
         var baseScore = CONST.MJ_TYPE[type].baseScore;
+        var xieList = roomInfo.seats[index];
     
         if (conf.type === 0){
-    
-            var huSeat = seats[index];
-    
-            //检查是不是特殊3摊牌
+            var huSeat = seats[index];   
             Util.calcuHuSeatFanshu(huSeat)
-            
             var huFanshu = huSeat.fanShu = huSeat.fanShu > 8?8:huSeat.fanShu
-
             huSeat.totalhucishu++;
             if (huFanshu === 8){
                 huSeat.lazicishu++
@@ -107,8 +103,7 @@ class Game {
                 huSeat.currentScore = huSeat.fanShu*(1*baseScore + (seats.length - 2)*(baseScore/2))
             }
 
-            console.log('huseats current socres is ',huSeat.currentScore)
-        
+
             //计算其他人的胡数
            Util.caclOtherSeatFanshuAndHushu(seats,index);
     
@@ -116,10 +111,15 @@ class Game {
             for (var i = 0; i < seats.length;i++){
                     if (i === index) continue;
                    console.log('####',i,index,fromTurn,seats[i].currentScore)
+                    if (xie.action && index === roomInfo.lastHuIndex){
+                        seats[i].currentScore -= xie.score;
+                        seats[index].currentScore += xie.score;
+                    }
+
                     if (i === fromTurn || index === fromTurn){
-                        seats[i].currentScore -= seats[index].fanShu*baseScore
+                        seats[i].toHuSeatScore = seats[i].currentScore -= seats[index].fanShu*baseScore
                     }else{
-                        seats[i].currentScore -= seats[index].fanShu*(baseScore/2)
+                        seats[i].toHuSeatScore -= seats[index].fanShu*(baseScore/2)
                     }
     
                 for (var j = i+1;j < seats.length;j++){

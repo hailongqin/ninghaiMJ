@@ -144,7 +144,8 @@ exports.start = function(){
                     lazipaishu:0,
                     shuangtaicishu:0,
                     pinghucishu:0,
-                    totalhucishu:0
+                    totalhucishu:0,
+                    xie:{}
                 }
                 seats.push(seatOne);
                 seatUserIds.push(userId);
@@ -191,6 +192,17 @@ exports.start = function(){
                     Game.sendGameEnd(roomInfo);
                     return;
                 } 
+
+                var currentXie = seats[i].xie;
+                if (data.xie){
+                    if (currentXie.action){
+                        currentXie.score += seats[i].toHuSeatScore
+                    }else{
+                        currentXie.score = seats[i].toHuSeatScore
+                    }
+                }else{
+                    currentXie = {};
+                }
 
                 var allReady = true;
                 for (var item of seats){
