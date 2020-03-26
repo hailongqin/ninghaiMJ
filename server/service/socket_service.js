@@ -182,8 +182,9 @@ exports.start = function(){
                     Log.error('socket set_ready get roominfo is error',err)
                     return;
                 }
-                Log.info('receive game_ready data is ',roomInfo)
+                //Log.info('receive game_ready data is ',roomInfo)
 
+                console.log('userid is ',userId,roomInfo.seats)
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
