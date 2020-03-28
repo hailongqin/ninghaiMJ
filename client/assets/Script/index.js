@@ -97,7 +97,20 @@ cc.Class({
                     this.jumpToLogin();
                 }else{
                     cc.vv.userInfo = {userId,userName:data.userName};
-                    cc.director.loadScene(this.hallScen.name);
+
+                    if (param && param.roomId){
+                        cc.vv.http.sendRequest('/room/check_room_exit',{roomId:param.roomId},()=>{  
+                            cc.vv.roomId =  param.roomId;
+                            cc.director.loadScene(this.roomSecen.name);
+            
+                        },(err)=>{
+                            var message = err.message || '加入房间失败'
+                            cc.vv.alertScript.alert(message);
+                            cc.director.loadScene(this.hallScen.name);
+                        });
+                    }else{
+                        cc.director.loadScene(this.hallScen.name);
+                    }
                 }
  
             },(err)=>{

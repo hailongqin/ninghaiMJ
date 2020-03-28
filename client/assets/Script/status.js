@@ -37,7 +37,6 @@ cc.Class({
     setStatusData(myIndex,roomInfo){
         for (var i = 0 ; i < roomInfo.seats.length;i++){
             this.setUserInfo(i,myIndex,roomInfo.seats);
-            this.setUserReadyStatus(i,myIndex,roomInfo);
         }
     },
 
@@ -79,11 +78,27 @@ cc.Class({
                     node.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
                 });
             }
+
+            node.getChildByName('off_line_sign').active = seats[seatIndex].onLine?false:true
+            
             node.active = true;
         }
     },
 
 
+    setXieIcon(seatIndex,myIndex,seats){
+
+        var nodeIndex = -1;
+        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
+        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
+        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
+        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;   
+
+        if (node !== -1){
+            var node = this.node.children[nodeIndex];
+            node.getChildByName('xie').active = seats[seatIndex].xie && seats[seatIndex].xie.action?true:false  
+        }
+    },
     setUserReadyStatus(seatIndex,myIndex,roomInfo){
         var nodeIndex = -1;
         var seats = roomInfo.seats;

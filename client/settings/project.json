@@ -16,14 +16,14 @@
   "design-resolution-height": 640,
   "fit-width": false,
   "fit-height": true,
-  "use-project-simulator-setting": true,
+  "use-project-simulator-setting": false,
   "simulator-orientation": true,
   "use-customize-simulator": true,
   "simulator-resolution": {
     "height": 640,
     "width": 960
   },
-  "last-module-event-record-time": 1584773809265,
+  "last-module-event-record-time": 1585382248627,
   "assets-sort-type": "name",
   "facebook": {
     "appID": "",

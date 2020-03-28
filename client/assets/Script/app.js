@@ -5,9 +5,6 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { timingSafeEqual } from "crypto";
-
-
 var maxHoldLength = 14;
 
 cc.Class({
@@ -179,7 +176,7 @@ cc.Class({
     },
 
     clickResultReadyBtn(event,xie){
-        console.log('click result ready',xie)
+        console.log('click result ready',xie,typeof xie)
         var param = {xie:false};
         if (xie === 'true'){
             param.xie = true
@@ -274,10 +271,6 @@ cc.Class({
             hideChiResultNode(this.leftChiResultNode);
             hideChiResultNode(this.rightChiResultNode);  
             hideChiResultNode(this.upChiResultNode); 
-
-
-         
-
     },
 
     initEveryNode(){
@@ -327,7 +320,7 @@ cc.Class({
         var playerUserIds = players.map((s)=>{return s.userId});
         var myIndex = -1;
         if (playerUserIds.indexOf(userId) !== -1){
-            if (roomInfo.gameStatus !== CONST.GAME_STATUS_NO_START){ //游戏已经开始了，上帝视角
+            if (roomInfo.gameStatus !== cc.vv.CONST.GAME_STATUS_NO_START){ //游戏已经开始了，上帝视角
                 myIndex = 0;
                 this.gameInfo.isKanke = true;
             }else{
@@ -475,13 +468,32 @@ cc.Class({
        this.node.on(CONST.SERVER_GAME_OVER,(data)=>{
         var seats = data.seats;
 
+        this.gameInfo.gameStatus = cc.vv.CONST.GAME_STATUS_END;
+        var maxScoreIndex = 0;
+        var maxFangpaoIndex = 0;
+
         for (var i = 0; i < seats.length;i++){
             var seat = seats[i];
             var node = this.gameOverNode.getChildByName('list'+i);
             node.getChildByName('zimocishu').getComponent(cc.Label).string = seat.zimocishu;
+            node.getChildByName('fangpaocishu').getComponent(cc.Label).string = seat.fangpaocishu;
+            node.getChildByName('lazipai').getComponent(cc.Label).string = seat.lazipaishu;
+            node.getChildByName('score').getComponent(cc.Label).string = seat.totalScore;
+            node.getChildByName('userName').getComponent(cc.Label).string = seat.userInfo.userName;
+            node.getChildByName('id').getComponent(cc.Label).string = i;
 
+            node.getChildByName('GameEnd5').active = false; //大赢家
+            node.getChildByName('GameEnd3').active = false; //放炮次数
+
+            if (i !== 0){
+                if (seat.totalScore > seat[maxScoreIndex]) maxScoreIndex = i;
+                if (seat.fangpaocishu > seat[maxFangpaoIndex]) maxFangpaoIndex = i;
+            }
         }
-       })
+            this.gameOverNode.getChildByName('list'+maxScoreIndex).getChildByName('GameEnd5').active = true;
+            this.gameOverNode.getChildByName('list'+maxFangpaoIndex).getChildByName('GameEnd3').active = true;
+            this.gameOverNode.active = true;
+        })
             
        // 游戏开始 //群发
         this.node.on(CONST.SERVER_GAME_START_NOTIFY,(data) => {
@@ -496,6 +508,7 @@ cc.Class({
             var myIndex = this.getMyIndexFromRoomInfo(data);
 
            this.gameInfo = {
+               ...this.gameInfo,
                myFolds:[],
                myHolds:[],
                myHuas:[],
@@ -523,6 +536,7 @@ cc.Class({
            };
            cc.vv.roomId = data.roomId;
             for (var i = 0; i < seats.length;i++){
+                this.statusNode.getComponent('status').setXieIcon(i,myIndex,seats);
                 if (cc.vv.Common.checkIsMySelfIndex(myIndex,i)){
                     this.gameInfo.myIndex = i;
                 }else if ( cc.vv.Common.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
@@ -534,7 +548,7 @@ cc.Class({
                 } 
             }
 
-           
+            this.statusNode.getComponent('status').setScoreData(data,myIndex);
             this.fengNode.getComponent('feng').setFengDirection(myIndex,data);
             this.fengNode.getComponent('feng').setTurn(data);
             this.setZhuangIconPosition(data.zhuangIndex)
@@ -597,7 +611,7 @@ cc.Class({
             var scoreNode = node.getChildByName('score');
             var xieScore = node.getChildByName('xie');
 
-            if (!this.gameInfo.isKanke){
+            if (!this.gameInfo.isKanke && i === this.gameInfo.myIndex){
                 if (data.index === i || data.index !== roomInfo.zhuangIndex){
                     this.showNode(readyBtn)
                 }else{
@@ -609,7 +623,7 @@ cc.Class({
             }
           
 
-            scoreNode.getComponent(cc.Label).string = seat.currentScore;
+            scoreNode.getComponent(cc.Label).string = seat.currentScore > 0?'+'+seat.currentScore:seat.currentScore;
 
             if (seat.userInfo && seat.userInfo.userName){
                 nameNode.getComponent(cc.Label).string = seat.userInfo.userName
@@ -917,6 +931,7 @@ cc.Class({
        
         this.init();
      },
+
 
      onDestroy(){
         console.log('ondestroy');

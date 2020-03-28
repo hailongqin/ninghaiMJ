@@ -110,7 +110,7 @@ class Util{
     checkIsDuiDuiHu(seat){
         var chis = seat.chis;
         for (var i = 0; i < chis.length;i++){
-            if (chis.type === 'chi') return false
+            if (chis[i].type === 'chi') return false
         }
         //对对胡牌有种情况
         //1、N坎 + 2张双牌

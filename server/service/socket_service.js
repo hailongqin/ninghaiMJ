@@ -93,6 +93,7 @@ exports.start = function(){
                 Game.notifyTip(roomInfo,'用户'+userId+'进入房间');
                 Room.addAndUpdateRoom(roomId,roomInfo);
                 Game.sendRoomBaseInfo(roomInfo,userId);
+                socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo)
                 if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
                     Game.notifyCanSetReady(userId);
                 else{
@@ -155,7 +156,7 @@ exports.start = function(){
                     return seatUserIds.indexOf(item.userId) === -1;
                 })
 
-                Room.broacastInRoom(CONST.SERVER_ROOM_NEW_USER_SET_READY,roomInfo.roomId,{index:seats.length - 1,roomInfo});
+              //  Room.broacastInRoom(CONST.SERVER_ROOM_NEW_USER_SET_READY,roomInfo.roomId,{index:seats.length - 1,roomInfo});
                 Game.updatePepoleStatus(roomInfo);
                 if (conf.userCount === seats.length){
                     roomInfo.gameStatus = CONST.GAME_STATUS_START;
@@ -184,7 +185,7 @@ exports.start = function(){
                 }
                 //Log.info('receive game_ready data is ',roomInfo)
 
-                console.log('userid is ',userId,roomInfo.seats)
+                console.log('net ju ready data is ',data)
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
@@ -195,14 +196,18 @@ exports.start = function(){
                     return;
                 } 
 
+                if (!roomInfo.gameStatusOneOver) return; //已经开始了
+
                 var currentXie = seats[index].xie;
-                if (roomInfo.zhuangIndex === roomInfo.currentHuIndex){ // 庄家胡了才可以卸
+                console.log('cuurenxie is ',currentXie)
+                if (roomInfo.zhuangIndex === roomInfo.currentHuIndex && index !== roomInfo.zhuangIndex){ // 庄家胡了才可以卸
                     if (data.xie){
                         if (currentXie.action){
-                            currentXie.score += Math.abs(seats[i].fromHuSeatScore)
+                            currentXie.score += Math.abs(seats[index].fromHuSeatScore)
                         }else{
-                            currentXie.score =  Math.abs(seats[i].fromHuSeatScore)
+                            currentXie.score =  Math.abs(seats[index].fromHuSeatScore)
                         }
+                        currentXie.action = true
                     }else{
                         currentXie = {};
                     }
@@ -382,9 +387,18 @@ exports.start = function(){
                     return;
                 }
 
-
+                roomInfo.gameStatusOneOver = true;
                 var timer = setTimeout(() => {
                         Timer.deleteTimer(roomId);
+                         //自动开局的，把卸的人加上钱
+                         for (var i = 0; i < seats.length;i++){
+                             if (roomInfo.zhuangIndex === roomInfo.currentHuIndex && i !== roomInfo.zhuangIndex){
+                                 if (seats[i].xie.action){
+                                     seats[i].xie.score += Math.abs(seats[i].fromHuSeatScore)
+                                 }
+                             }
+                         }
+
                         Game.begin(roomInfo);
                     }, 10*1000);
 
@@ -772,10 +786,11 @@ exports.start = function(){
                     if (roomInfo.gameStatus === CONST.GAME_STATUS_START){
                         var seats = roomInfo.seats;
                         seats[index].onLine = false;
-                        Room.broacastInRoom(CONST.SERVER_GAME_USER_OFFLINE,index)
+                        
                     }else{
                         roomInfo.seats.splice(index,1);
                     }
+                    Game.updatePepoleStatus(roomInfo);
                 }
 
                 index = Game.getIndexByUserId(roomInfo.players,userId);

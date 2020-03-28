@@ -24,30 +24,11 @@ cc.Class({
         //         this._bar = value;
         //     }
         // },
-
- 
     },
 
     // LIFE-CYCLE CALLBACKS:
 
-     onLoad () {
-         this.x = this.node.x;
-         this.y = this.node.y;
-     },
-
-    showTip(content){
-        this.node.getComponent(cc.Label).string = content;
-        var jumpUp = cc.moveBy(2, cc.v2(0, 20)).easing(cc.easeCubicActionOut());
-        this.node.active = true;
-        this.node.runAction(jumpUp);
-
-        setTimeout(() => {
-            this.node.active = false;
-            this.node.x = this.x;
-            this.node.y = this.y;
-        }, 500);
-
-    },
+    // onLoad () {},
 
     start () {
 

@@ -9,16 +9,23 @@ var roomInfo = {
     },
     zhuangIndex:1,
     seats:[{
-        holds:[1,1,1,2,2,2,4,4,5,5,6],
+        holds:[37,37,37,14,14],
         chis:[{
-            type:'gang',
-            pai:36
+            type:'chi',
+            pai:3,
+            list:[1,2,3]
+        },
+        {
+            type:'chi',
+            pai:27,
+            list:[27,28,29]
         },
         {
             type:'peng',
-            pai:31
+            pai:25,
+            list:[25,25,25]
         }],
-        huas:[41,45],
+        huas:[],
         fromHuSeatScore:0,
         fromOtherScore:0,
         xieScore:0,
@@ -63,7 +70,7 @@ var roomInfo = {
     }]
 }
 
-calcHuShu(roomInfo,1,0)
+calcHuShu(roomInfo,0,0)
 
 function calcHuShu(roomInfo,index,fromTurn){
     var conf = roomInfo.conf;

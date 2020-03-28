@@ -32,11 +32,11 @@ class Game {
 
     //开始一局新的
     begin(roomInfo){
-        roomInfo.gameStatus = CONST.GAME_STATUS_START;
+        roomInfo.gameStatusOneOver = false;
         if (roomInfo.count === 0){ //如果是第一局
             roomInfo.zhuangIndex = 0;
         }else{
-            if (roomInfo.currentHuIndex !== roomInfo.prevHuIndex){
+            if (roomInfo.currentHuIndex !== roomInfo.zhuangIndex){
                 this.moveToNextZhuang(roomInfo);
                 for (var i = 0; i < roomInfo.seats.length;i++){
                     roomInfo.seats[i].xie = {};
@@ -652,7 +652,7 @@ class Game {
             return 
         }
         
-        Room.broacastInRoom(CONST.SERVER_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
     }
 
     notifyCanSetReady(userId){

@@ -923,7 +923,9 @@
     "loginScen": {
       "__uuid__": "2e7e354c-af69-40c1-9c71-457ee63dc378"
     },
-    "roomSecen": null,
+    "roomSecen": {
+      "__uuid__": "8dcf6bcf-a3e3-42a4-a45b-66f59f6cbcee"
+    },
     "_id": "817I9cq0VG1ahGVAvaa0m1"
   }
 ]

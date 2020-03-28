@@ -2559,7 +2559,7 @@
     "component": "",
     "_componentId": "17772xJNRNPFaLMT473uZL9",
     "handler": "onJushuToggleClick",
-    "customEventData": "20"
+    "customEventData": "2"
   },
   {
     "__type__": "cc.Node",
