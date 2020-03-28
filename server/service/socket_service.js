@@ -383,7 +383,9 @@ exports.start = function(){
              
                 Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
                 if (roomInfo.count >= roomInfo.conf.jushu){
-                    roomInfo.gameStatus = CONST.GAME_STATUS_END
+                    roomInfo.gameStatus = CONST.GAME_STATUS_END;
+                    Room.setRoomInfoToDB(roomInfo);
+                    
                     return;
                 }
 
@@ -787,9 +789,13 @@ exports.start = function(){
                         var seats = roomInfo.seats;
                         seats[index].onLine = false;
                         
-                    }else{
+                    }else  if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
                         roomInfo.seats.splice(index,1);
                     }
+                       
+                    if (roomInfo.gameStatus === CONST.GAME_STATUS_END){
+                    }
+                    
                     Game.updatePepoleStatus(roomInfo);
                 }
 

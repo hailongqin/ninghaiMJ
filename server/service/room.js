@@ -42,14 +42,15 @@ class roomList {
         }
     }
 
-    setRoomInfoToDB(roomInfo){
+    setRoomInfoToDB(roomInfo,callback){
         var roomId = roomInfo.roomId;
         
         roomModel.updateOne({roomId},roomInfo,(err)=>{
             if (err) {
                 Log.error('setRoomInfofromDB err',err)
-                return;
             } 
+
+           if (callback) callback();
         })
        
     }

@@ -475,9 +475,13 @@ cc.Class({
         for (var i = 0; i < seats.length;i++){
             var seat = seats[i];
             var node = this.gameOverNode.getChildByName('list'+i);
-            node.getChildByName('zimocishu').getComponent(cc.Label).string = seat.zimocishu;
-            node.getChildByName('fangpaocishu').getComponent(cc.Label).string = seat.fangpaocishu;
-            node.getChildByName('lazipai').getComponent(cc.Label).string = seat.lazipaishu;
+            node.getChildByName('zimocishu').getComponent(cc.Label).string = '自摸次数：'+seat.zimocishu;
+            node.getChildByName('fangpaocishu').getComponent(cc.Label).string = '放炮次数：'+seat.fangpaocishu;
+            node.getChildByName('lazipai').getComponent(cc.Label).string = '辣子次数：'+seat.lazipaishu;
+            node.getChildByName('zonghupaishu').getComponent(cc.Label).string = '总胡牌数：'+seat.totalhucishu;
+            node.getChildByName('shuangtaipaishu').getComponent(cc.Label).string = '双台牌数：'+seat.shuangtaicishu;
+            node.getChildByName('pinghupaishu').getComponent(cc.Label).string = '平胡牌数：'+seat.pinghucishu;
+
             node.getChildByName('score').getComponent(cc.Label).string = seat.totalScore;
             node.getChildByName('userName').getComponent(cc.Label).string = seat.userInfo.userName;
             node.getChildByName('id').getComponent(cc.Label).string = i;
@@ -486,13 +490,18 @@ cc.Class({
             node.getChildByName('GameEnd3').active = false; //放炮次数
 
             if (i !== 0){
-                if (seat.totalScore > seat[maxScoreIndex]) maxScoreIndex = i;
-                if (seat.fangpaocishu > seat[maxFangpaoIndex]) maxFangpaoIndex = i;
+                if (seat[i].totalScore > seat[maxScoreIndex]) maxScoreIndex = i;
+                if (seat[i].fangpaocishu > seat[maxFangpaoIndex]) maxFangpaoIndex = i;
             }
+            node.active = true;
         }
-            this.gameOverNode.getChildByName('list'+maxScoreIndex).getChildByName('GameEnd5').active = true;
-            this.gameOverNode.getChildByName('list'+maxFangpaoIndex).getChildByName('GameEnd3').active = true;
-            this.gameOverNode.active = true;
+
+        for (;i < 4;i++){
+            this.gameOverNode.getChildByName('list'+i).active = false;
+        }
+        this.gameOverNode.getChildByName('list'+maxScoreIndex).getChildByName('GameEnd5').active = true;
+        this.gameOverNode.getChildByName('list'+maxFangpaoIndex).getChildByName('GameEnd3').active = true;
+        this.gameOverNode.active = true;
         })
             
        // 游戏开始 //群发
