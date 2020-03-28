@@ -165,6 +165,10 @@ cc.Class({
         cc.vv.net.close();
     },
 
+    openSetting(){
+        cc.vv.setting.show();
+    },
+
     // chupai(pai){
       
     backHall(){

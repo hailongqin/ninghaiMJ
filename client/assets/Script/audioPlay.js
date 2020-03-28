@@ -13,14 +13,10 @@ cc.Class({
         // },
         // ...
 
-        bgAudio:{
-            default:null,
-            type: cc.AudioClip
-        },
-        bgmVolume:1.0,
-        sfxVolume:1.0,
+        bgmVolume:0.5,
+        sfxVolume:0.5,
         
-        bgmAudioID:-1,
+        bgmAudioID:null,
     },
 
     onLoad(){
@@ -82,17 +78,19 @@ cc.Class({
         if(this.sfxVolume != v){
             cc.sys.localStorage.setItem("sfxVolume",v);
             this.sfxVolume = v;
-            cc.audioEngine.setVolume(this.sfxVolume,v);
+            if (this.sfxVolumeID)
+                cc.audioEngine.setVolume(this.sfxVolumeID,v);
         }
     },
     
     setBGMVolume:function(v,force){
+        console.log(v,force)
         if(this.bgmAudioID >= 0){
             if(v > 0){
                 cc.audioEngine.resume(this.bgmAudioID);
             }
             else{
-                cc.audioEngine.stop(this.bgmAudioID);
+                cc.audioEngine.pause(this.bgmAudioID);
             }
             //cc.audioEngine.setVolume(this.bgmAudioID,this.bgmVolume);
         }

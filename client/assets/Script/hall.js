@@ -81,6 +81,10 @@ cc.Class({
         })
        
      },
+     openSetting(){
+      cc.vv.setting.show();
+    },
+
 
      onJushuToggleClick(toggle,data){
         roomConf.jushu = parseInt(data);

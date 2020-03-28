@@ -39,12 +39,29 @@ cc.Class({
         yinxiaoProgress:{
             default:null,
             type:cc.Node
-        }
+        },
+        yinxiaoOpenNode:{
+            default:null,
+            type:cc.Node
+        },
+        yinxiaoCloseNode:{
+            default:null,
+            type:cc.Node
+        },
+        yinyueCloseNode:{
+            default:null,
+            type:cc.Node
+        },
+        yinyueOpenNode:{
+            default:null,
+            type:cc.Node
+        },
     },
 
     // LIFE-CYCLE CALLBACKS:
 
      onLoad () {
+        cc.game.addPersistRootNode(this.node); //作为常住节点
          this.initYinyueHandle(this.yinyueHandleNode);
          this.initYinxiaoHandle(this.yinxiaoHandleNode);
      },
@@ -72,7 +89,8 @@ cc.Class({
         var node = this.yinyueProgress;
         var percent = Math.abs(value)/node.width;
         node.getComponent(cc.ProgressBar).progress = percent;
-        cc.vv.audio.setBGMVolume(percent)
+        console.log(value,percent)
+        cc.vv.audio.setBGMVolume(percent,true)
 
      },
 
@@ -82,6 +100,51 @@ cc.Class({
         node.getComponent(cc.ProgressBar).progress =percent;
         cc.vv.audio.setSFXVolume(percent)
      },
+
+     setYinyueHandlePosition(pos){
+        this.yinyueHandleNode.x = pos;
+     },
+
+     setYinxiaoHandlePosition(pos){
+        this.yinxiaoHandleNode.x = pos;
+     },
+
+     setOrStopYinyueProgress(e,value){
+        this.yinyueOpenNode.active = false;
+        this.yinyueCloseNode.active = false;
+        console.log(value)
+        if (parseInt(value) === 0){
+            this.setYinyueProgressValue(0);
+            this.yinyueCloseNode.active = true;
+            this.setYinyueHandlePosition(-this.yinyueProgress.width/2)
+        }else{
+            this.setYinyueProgressValue(this.yinyueProgress.width/2);
+            this.yinyueOpenNode.active = true;
+            this.setYinyueHandlePosition(0)
+        }
+     },
+
+     setOrStopYinxiaoProgress(e,value){
+        this.yinxiaoOpenNode.active = false;
+        this.yinxiaoCloseNode.active = false;
+        if (parseInt(value) === 0){
+            this.setYinxiaoProgressValue(0);
+            this.yinxiaoCloseNode.active = true;
+            this.setYinxiaoHandlePosition(-this.yinxiaoProgress.width/2)
+        }else{
+            this.setYinxiaoProgressValue(this.yinxiaoProgress.width/2);
+            this.yinxiaoOpenNode.active = true;
+            this.setYinxiaoHandlePosition(0)
+        }
+    },
+
+    close(){
+        this.node.active = false;
+    },
+
+    show(){
+        this.node.active = true;
+    },
 
     start () {
 

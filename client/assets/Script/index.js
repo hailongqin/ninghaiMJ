@@ -66,8 +66,9 @@ cc.Class({
      onLoad () {
         cc.vv = {};
         cc.vv.alertScript =  cc.find("alert").getComponent("alert");
+        cc.vv.setting =  cc.find("setting").getComponent("setting");
         cc.vv.audio =  cc.find("audio").getComponent("audioPlay");
-
+        cc.vv.audio.playBGM('bgFight')
         cc.vv.Util = require('utils');
         cc.vv.Crypto = require('md5')
 
@@ -86,9 +87,8 @@ cc.Class({
         console.log(cc.vv.CONST)
 
         var param = this.urlParse();
-        console.log('url param is ',param,cc.vv.storage.getStorage('aaa'))
+        console.log('url param is ',param,cc.vv.storage.getStorage('aaa'));
 
-        return;
 
         var userId = cc.vv.storage.getStorage('userId')
         if (userId && userId !== 'null'){
