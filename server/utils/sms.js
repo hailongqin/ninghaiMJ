@@ -31,6 +31,27 @@ class SMS{
         })
         
     }
+
+    sendRegisterSms(PhoneNumbers,code){
+        var params = {
+            "RegionId": "cn-hangzhou",
+            "PhoneNumbers": PhoneNumbers,
+            "SignName": "川川网络",
+            "TemplateCode": "SMS_186680278",
+            "TemplateParam": `{code:${code}}`
+          }
+          
+
+        var requestOption = {
+            method: 'POST'
+        };
+        
+        this.client.request('SendSms', params, requestOption).then((result) => {
+            console.log(JSON.stringify(result));
+        }, (ex) => {
+            console.log(ex);
+        })    
+    }
 }
 
 

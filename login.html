@@ -57,6 +57,12 @@
             flex-direction: column;
         }
 
+        .name-wrap{
+            width: 100%;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
         .phone-wrap{
             width: 100%;
         }
@@ -126,6 +132,11 @@
 
 <div class="bd flex flex-center flex-direction-column">
 
+    <div class="name-wrap flex" id='nameWrap'>
+        <div class="title">昵称</div>
+        <input placeholder="请输入昵称,最多4个字" class="input-wrap" id="userName" maxlength="4"/>
+    </div>
+
     <div class="phone-wrap flex">
         <div class="title">手机号</div>
         <input placeholder="请输入手机号" class="input-wrap" id="phone" maxlength="11"/>
@@ -139,7 +150,7 @@
         </div>
     </div>
 
-    <button class="btn" id="submit">登录</button>
+    <button class="btn" id="submit"></button>
 </div>
 
 
@@ -159,16 +170,51 @@
         doc.addEventListener('DOMContentLoaded', recalc, false);
     })(document, window);
 
+    function urlParse(){
+        var params = {};
+        if(window.location == null){
+            return params;
+        }
+        var name,value; 
+        var str=window.location.href; //取得整个地址栏
+        var num=str.indexOf("?") 
+        str=str.substr(num+1); //取得所有参数   stringvar.substr(start [, length ]
+    
+        var arr=str.split("&"); //各个参数放到数组里
+        for(var i=0;i < arr.length;i++){ 
+            num=arr[i].indexOf("="); 
+            if(num>0){ 
+                name=arr[i].substring(0,num);
+                value=arr[i].substr(num+1);
+                params[name]=value;
+            } 
+        }
+        return params;
+    }
+
+    var UrlParam = urlParse();
+
+    var isRegister = false;
+
     var eleCodeBtn = document.getElementById('code-btn');
     var phoneEle = document.getElementById('phone');
     var codeEle = document.getElementById('code');
-    var submitEle = document.getElementById('submit')
+    var submitEle = document.getElementById('submit');
+    var nameWrapEle = document.getElementById('nameWrap');
+    var nameEle = document.getElementById('userName');
+    if (UrlParam.register){
+        nameWrapEle.style.display = 'flex';
+        isRegister = true;
+        submitEle.innerHTML = '注册'
+    }else{
+        submitEle.innerHTML = '登录'
+    }
     var HOST = 'https://www.ccnet.site'
 
     var hasSendCode = false;
     $('#code-btn').click(function(){
         if (hasSendCode) return;
-        hasSendCode = true;
+
         var phone = phoneEle.value;
         if (!phone){
             alert('请输入手机号码');
@@ -181,25 +227,64 @@
             return;
         }
         console.log('开始发送请求')
-        $.ajax({
-            type: 'POST',
-            url: HOST+'/user/send_login_sms',
-            contentType: "application/json", //必须这样写
-            dataType:"json",
-            data: JSON.stringify({phone:phone}),
-            success: function(){
+        hasSendCode = true;
+        if (isRegister){
+                $.ajax({
+                    type: 'POST',
+                    url: HOST+'/user/check_user_exit',
+                    contentType: "application/json", //必须这样写
+                    dataType:"json",
+                    data: JSON.stringify({phone:phone}),
+                    success: function(res){
+                    if (res.code === 0){
+                        if (res.result){
+                            alert('账号已经注册');
+                            return;
+                        }else{
 
-            },
+                            $.ajax({
+                                type: 'POST',
+                                url: HOST+'/user/send_register_sms',
+                                contentType: "application/json", //必须这样写
+                                dataType:"json",
+                                data: JSON.stringify({phone:phone}),
+                                success: function(){
+                                },
 
-        });
+                            });
 
-        sendCode()
+                            sendCode()
+                        }
+                    }
+                    },
+                });
+        }else{
+            $.ajax({
+                type: 'POST',
+                url: HOST+'/user/send_login_sms',
+                contentType: "application/json", //必须这样写
+                dataType:"json",
+                data: JSON.stringify({phone:phone}),
+                success: function(){
+                },
+
+            });
+
+            sendCode()    
+        }
+
+
+
 
     })
 
+    var btnHasClick = false;
+
     $('#submit').click(function(){
         var phone = phoneEle.value;
-        var code = codeEle.value
+        var code = codeEle.value;
+        var userName = nameEle.value;
+        if (btnHasClick) return;
         if (!code){
             alert('请输入验证码');
             return;
@@ -209,7 +294,36 @@
             alert(('验证码错误'));
             return;
         }
-        $.ajax({
+
+        if (isRegister){
+            if (!userName){
+                alert('请输入昵称')
+                return;
+            }
+            btnHasClick = true
+            $.ajax({
+                type: 'POST',
+                url: HOST+'/user/register_by_phone',
+                contentType: "application/json", //必须这样写
+                dataType:"json",
+                data: JSON.stringify({phone:phone,code:code,userName}),
+                success: function(res){
+                    if (res && res.code !== 0){
+                        alert(res.message || '注册失败')
+                    }else{
+                        window.localStorage.setItem('userId',res.userId);
+                        window.open(HOST)
+                    }
+
+                },
+                fail:function(err){
+
+                }
+
+            });
+        }else{
+            btnHasClick = true
+            $.ajax({
             type: 'POST',
             url: HOST+'/user/user_login_by_sms',
             contentType: "application/json", //必须这样写
@@ -220,7 +334,7 @@
                     alert(res.message || '登录失败')
                 }else{
                     window.localStorage.setItem('userId',res.userId);
-                    window.close();
+                    window.open(HOST)
                 }
 
             },
@@ -229,6 +343,8 @@
             }
 
         });
+        }
+        
     })
 
 

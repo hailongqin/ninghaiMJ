@@ -38,6 +38,10 @@ cc.Class({
         window.open('./login.html')
     },
 
+    onClickUserRegitser(){
+        window.open('./login.html?register=true')
+    },
+
      onLoad () {
         
      },

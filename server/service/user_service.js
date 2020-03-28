@@ -37,7 +37,6 @@ router.post('/get_user_info',function(req,res,next){
             return;
         }
 
-        console.log('ret',ret)
         if (ret && ret.userId){
             res.json({
                 code:0,data:ret
@@ -49,6 +48,26 @@ router.post('/get_user_info',function(req,res,next){
         }
 
     })
+})
+
+router.post('/check_user_exit',function(req,res,next){
+    var body = req.body;
+    var phone = body.phone;
+    if (!phone){
+        res.json({code:-1,message:'参数错误'})
+        return;
+    }
+
+    userModel.findOne({phone:body.phone},(err,ret)=>{
+        if (err){
+            res.json({code:-2,message:'读取数据库错误'})
+            return
+        }
+
+        res.json({code:0,result:ret?true:false})
+
+    })
+
 })
 
 router.post('/send_login_sms',function(req,res,next){
@@ -69,6 +88,23 @@ router.post('/send_login_sms',function(req,res,next){
 
 })
 
+router.post('/send_register_sms',function(req,res,next){
+
+    var body = req.body;
+    if (!body.phone){
+        res.json({code:-1,message:"手机号为空"})
+        return;
+    }
+
+    var code = Util.generateSmsCode();
+    console.log('sms code is ',body.phone,code)
+    Redis.setRedis(`register_${body.phone}`,code,5*60);
+
+    SMS.sendRegisterSms(body.phone,code);
+    res.json({code:0});
+    return;
+
+})
 
 //已经登录过的按userId登录
 router.post('/user_login_by_userId',function(req,res,next){
@@ -92,6 +128,81 @@ router.post('/user_login_by_userId',function(req,res,next){
 
         res.json({code:0,userName:ret.userName})
 
+    })
+})
+
+router.post('/register_by_phone',function(req,res,next){
+    var body = req.body;
+    var phone = body.phone;
+    var code = body.code;
+    var userName = body.userName;
+    if (!phone || !code || !userName){
+        res.json({code:-1,message:'参数错误'})
+        return;
+    }
+
+    userModel.findOne({phone:body.phone},(err,ret)=>{
+        if (err){
+            res.json({code:-2,message:'读取数据库错误'})
+            return
+        }
+
+       if (ret){
+        res.json({code:-3,message:'账号已存在'})
+        return;
+       }
+       Redis.getRedis(`register_${phone}`,(_code)=>{
+            if (_code !== code){
+                res.json({code:-4,message:'验证码错误'})
+                return;
+            }
+
+                
+            createUser(phone);
+            function createUser(phone){
+                var userId = Util.generateUserId();
+                if (creatingUser[userId]){
+                    createUser(phone)
+                    return;
+                }
+                creatingUser[userId] = true;
+        
+                userModel.findOne({userId:userId})
+                .select("-_id")
+                .exec((err,ret)=> {
+                    if (err){
+                        res.json({code:-2,message:'读取数据库错误'})
+                        delete creatingUser[userId]
+                        return
+                    }
+        
+                    if (ret && ret.length){
+                        delete creatingUser[userId];
+                        createUser(phone)
+                        return
+                    }
+        
+                    var condition = {
+                        userId,
+                        phone,
+                        userName
+                    }
+                    userModel.create(condition,  (err, doc) => {
+                        if (err) {
+                            delete creatingUser[userId]
+                            res.json({code:-2,message:"插入数据错误"});
+                        } else {
+                            delete creatingUser[userId]
+                            res.json({code:0,userId,userName})
+                        }
+                    })
+        
+                })
+        
+        
+            }
+
+        })
     })
 })
 
@@ -137,51 +248,11 @@ router.post('/user_login_by_sms',function(req,res,next){
             if (ret){
                 res.json({code:0,userId:ret.userId})
                 return
+            }else{
+                res.json({code:-4,message:'账号不存在'});
+                return;
             }
-    
-            createUser(phone);
-            function createUser(phone){
-                var userId = Util.generateUserId();
-                if (creatingUser[userId]){
-                    createUser(phone)
-                    return;
-                }
-                creatingUser[userId] = true;
-        
-                userModel.findOne({userId:userId})
-                .select("-_id")
-                .exec((err,ret)=> {
-                    if (err){
-                        res.json({code:-2,message:'读取数据库错误'})
-                        delete creatingUser[userId]
-                        return
-                    }
-        
-                    if (ret && ret.length){
-                        delete creatingUser[userId];
-                        createUser(phone)
-                        return
-                    }
-        
-                    var condition = {
-                        userId,
-                        phone,
-                        userName:phone.substr(-4,4)
-                    }
-                    userModel.create(condition,  (err, doc) => {
-                        if (err) {
-                            delete creatingUser[userId]
-                            res.json({code:-2,message:"插入数据错误"});
-                        } else {
-                            delete creatingUser[userId]
-                            res.json({code:0,userId,userName:phone.substr(-4,4)})
-                        }
-                    })
-        
-                })
-        
-        
-            }
+
             
         })
     });
