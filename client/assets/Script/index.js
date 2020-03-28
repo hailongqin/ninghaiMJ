@@ -88,6 +88,8 @@ cc.Class({
         var param = this.urlParse();
         console.log('url param is ',param,cc.vv.storage.getStorage('aaa'))
 
+        return;
+
         var userId = cc.vv.storage.getStorage('userId')
         if (userId && userId !== 'null'){
             cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
