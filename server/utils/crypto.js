@@ -12,7 +12,7 @@ exports.checkSign = function (body){
 	var sign = body.sign;	
 	for (var key in body){
 		if (key === 'sign') continue;
-		str = body[key]
+		str += body[key]
 	}
 
 	return md5(str+config.PRIVATE_KEY) === sign;

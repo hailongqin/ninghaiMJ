@@ -64,6 +64,7 @@ cc.Class({
                 CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY , //下一句准备
                 CONST.SERVER_ROOM_SEND_BASE_INFO,
                 CONST.SERVER_GAME_OVER, //游戏结束
+                CONST.SERVER_AUDIO_CHAT,
             ]
 
             events.map((e)=>{

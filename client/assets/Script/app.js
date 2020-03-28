@@ -151,7 +151,9 @@ cc.Class({
       }else{
           return;
       }
-      this.gameInfo = {};
+      this.gameInfo = {
+          isKanke:true
+      };
       this.initEveryNode();
       cc.vv.net.connect(()=>{
           this.initHander();
@@ -325,9 +327,16 @@ cc.Class({
         var playerUserIds = players.map((s)=>{return s.userId});
         var myIndex = -1;
         if (playerUserIds.indexOf(userId) !== -1){
-            myIndex = seats.length;
+            if (roomInfo.gameStatus !== CONST.GAME_STATUS_NO_START){ //游戏已经开始了，上帝视角
+                myIndex = 0;
+                this.gameInfo.isKanke = true;
+            }else{
+                myIndex = seats.length;
+            }
+           
         }else if (seatUserIds.indexOf(userId) !== -1){
-            myIndex = seatUserIds.indexOf(userId)
+            myIndex = seatUserIds.indexOf(userId);
+            this.gameInfo.isKanke = false
         }
 
         return myIndex;
@@ -349,6 +358,7 @@ cc.Class({
             cc.vv.net.send(CONST.CLIENT_CHUPAI_NOTIFY,{pai:event.detail})
         })
 
+        //单发
        this.node.on('delay_ms',(data)=>{
     
            if (data <= 100){
@@ -363,11 +373,12 @@ cc.Class({
            this.delayMsLabel.getComponent(cc.Label).string = data+'ms';
         })
 
+        //单发
        this.node.on(CONST.SERVER_GAME_CHUPAI_NOTIFY,()=>{
            this.gameInfo.canChupai = true
        })
 
-       //显示tingpai 的节点
+       //显示tingpai 的节点 单发
        this.node.on(CONST.SERVER_GAME_TINGPAI_NOTIFY,(data)=>{
             this.setTingPaiResult(data);
        })
@@ -397,37 +408,37 @@ cc.Class({
             }
        })
 
-       // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次
+       // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次 //群发
        this.node.on(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,(data)=>{
             var myIndex =  this.getMyIndexFromRoomInfo(data);
             this.statusNode.getComponent('status').setStatusData(myIndex,data);
        })
 
-        //进来的时候，接受是否可以准备了
+        //进来的时候，接受是否可以准备了 //单发
        this.node.on(CONST.SERVER_GAME_CAN_SET_READY,()=>{
            this.showReadyBtnNode();
        })
 
-        //刚进来用户准备
+        //刚进来用户准备 //群发
        this.node.on(CONST.SERVER_ROOM_NEW_USER_SET_READY,(data)=>{
         var myIndex =  this.getMyIndexFromRoomInfo(data.roomInfo);
         this.statusNode.getComponent('status').setUserInfo(data.index,myIndex,data.roomInfo.seats);
         this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
        })
 
-        //游戏结束后准备
+        //游戏结束后准备 //群发
        this.node.on(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,(data)=>{
         var myIndex =  this.getMyIndexFromRoomInfo(data.roomInfo);
         this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
        })
        
 
-       // 只给个提示
+       // 只给个提示 
        this.node.on(CONST.SERVER_GAME_SEND_TIP,(data)=>{
          this.showTip(data)
        })
 
-       //更新手牌，出牌，花牌，持牌等
+       //更新手牌，出牌，花牌，持牌等 //群发
        this.node.on(CONST.SERVER_GAME_UPDATE_TABLE,(data)=>{
          // 更新table
          var seats = data.seats;
@@ -440,12 +451,13 @@ cc.Class({
             this.gameInfo.op = {};
             this.opNode.getComponent('operation').hide();
        })
-       // 操作通知
+       // 操作通知 //群发
        this.node.on(CONST.SERVER_GAME_OP_NOTIFY,(data)=>{
         this.opNode.getComponent('operation').showOperation(data.op)
 
        })
 
+        //群发
        this.node.on(CONST.SERVER_ROOM_SEND_BASE_INFO,(data)=>{
            var conf = data.conf;
            var currentCount = data.count;
@@ -455,6 +467,11 @@ cc.Class({
            this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(conf.jushu - currentCount)+'局';
        })
 
+       this.node.on(CONST.SERVER_AUDIO_CHAT,(data)=>{
+           this.audioChat.playAudio(data);
+       })
+
+       //群发
        this.node.on(CONST.SERVER_GAME_OVER,(data)=>{
         var seats = data.seats;
 
@@ -466,7 +483,7 @@ cc.Class({
         }
        })
             
-       // 游戏开始
+       // 游戏开始 //群发
         this.node.on(CONST.SERVER_GAME_START_NOTIFY,(data) => {
             this.hideAllReadyBtn();
             this.statusNode.getComponent('status').clearAllReadySign();
@@ -476,8 +493,7 @@ cc.Class({
             if (data.count !== 1){
                 this.clearTable();
             }
-            var userIds = seats.map((s)=>{return s.userId});
-            var myIndex = userIds.indexOf(userId) ; //我的位置
+            var myIndex = this.getMyIndexFromRoomInfo(data);
 
            this.gameInfo = {
                myFolds:[],
@@ -503,7 +519,6 @@ cc.Class({
 
                roomId:data.roomId,
                myIndex:myIndex,
-               isKanke:false,
                gameStatus:data.gameStatus
            };
            cc.vv.roomId = data.roomId;
@@ -519,10 +534,7 @@ cc.Class({
                 } 
             }
 
-            if (myIndex === -1){ //是看客
-                this.gameInfo.myIndex = 0; //上帝视角
-                this.gameInfo.isKanke = true;
-            }
+           
             this.fengNode.getComponent('feng').setFengDirection(myIndex,data);
             this.fengNode.getComponent('feng').setTurn(data);
             this.setZhuangIconPosition(data.zhuangIndex)
@@ -585,15 +597,17 @@ cc.Class({
             var scoreNode = node.getChildByName('score');
             var xieScore = node.getChildByName('xie');
 
-
-            if (data.index === i || data.index !== roomInfo.zhuangIndex){
-                this.showNode(readyBtn)
-            }else{
-                if (data.index === roomInfo.zhuangIndex){
-                    this.showNode(xieBtn);
-                    this.showNode(buxiebtn)
+            if (!this.gameInfo.isKanke){
+                if (data.index === i || data.index !== roomInfo.zhuangIndex){
+                    this.showNode(readyBtn)
+                }else{
+                    if (data.index === roomInfo.zhuangIndex){
+                        this.showNode(xieBtn);
+                        this.showNode(buxiebtn)
+                    }
                 }
             }
+          
 
             scoreNode.getComponent(cc.Label).string = seat.currentScore;
 

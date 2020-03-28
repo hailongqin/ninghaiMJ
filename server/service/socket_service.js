@@ -239,6 +239,7 @@ exports.start = function(){
                     Log.error('socket cancel_ready get roominfo is error',err)
                     return;
                 }
+                if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
 
@@ -724,6 +725,25 @@ exports.start = function(){
             })
 
         });
+
+        socket.on(CONST.CLIENT_AUDIO_CAHT,(data)=>{
+            var userId = socket.userId;
+            var roomId = socket.roomId;
+            
+            if (!userId || !roomId){
+                Log.error('socket dismiss_CLIENT_AUDIO_CAHTroom param is error',roomId,userId)
+                return;
+            }   
+
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket CLIENT_AUDIO_CAHT get roominfo is error',err)
+                    return;
+                }
+                
+                Room.broacastInRoom(CONST.SERVER_AUDIO_CHAT,roomInfo.roomId,data)
+            }) 
+        })
         
         socket.on('disconnect',()=>{
             var userId = socket.userId;
