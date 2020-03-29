@@ -61,7 +61,9 @@ cc.Class({
     // LIFE-CYCLE CALLBACKS:
 
      onLoad () {
+         console.log('onload this.node',this.node)
         cc.game.addPersistRootNode(this.node); //作为常住节点
+        this.node.active = false;
          this.initYinyueHandle(this.yinyueHandleNode);
          this.initYinxiaoHandle(this.yinxiaoHandleNode);
      },
@@ -143,6 +145,7 @@ cc.Class({
     },
 
     show(){
+        console.log(this.node)
         this.node.active = true;
     },
 
