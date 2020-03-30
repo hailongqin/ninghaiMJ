@@ -4,7 +4,60 @@ var router = express.Router();
 var Log = require('../utils/log');
 var Util = require('../utils/util');
 var Redis = require('../utils/redis');
+var request = require("request");
+var Config = require('../config').config;
+var SHA1 = require('../utils/crypto').sha1
 
+function generateWxConfigSignal(url,callback){
+        
+    var param = {
+        jsapi_ticket:'',
+        noncestr:'',
+        timestamp:'',
+        url,
+    }
+
+    Redis.getRedis('we_ticket',(value)=>{
+        param.jsapi_ticket = value;
+        param.noncestr = Util.generateRoomId();
+        param.timestamp = Date.parse(new Date());
+        var str = '';
+        for (var key in param){
+            str+=`${key}=${param[key]}&`
+        }
+        str = str.substring(0, str.length - 1);
+        param.signature = SHA1(str);
+        callback(param)
+    })
+
+  
+}
+
+
+setInterval(()=>{
+    getWechatAccessToken();
+},7200-5*60)
+
+getWechatAccessToken();
+function getWechatAccessToken(){
+    var url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${Config.WECHAT_APPID}&secret=${Config.WECHAT_APPSECRETKEY}`
+
+    request(url,function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            console.log(body,typeof body) 
+            var ret = JSON.parse(body);
+            Redis.setRedis('we_access_token',ret.access_token)
+            var jsTicketUrl = `https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=${ret.access_token}&type=jsapi`;
+
+            request(jsTicketUrl,function(error,response,body){
+                if (!error && response.statusCode == 200) {
+                   var ret = JSON.parse(body);
+                   Redis.setRedis('we_ticket',ret.ticket)
+                }
+            })
+        }
+    })
+}
 
 var {
     userModel
@@ -259,6 +312,50 @@ router.post('/user_login_by_sms',function(req,res,next){
 
     return;
 
+
+})
+
+router.get('/wechat_auth',function(req,res,next){
+    var query = req.query;
+    var body = req.body;
+    console.log(query,body,Config,Config.WECHAT_APPID);
+
+    var url = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${Config.WECHAT_APPID}&secret=${Config.WECHAT_APPSECRETKEY}&code=${query.code}&grant_type=authorization_code`
+    request(url, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            console.log(body,typeof body) 
+            var ret = JSON.parse(body)
+            var url = `https://api.weixin.qq.com/sns/userinfo?access_token=${ret.access_token}&openid=${ret.openid}&lang=zh_CN`
+            console.log(url)
+            request(url,function(error,response,body){
+                if (!error && response.statusCode == 200) {
+                    console.log(body,typeof body) 
+                    var ret = JSON.parse(body);
+                    var condition = {
+                        userName:ret.nickName,
+                        userId:ret.openid,
+                        header:ret.headimgurl || ''
+                    }
+
+                    userModel.updateOne({userId:body.openid},condition,{upsert:true});
+                }
+            })  
+        }
+    });
+    res.json({code:0})
+    return 
+})
+
+router.post('/get_wx_config',function(req,res,next){
+
+    var body = req.body;
+    if (!body.url){
+        res.json({code:-1,message:'参数错误'})
+        return;
+    }
+    generateWxConfigSignal(url,(param)=>{
+        res.json({code:0,data:param})
+    })
 
 })
 module.exports = router;

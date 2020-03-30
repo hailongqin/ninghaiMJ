@@ -2,8 +2,8 @@
 var CONST  = require('./const');
 
 
-class Util{
 
+class Util{
      generateSmsCode(){
         var code = "";
         for(var i = 0; i < 4; ++i){

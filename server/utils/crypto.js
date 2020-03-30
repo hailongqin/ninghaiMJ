@@ -17,3 +17,9 @@ exports.checkSign = function (body){
 
 	return md5(str+config.PRIVATE_KEY) === sign;
 }
+
+exports.sha1 = function (content) {
+	var md5 = crypto.createHash('sha1');
+	md5.update(content);
+	return md5.digest('hex');	
+}
