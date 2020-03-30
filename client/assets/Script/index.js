@@ -63,7 +63,9 @@ cc.Class({
 
     // LIFE-CYCLE CALLBACKS:
 
+   
      onLoad () {
+       // this.configWxApi();
         cc.vv = {};
         cc.vv.alertScript =  cc.find("alert").getComponent("alert");
         cc.vv.setting =  cc.find("setting").getComponent("setting");
@@ -92,13 +94,13 @@ cc.Class({
 
         var userId = cc.vv.storage.getStorage('userId')
         if (userId && userId !== 'null'){
-            cc.vv.userId = parseInt(cc.vv.storage.getStorage('userId'));
+            cc.vv.userId =cc.vv.storage.getStorage('userId');
             cc.vv.http.sendRequest('/user/user_login_by_userId',{userId:cc.vv.userId},(data)=>{
-                console.log('login data is ',data)
+             
                 if (data.code === -3){
                     this.jumpToLogin();
                 }else{
-                    cc.vv.userInfo = {userId,userName:data.userName};
+                    cc.vv.userInfo = {userId,userName:data.userName,header:data.header};
 
                     if (param && param.roomId){
                         cc.vv.http.sendRequest('/room/check_room_exit',{roomId:param.roomId},()=>{  
@@ -106,8 +108,6 @@ cc.Class({
                             cc.director.loadScene(this.roomSecen.name);
             
                         },(err)=>{
-                            var message = err.message || '加入房间失败'
-                            cc.vv.alertScript.alert(message);
                             cc.director.loadScene(this.hallScen.name);
                         });
                     }else{
@@ -116,18 +116,15 @@ cc.Class({
                 }
  
             },(err)=>{
+              
                 this.jumpToLogin();
+                
+               
 
             })
-            // if (param.roomId){
-            //     cc.vv.roomId = ret.roomId
-            //     cc.director.loadScene(this.roomSecen.name); 
-            // }else{
-               
-            // }
        
         }else{
-             this.jumpToLogin();
+            this.jumpToLogin();
         }
 
         

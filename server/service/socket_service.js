@@ -86,11 +86,14 @@ exports.start = function(){
                     return;
                 }
                 var players = roomInfo.players;
+                var userName = data.userInfo && data.userInfo.userName?data.userInfo.userName:''
+
                 players.push({
                     userId,
-                    userInfo:data.userInfo || {}
+                    userInfo:data.userInfo || {},
+                    
                 })
-                Game.notifyTip(roomInfo,'用户'+userId+'进入房间');
+                Game.notifyTip(roomInfo,'玩家'+userName+'进入房间');
                 Room.addAndUpdateRoom(roomId,roomInfo);
                 Game.sendRoomBaseInfo(roomInfo,userId);
                 socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo)
@@ -358,8 +361,11 @@ exports.start = function(){
                 var pai = seat.op.pai;
 
                 if (!seat.op.canHu) return;
-                
                 var fromTurn = seat.op.fromTurn; //0
+                
+
+
+                
               
                 console.log('hu fromTurn ',fromTurn,index)
                 if (index !== fromTurn){
@@ -781,10 +787,11 @@ exports.start = function(){
                     return;
                 }
                 
-
+                var userName = ''
                 var index = Game.getIndexByUserId(roomInfo.seats,userId);
                 if (index !== null && index !== undefined){
                     console.log('在做的里面')
+                    userName = roomInfo.seats[index].userInfo.userName
                     if (roomInfo.gameStatus === CONST.GAME_STATUS_START){
                         var seats = roomInfo.seats;
                         seats[index].onLine = false;
@@ -802,11 +809,12 @@ exports.start = function(){
                 index = Game.getIndexByUserId(roomInfo.players,userId);
 
                 if (index !== null && index !== undefined){
+                    userName = roomInfo.players[index].userInfo.userName
                     console.log('在看的里面')
                     roomInfo.players.splice(index,1);
                 }
 
-                Game.notifyTip(roomInfo,'用户'+userId+'离开房间')
+                Game.notifyTip(roomInfo,'玩家'+userName+'离开房间')
 
                 console.log('disconneted',roomInfo)
               

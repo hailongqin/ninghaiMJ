@@ -22,7 +22,7 @@ db.once('close',()=>{
 var Schema = mongoose.Schema;
 
 var roomSchema = new Schema({
-    creator:{type:Number},//房间创建者
+    creator:{type:String},//房间创建者
     roomId:{type:String}, //房间id
     conf:{type:Object}, //房间配置
     players:{type:Array},//进入房间的人

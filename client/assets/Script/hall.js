@@ -39,13 +39,30 @@ cc.Class({
         roomSecen:{
             default:null,
             type:cc.SceneAsset
-        }
+        },
+        userInfoNode:{
+         default:null,
+         type:cc.Node
+        },
+        
     },
 
     // LIFE-CYCLE CALLBACKS:
 
-     onLoad () {
+    setUserInfo(){
+      var userInfo = cc.vv.userInfo;
+      if (userInfo.userName){
+         this.userInfoNode.getChildByName('userName').getComponent(cc.Label).string = userInfo.userName
+     }
+     if (userInfo.header){
+         cc.loader.load({url: userInfo.header+'?file=a.png', type: 'png'}, function (err, tex) {        
+            this.userInfoNode.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
+         });
+     }
+    },
 
+     onLoad () {
+      this.setUserInfo();
        // cc.vv.Util.setFitSreenMode();
       console.log(cc.vv.audio)
       //  cc.vv.audio.playBigMusic();

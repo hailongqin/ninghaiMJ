@@ -5,6 +5,8 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
+import { ERROR } from "./socket-io";
+
 var maxHoldLength = 14;
 
 cc.Class({
@@ -459,6 +461,7 @@ cc.Class({
            var conf = data.conf;
            var currentCount = data.count;
            var type = conf.type;
+           this.gameInfo.conf = conf;
            this.headerNode.getChildByName('type').getComponent(cc.Label).string = cc.vv.CONST.MJ_TYPE[type].title;
            this.headerNode.getChildByName('jushu').getComponent(cc.Label).string = '总共'+conf.jushu+'局';
            this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(conf.jushu - currentCount)+'局';
@@ -941,8 +944,48 @@ cc.Class({
         }
     },
      onLoad () {
-       
         this.init();
+        setTimeout(() => {
+            this.setWxConfig();
+        }, 1000);
+     },
+
+     setWxConfig(){
+        cc.vv.http.sendRequest('/user/get_wx_config',{url:window.location.href},(data)=>{
+            
+            var param = data.data;
+       
+            wx.config({
+                debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+                appId: 'wx37ae340f5b1d8bdd', // 必填，公众号的唯一标识
+                timestamp: param.timestamp, // 必填，生成签名的时间戳
+                nonceStr: param.noncestr, // 必填，生成签名的随机串
+                signature: param.signature,// 必填，签名
+                jsApiList: ['updateAppMessageShareData'] // 必填，需要使用的JS接口列表
+            });
+
+            var conf = this.gameInfo.conf;
+            var type = conf.type;
+            var desc = `${cc.vv.CONST.MJ_TYPE[type].title} ${conf.userCount}人 ${conf.jushu}局 速来`;
+            var url = `https://www.ccnet.site?roomId=${cc.vv.roomId}`
+
+            wx.ready(() =>{
+                wx.updateAppMessageShareData({ 
+                    title: '宁海嘛嘛', // 分享标题
+                    desc: desc, // 分享描述
+                    link: url, // 分享链接，该链接域名或路径必须与当前页面对应的公众号JS安全域名一致
+                    imgUrl: '', // 分享图标
+                    success: function () {
+                     
+                    }
+                  })
+
+            });
+
+            wx.error(function(error){
+               // alert(JSON.stringify(error))
+            })
+        })
      },
 
 

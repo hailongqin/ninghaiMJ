@@ -35,12 +35,13 @@ cc.Class({
     // LIFE-CYCLE CALLBACKS:
 
     onClickUserLogin(){
-        window.open('./login.html')
+        var url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx37ae340f5b1d8bdd&redirect_uri=https://www.ccnet.site/login.html&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect'
+        window.open(url)
     },
 
-    onClickUserRegitser(){
-        window.open('./login.html?register=true')
-    },
+    // onClickUserRegitser(){
+    //     window.open('./login.html?register=true')
+    // },
 
      onLoad () {
         

@@ -26,6 +26,7 @@ function generateWxConfigSignal(url,callback){
             str+=`${key}=${param[key]}&`
         }
         str = str.substring(0, str.length - 1);
+        console.log('str is ',str)
         param.signature = SHA1(str);
         callback(param)
     })
@@ -36,7 +37,7 @@ function generateWxConfigSignal(url,callback){
 
 setInterval(()=>{
     getWechatAccessToken();
-},7200-5*60)
+},(7200-5*60)*1000)
 
 getWechatAccessToken();
 function getWechatAccessToken(){
@@ -51,6 +52,7 @@ function getWechatAccessToken(){
 
             request(jsTicketUrl,function(error,response,body){
                 if (!error && response.statusCode == 200) {
+                    console.log(body,typeof body) 
                    var ret = JSON.parse(body);
                    Redis.setRedis('we_ticket',ret.ticket)
                 }
@@ -315,12 +317,16 @@ router.post('/user_login_by_sms',function(req,res,next){
 
 })
 
-router.get('/wechat_auth',function(req,res,next){
-    var query = req.query;
-    var body = req.body;
-    console.log(query,body,Config,Config.WECHAT_APPID);
+router.post('/wechat_auth',function(req,res,next){
 
-    var url = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${Config.WECHAT_APPID}&secret=${Config.WECHAT_APPSECRETKEY}&code=${query.code}&grant_type=authorization_code`
+    var body = req.body;
+
+    if (!body.code){
+        res.json({code:-1,message:'参数错误'})
+        return;
+    }
+
+    var url = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${Config.WECHAT_APPID}&secret=${Config.WECHAT_APPSECRETKEY}&code=${body.code}&grant_type=authorization_code`
     request(url, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             console.log(body,typeof body) 
@@ -331,31 +337,39 @@ router.get('/wechat_auth',function(req,res,next){
                 if (!error && response.statusCode == 200) {
                     console.log(body,typeof body) 
                     var ret = JSON.parse(body);
-                    var condition = {
-                        userName:ret.nickName,
+                    var data = {
+                        userName:ret.nickname,
                         userId:ret.openid,
                         header:ret.headimgurl || ''
                     }
 
-                    userModel.updateOne({userId:body.openid},condition,{upsert:true});
+                    userModel.updateOne({userId:ret.openid},data,{upsert:true},(err)=>{
+                        console.log(err)
+                    });
+
+                    res.json({
+                        code:0,data
+                    })
                 }
             })  
         }
     });
-    res.json({code:0})
     return 
 })
 
 router.post('/get_wx_config',function(req,res,next){
 
     var body = req.body;
+    console.log(body);
     if (!body.url){
         res.json({code:-1,message:'参数错误'})
         return;
     }
-    generateWxConfigSignal(url,(param)=>{
+    generateWxConfigSignal(body.url,(param)=>{
         res.json({code:0,data:param})
     })
+
+    return;
 
 })
 module.exports = router;
