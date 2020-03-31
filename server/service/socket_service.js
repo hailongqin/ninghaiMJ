@@ -525,7 +525,9 @@ exports.start = function(){
                     seats[fromTurn].folds.splice(-1,1)
                 }
 
-                Game.notifyOperationAction(seats,{type:'gang'})
+                Game.notifyOperationAction(seats,{type:'gang'});
+
+                Game.checkIs3Tan(roomInfo,index)
                 
                 Game.fapai(roomInfo);
                 })
@@ -602,6 +604,7 @@ exports.start = function(){
                     seats[fromTurn].folds.splice(-1,1);
     
                     Game.updateTable(roomInfo);
+                    Game.checkIs3Tan(roomInfo,index)
                     Game.notifyChupai(roomInfo)
                 })
         
@@ -690,6 +693,7 @@ exports.start = function(){
                 fromFolds.splice(-1,1)
 
                 Game.updateTable(roomInfo); //通知更新桌面上的牌
+                Game.checkIs3Tan(roomInfo,index)
                 Game.notifyChupai(roomInfo);   
                })
             })    
@@ -802,6 +806,8 @@ exports.start = function(){
                     Log.error('socket guo get roominfo is error',err)
                     return;
                 }
+
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
 
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId)

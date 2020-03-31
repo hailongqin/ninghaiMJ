@@ -959,6 +959,30 @@ class Game {
         return false;
     }
 
+    checkIs3Tan(roomInfo,index){
+        var seat = roomInfo.seats[index];
+        if (seat.chis.length === 3){
+            var chis = seat.chis;
+            var filterChis = chis.filter((c)=>{
+                return CONST.ALLFENGLISTS.indexOf(c.pai) === -1
+            })
+            var allTypeCommon = true
+            for (var i = 1; i < filterChis.length;i++){
+                var pai = filterChis[i].pai;
+                if (Math.floor(pai/10) !== Math.floor(filterChis[i - 1].pai/10)){
+                    allTypeCommon = false;
+                    break;
+                }
+            }
+
+            if (allTypeCommon){
+                var userName = seat.userInfo.userName;
+                Room.broacastInRoom(CONST.SERVER_GAME_SEND_TIP,roomInfo.roomId,`玩家${userName}三摊!`,[seat.userId])
+            }
+
+        }
+    }
+
     syncZhanJi(roomInfo){
         var seats = [];
         var list = [];

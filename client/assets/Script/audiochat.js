@@ -41,10 +41,5 @@ cc.Class({
 
     },
 
-
-    onClickChat(){
-        wx.startRecord();
-    }
-
     // update (dt) {},
 });

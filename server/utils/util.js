@@ -150,14 +150,20 @@ class Util{
             result:true,
             hasFeng:false
         }
-        for (var i = 1; i < allLists.length;i++){
-            var pai = allLists[i];
-            if (CONST.ALLFENGLISTS.indexOf(pai) !== -1){
-                ret.hasFeng = true;
-                continue;
-            }
 
-            if (Math.floor(pai/10) !== Math.floor(allLists[i - 1]/10)){
+        var fengList = allLists.filter((a)=>{
+            return CONST.ALLFENGLISTS.indexOf(pai) !== -1
+        })
+
+        var otherList = allLists.filter((a)=>{
+            return CONST.ALLFENGLISTS.indexOf(pai) === -1
+        })
+
+        if (fengList.length) ret.hasFeng = true;
+
+        for (var i = 1; i < otherList.length;i++){
+            var pai = otherList[i];
+            if (Math.floor(pai/10) !== Math.floor(otherList[i - 1]/10)){
                 ret.result = false;
                 break;
             }
