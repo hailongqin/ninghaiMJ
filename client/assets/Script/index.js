@@ -101,12 +101,20 @@ cc.Class({
                     this.jumpToLogin();
                 }else{
                     cc.vv.userInfo = {userId,userName:data.userName,header:data.header};
-
-                    if (param && param.roomId){
-                        cc.vv.http.sendRequest('/room/check_room_exit',{roomId:param.roomId},()=>{  
+                    var roomId = '';
+                    if (data.roomId) roomId = data.roomId
+                    else if (param && param.roomId) roomId = param.roomId
+                    
+                    if (roomId){
+                        cc.vv.http.sendRequest('/room/check_room_exit',{roomId},(data)=>{  
                             cc.vv.roomId =  param.roomId;
-                            cc.director.loadScene(this.roomSecen.name);
-            
+                            if (data.roomStatus === cc.vv.CONST.ROOM_STATUS_DISMISS){
+                                cc.vv.alertScript.alert('房间已解散')
+                                cc.director.loadScene(this.hallScen.name);
+                            }else{
+                                cc.director.loadScene(this.roomSecen.name);
+                            }
+                           
                         },(err)=>{
                             cc.director.loadScene(this.hallScen.name);
                         });

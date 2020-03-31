@@ -8,6 +8,12 @@ var CONST = require('../utils/const');
 
 var Util = require('../utils/util');
 
+var {
+    zhanJiModel,
+} = require('../db/db')
+
+var Redis = require('../utils/redis')
+
 
 class Game {
     constructor() {
@@ -951,6 +957,50 @@ class Game {
         }
 
         return false;
+    }
+
+    syncZhanJi(roomInfo){
+        var seats = [];
+        var list = [];
+
+        seats = roomInfo.seats.map((s)=>{
+            return {
+                userInfo:s.userInfo,
+                totalScore:s.totalScore
+            }
+        })
+
+        for (var i = 0; i < roomInfo.seats;i++){
+            var st = roomInfo.seats[i];
+            list.push({
+                ownerId:st.userId,
+                seats:seats,
+                conf:roomInfo.conf,
+                gameStatus:roomInfo.gameStatus
+            })
+        }
+        zhanJiModel.insertMany(list);
+    }
+
+    clearDimissGameNotify(roomInfo){
+
+        for (var item of roomInfo.seats){
+            item.agree_dismiss_game = false;
+        }
+
+        Room.broacastInRoom(CONST.SERVER_CLEAR_DISMISS_ROOM,roomInfo.roomId)
+    }
+
+    syncStatus(roomInfo){
+       for (var i = 0; i < roomInfo.seats;i++){
+            Redis.setRedis(`game_status_${roomInfo.seats[i].userId}`,roomInfo.roomId)
+       }
+    }
+
+    deleteStatus(roomInfo){
+        for (var i = 0; i < roomInfo.seats;i++){
+            Redis.deleteKey(`game_status_${roomInfo.seats[i].userId}`)
+       }
     }
 
 }

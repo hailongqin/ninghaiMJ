@@ -40,6 +40,10 @@ class Redis{
             callback(value)
        }); 
     }
+
+    deleteKey(key){
+        rClient.del(key)
+    }
 }
 
 module.exports = new Redis();

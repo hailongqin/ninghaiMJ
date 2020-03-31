@@ -181,7 +181,15 @@ router.post('/user_login_by_userId',function(req,res,next){
             return;
         }
 
-        res.json({code:0,userName:ret.userName})
+        Redis.getRedis(`game_status_${body.userId}`,(value) => {
+            if (value){
+                res.json({code:0,userName:ret.userName,roomId:value})
+            }else{
+                res.json({code:0,userName:ret.userName})
+            }
+        })
+
+        
 
     })
 })

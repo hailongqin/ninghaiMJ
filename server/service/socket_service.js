@@ -164,7 +164,8 @@ exports.start = function(){
                 if (conf.userCount === seats.length){
                     roomInfo.gameStatus = CONST.GAME_STATUS_START;
                     Room.setRoomInfoToDB(roomInfo);
-                    Timer.deleteTimer(roomId)
+                    Timer.deleteTimer(roomId);
+                    Game.syncStatus(roomInfo);
                     Game.begin(roomInfo);
                 }
             });
@@ -189,6 +190,7 @@ exports.start = function(){
                 //Log.info('receive game_ready data is ',roomInfo)
 
                 console.log('net ju ready data is ',data)
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
@@ -282,6 +284,7 @@ exports.start = function(){
                     return;
                 }
                 Log.info('receive chupai data is ',roomInfo)
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 //将牌从自己手中扣除
@@ -347,6 +350,7 @@ exports.start = function(){
                     return;
                 }
                 Log.info('receive hu data is ',roomInfo)
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 var seats = roomInfo.seats;
@@ -414,7 +418,7 @@ exports.start = function(){
                     if (roomInfo.count >= roomInfo.conf.jushu){
                         roomInfo.gameStatus = CONST.GAME_STATUS_END;
                         Room.setRoomInfoToDB(roomInfo);
-                        
+                        Game.deleteStatus(roomInfo);
                         return;
                     }
     
@@ -454,6 +458,7 @@ exports.start = function(){
                     return;
                 }
                 Log.info('gang gang data is ',roomInfo)
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 var seats = roomInfo.seats;
@@ -545,7 +550,7 @@ exports.start = function(){
                     return;
                 }
                 Log.info('receive peng data is ',roomInfo);
-
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 var seats = roomInfo.seats;
@@ -621,6 +626,7 @@ exports.start = function(){
                     return;
                 }
                 Log.info('receive chi data is ',roomInfo)
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 var seats = roomInfo.seats;
@@ -706,7 +712,7 @@ exports.start = function(){
                 }
                 Log.info('roomInfo',roomInfo);
 
-                
+                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
                 var seats = roomInfo.seats;
@@ -750,6 +756,63 @@ exports.start = function(){
 			socket.emit(CONST.SERVER_PING_RESULT_REPLY);
         });
 
+        socket.on(CONST.CLIENT_REPLY_DISMISS_GAME,(data)=>{
+            var userId = socket.userId;
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket guo get roominfo is error',err)
+                    return;
+                }
+
+                var index = Game.getIndexByUserId(seats,userId);
+                var seats = roomInfo.seats;
+                if (!data.result){ //有yige 不同意
+                    Game.clearDimissGameNotify(roomInfo);
+                    var userName = roomInfo.seats[index].userInfo.userName
+                    Room.broacastInRoom(CONST.SERVER_GAME_SEND_TIP,roomInfo.roomId,`玩家${userName}不同意解散`)
+                    return;
+                }else{
+                    
+                    seats[index].agree_dismiss_game = true;
+                    Room.broacastInRoom(CONST.SERVER_SEND_DISMISS_STATUS,roomInfo.roomId,{seats:seats})
+                    var allAgree = true;
+                    for (var item of roomInfo.seats){
+                        if (!item.onLine) continue;
+                        if (item.agree_dismiss_game !== true){
+                            allAgree = false;
+                            break;
+                        }
+
+                    }
+
+                    if (allAgree){
+                        roomInfo.gameStatus = CONST.GAME_STATUS_LIU_JU;
+                        Room.broacastInRoom(CONST.SERVER_GAME_OVER,roomInfo.roomId,roomInfo);
+                        Game.deleteStatus(roomInfo);
+                    }
+                }
+            })   
+        });
+
+        socket.on(CONST.CLIENT_APPLY_DISMISS_GAME,(data)=>{
+            var userId = socket.userId;
+            //申请jiesanfangjian
+            Room.getRoomInfo(roomId,(err,roomInfo)=>{
+                if (err){
+                    Log.error('socket guo get roominfo is error',err)
+                    return;
+                }
+
+                var seats = roomInfo.seats;
+                var index = Game.getIndexByUserId(seats,userId)
+
+                seats[index].agree_dismiss_game = true;
+
+               Room.broacastInRoom(CONST.SERVER_APPLY_DISMISS_ROOM,roomInfo.roomId,{userName:seats[index].userInfo.userName,index},[userId])
+            }) 
+        });
+
+        //jiesan fangjian youxiweikaishi caikeyi jiesan 
         socket.on(CONST.CLIENT_DISMISS_ROOM_NOTIFY,(data)=>{
 
             var userId = socket.userId;
@@ -765,8 +828,12 @@ exports.start = function(){
                     Log.error('socket guo get roominfo is error',err)
                     return;
                 }
+
+                if(roomInfo.gameStatus === CONST.GAME_STATUS_START){
+                    return;
+                }
                 
-                roomInfo.status = CONST.ROOM_STATUS_DISMISS;
+                roomInfo.roomStatus = CONST.ROOM_STATUS_DISMISS;
 
                 // Game.notifyRoomHasDismiss(roomInfo);
             })

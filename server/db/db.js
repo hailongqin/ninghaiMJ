@@ -61,7 +61,18 @@ const userSchema = new Schema({
 
 var userModel = mongoose.model('user',userSchema,'user');
 
+const zhanJiSchema = new Schema({
+    ownerId:{type:String},
+    seats:{type:Array},//做的人
+    conf:{type:Object},
+    gameStatus:{type:String},//zuizhongyouxizhuangtai
+}, {timestamps: {createdAt: 'created', updatedAt: 'updated'}})
+
+var zhanJiModel = mongoose.model('zhanji',zhanJiSchema,'zhanji');
+
+
 module.exports = {
     roomModel,
-    userModel
+    userModel,
+    zhanJiModel
 }
