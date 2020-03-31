@@ -107,11 +107,12 @@ cc.Class({
                     
                     if (roomId){
                         cc.vv.http.sendRequest('/room/check_room_exit',{roomId},(data)=>{  
-                            cc.vv.roomId =  param.roomId;
+                          
                             if (data.roomStatus === cc.vv.CONST.ROOM_STATUS_DISMISS){
                                 cc.vv.alertScript.alert('房间已解散')
                                 cc.director.loadScene(this.hallScen.name);
                             }else{
+                                cc.vv.roomInfo =  {roomId,conf:data.conf};
                                 cc.director.loadScene(this.roomSecen.name);
                             }
                            

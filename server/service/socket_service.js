@@ -860,8 +860,28 @@ exports.start = function(){
                     Log.error('socket CLIENT_AUDIO_CAHT get roominfo is error',err)
                     return;
                 }
+
+                var players = roomInfo.players;
+                var seats = roomInfo.seats;
+                var playerIndex = '';
+                var seatIndex = '';
+                for (var key in players){
+                    if (players[key].userId === userId){
+                        playerIndex = parseInt(key);
+                        break;
+                    }
+                }
+
+                if (playerIndex === ''){
+                    for (var key in seats){
+                        if (seats[key].userId === userId){
+                            seatIndex = parseInt(key);
+                            break;
+                        }
+                    }  
+                }
                 
-                Room.broacastInRoom(CONST.SERVER_AUDIO_CHAT,roomInfo.roomId,data)
+                Room.broacastInRoom(CONST.SERVER_AUDIO_CHAT,roomInfo.roomId,{serverId:data.serverId,playerIndex,seatIndex})
             }) 
         })
         

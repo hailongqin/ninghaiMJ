@@ -93,7 +93,7 @@ cc.Class({
 
      _onCickConfirmCreateRoom(){
         cc.vv.http.sendRequest('/room/create_room',{conf:roomConf},(ret)=>{
-            cc.vv.roomId = ret.roomId
+            cc.vv.roomInfo = {roomId:ret.roomId,conf:roomConf}
             cc.director.loadScene(this.roomSecen.name);
         })
        

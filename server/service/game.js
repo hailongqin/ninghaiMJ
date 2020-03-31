@@ -1016,13 +1016,14 @@ class Game {
     }
 
     syncStatus(roomInfo){
-       for (var i = 0; i < roomInfo.seats;i++){
+       for (var i = 0; i < roomInfo.seats.length;i++){
+           console.log('set game status',roomInfo.seats[i].userId,roomInfo.roomId)
             Redis.setRedis(`game_status_${roomInfo.seats[i].userId}`,roomInfo.roomId)
        }
     }
 
     deleteStatus(roomInfo){
-        for (var i = 0; i < roomInfo.seats;i++){
+        for (var i = 0; i < roomInfo.seats.length;i++){
             Redis.deleteKey(`game_status_${roomInfo.seats[i].userId}`)
        }
     }

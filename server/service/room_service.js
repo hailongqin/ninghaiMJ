@@ -139,7 +139,7 @@ router.post('/check_room_exit', function(req, res, next){
     roomModel.findOne({
         roomId,
     })
-    .select("-_id roomStatus")
+    .select("-_id roomStatus conf")
     .exec((err,ret)=>{
         if (err){
             Log.error('post check_room_exit read db  is err',err)
@@ -148,7 +148,7 @@ router.post('/check_room_exit', function(req, res, next){
         }
 
         if (ret){
-            res.json({code:0,status:ret.roomStatus})
+            res.json({code:0,status:ret.roomStatus,conf:ret.conf})
         }else{
             res.json({code:-1,message:"房间不存在"})
         }

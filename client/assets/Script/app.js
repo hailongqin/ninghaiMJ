@@ -145,8 +145,8 @@ cc.Class({
     init(){
 
    
-      if (cc.vv.roomId){
-        this.roomIdLabel.string = cc.vv.roomId;
+      if (cc.vv.roomInfo && cc.vv.roomInfo.roomId){
+        this.roomIdLabel.string = cc.vv.roomInfo.roomId;
       }else{
           return;
       }
@@ -156,14 +156,14 @@ cc.Class({
       this.initEveryNode();
       cc.vv.net.connect(()=>{
           this.initHander();
-          var param = {userId:cc.vv.userId,roomId:cc.vv.roomId};
+          var param = {userId:cc.vv.userId,roomId:cc.vv.roomInfo.roomId};
             param.userInfo =  cc.vv.userInfo
           cc.vv.net.send(cc.vv.CONST.CLIENT_LOGIN,param)
       },this.node);
     },
 
     unInit(){
-        cc.vv.roomId = '';
+   
         cc.vv.net.close();
     },
 
@@ -474,12 +474,21 @@ cc.Class({
                 isShowProgressTips: 1, // 默认为1，显示进度提示
                 success: function (res) {
                     var localId = res.localId; // 返回音频的本地ID
-                    if (data.index){
-                        
+                    if (data.playerIndex){
+                        console.log('say playerIndex ',data.playerIndex);
                     }
-                    wx.playVoice({
-                        localId // 需要播放的音频的本地ID，由stopRecord接口获得
-                    });
+                    if (data.seatIndex){
+                        console.log('say seatIndex ',data.seatIndex);
+                    }
+
+                    this.localAudioList.push({
+                        localId,
+                        playerIndex:data.playerIndex,
+                        seatIndex:data.seatIndex
+                    })
+                   
+                    if (!this.isPlayingVoice)
+                        this.playAudioChat();
                 }
             });
            }
@@ -564,7 +573,6 @@ cc.Class({
                myIndex:myIndex,
                gameStatus:data.gameStatus
            };
-           cc.vv.roomId = data.roomId;
             for (var i = 0; i < seats.length;i++){
                 this.statusNode.getComponent('status').setXieIcon(i,myIndex,seats);
                 if (cc.vv.Common.checkIsMySelfIndex(myIndex,i)){
@@ -964,37 +972,31 @@ cc.Class({
         }, 1000);
      },
 
-     onClickChat(){
-        wx.startRecord();
-    },
-
-    stopChat(){
-        wx.stopRecord({
-            success:function(res){
-                if (res.localId){
-                    wx.uploadVoice({
-                        localId: res.localId, // 需要上传的音频的本地ID，由stopRecord接口获得
-                        isShowProgressTips: 1, // 默认为1，显示进度提示
-                        success: function (res) {
-                            if (res.serverId){
-                                var serverId = res.serverId; // 返回音频的服务器端ID
-                                cc.vv.net.send(cc.vv.CONST.CLIENT_AUDIO_CAHT,{serverId})
-                            }   
-                        }
-                        });
-                  
-                }
-            }
-        })
-    },
+     playAudioChat(){
+        if (this.localAudioList.length){
+            var local = this.localAudioList.splice(0,1);
+            var localId = local.localId;
+            var playerIndex = local.playerIndex;
+            var seatIndex = local.seatIndex;
+            this.isPlayingVoice = true
+            wx.playVoice({
+                localId, // 需要播放的音频的本地ID，由stopRecord接口获得
+            });
+        }else{
+            this.isPlayingVoice = false;
+        }
+     },
 
      setWxConfig(){
         cc.vv.http.sendRequest('/user/get_wx_config',{url:window.location.href},(data)=>{
             
             var param = data.data;
+
+            var roomInfo = cc.vv.roomInfo;
+            var conf = roomInfo.conf;
        
             wx.config({
-                debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+                debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
                 appId: 'wx37ae340f5b1d8bdd', // 必填，公众号的唯一标识
                 timestamp: param.timestamp, // 必填，生成签名的时间戳
                 nonceStr: param.noncestr, // 必填，生成签名的随机串
@@ -1005,14 +1007,15 @@ cc.Class({
                     'stopRecord',
                     'uploadVoice',
                     'playVoice',
-                    'downloadVoice'
+                    'downloadVoice',
+                    'onVoicePlayEnd'
                 ] // 必填，需要使用的JS接口列表
             });
 
-            var conf = this.gameInfo.conf;
+       
             var type = conf.type;
             var desc = `${cc.vv.CONST.MJ_TYPE[type].title} ${conf.userCount}人 ${conf.jushu}局 速来`;
-            var url = `https://www.ccnet.site?roomId=${cc.vv.roomId}`
+            var url = `https://www.ccnet.site?roomId=${roomInfo.roomId}`
 
             wx.ready(() =>{
                 wx.updateAppMessageShareData({ 
@@ -1025,7 +1028,11 @@ cc.Class({
                     }
                   })
 
-                
+            wx.onVoicePlayEnd({
+                success: (res) => {
+                    this.playAudioChat();
+                }
+            });   
 
             });
 
@@ -1039,7 +1046,7 @@ cc.Class({
      onDestroy(){
         console.log('ondestroy');
         cc.vv.net.close();
-        cc.vv.roomId = null;
+        cc.vv.roomInfo = null;
      },
 
     start () {

@@ -43,12 +43,12 @@ cc.Class({
      },
 
     checkRoomId(){
-        console.log(this.roomId)
+   
         if (this.roomId.length >= 6){
             this.node.active = false;
-            cc.vv.http.sendRequest('/room/check_room_exit',{roomId:this.roomId},()=>{
+            cc.vv.http.sendRequest('/room/check_room_exit',{roomId:this.roomId},(data)=>{
                 this.node.active = false;
-                cc.vv.roomId =  this.roomId;
+                cc.vv.roomInfo = { roomId:this.roomId,conf:data.conf}
                 cc.director.loadScene(this.roomSecen.name);
 
             },(err)=>{

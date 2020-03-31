@@ -36,6 +36,7 @@ cc.Class({
 
     onClickUserLogin(){
         var url = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx37ae340f5b1d8bdd&redirect_uri=https://www.ccnet.site/login.html&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect'
+        console.log('open url',url)
         window.open(url)
     },
 
