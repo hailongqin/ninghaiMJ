@@ -58,6 +58,43 @@ cc.Class({
        
     },
 
+    clearAudioTimer(){
+        if (this.intervalTimer){
+            clearInterval(this.intervalTimer);
+            this.intervalTimer = null;
+        }
+
+        for (var i = 0; i < this.node.children.length;i++){
+            var node = this.node.children[i];
+            node.getChildByName('voice').active = false;
+        }
+    },
+
+    playAuioAnimation(seatIndex,myIndex,seats){
+        var nodeIndex = -1;
+        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
+        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
+        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
+        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;      
+        if (nodeIndex !== -1){
+            var node = this.node.children[nodeIndex];
+            var voiceNode = node.getChildByName('voice');
+            for (var i = 0; i < 3;i++){
+                 voiceNode.getChildByName(`v_anim${i}`).active = false;
+            }
+            voiceNode.getChildByName(`v_anim0`).active = true;
+            var index = 0;
+            this.intervalTimer = setInterval(() => {
+                voiceNode.getChildByName(`v_anim${index}`).active = false;
+                index++;
+                if (index === 3) index = 0;
+                voiceNode.getChildByName(`v_anim${index}`).active = true;
+            }, 100);
+
+            voiceNode.active = true;
+        }
+    },
+
     setUserInfo(seatIndex,myIndex,seats){
 
         var nodeIndex = -1;

@@ -113,7 +113,8 @@ cc.Class({
             type:cc.Node,
         },
 
-        gameInfo:null
+        gameInfo:null,
+        isPlayingVoice:null
     },
 
     // LIFE-CYCLE CALLBACKS:
@@ -153,6 +154,7 @@ cc.Class({
       this.gameInfo = {
           isKanke:true
       };
+      this.localAudioList = [];
       this.initEveryNode();
       cc.vv.net.connect(()=>{
           this.initHander();
@@ -471,7 +473,7 @@ cc.Class({
            if (data.serverId){
             wx.downloadVoice({
                 serverId: data.serverId, // 需要下载的音频的服务器端ID，由uploadVoice接口获得
-                isShowProgressTips: 1, // 默认为1，显示进度提示
+                isShowProgressTips: 0, // 默认为1，显示进度提示
                 success: function (res) {
                     var localId = res.localId; // 返回音频的本地ID
                     if (data.playerIndex){
@@ -484,9 +486,11 @@ cc.Class({
                     this.localAudioList.push({
                         localId,
                         playerIndex:data.playerIndex,
-                        seatIndex:data.seatIndex
+                        seatIndex:data.seatIndex,
+                        roomInfo:data.roomInfo
                     })
                    
+                    console.log('isPlayingVoice',this.isPlayingVoice)
                     if (!this.isPlayingVoice)
                         this.playAudioChat();
                 }
@@ -973,16 +977,26 @@ cc.Class({
      },
 
      playAudioChat(){
+         console.log('localAudioList',this.localAudioList)
         if (this.localAudioList.length){
+            this.statusNode.getComponent('status').clearAudioTimer();
             var local = this.localAudioList.splice(0,1);
             var localId = local.localId;
             var playerIndex = local.playerIndex;
             var seatIndex = local.seatIndex;
+            var roomInfo = local.roomInfo;
+            var seats = roomInfo.seats;
             this.isPlayingVoice = true
+            if (seatIndex !== ''){
+                var myIndex = this.getMyIndexFromRoomInfo(roomInfo);
+                this.statusNode.getComponent('status').playAuioAnimation(seatIndex,myIndex,seats)
+            }
+
             wx.playVoice({
                 localId, // 需要播放的音频的本地ID，由stopRecord接口获得
             });
         }else{
+            this.statusNode.getComponent('status').clearAudioTimer();
             this.isPlayingVoice = false;
         }
      },
@@ -1030,6 +1044,9 @@ cc.Class({
 
             wx.onVoicePlayEnd({
                 success: (res) => {
+                    this.playAudioChat();
+                },
+                fail:(err)=>{
                     this.playAudioChat();
                 }
             });   

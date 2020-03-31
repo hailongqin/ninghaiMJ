@@ -113,20 +113,15 @@ cc.Class({
             this.holdTimeEclipse = 0;
         })
 
-        this.node.on(cc.Node.EventType.TOUCH_CANCEL,function(event){  
-            alert('cancel');
+        this.node.on(cc.Node.EventType.TOUCH_CANCEL,()=>{  
+            console.log('cancel')
             this.stopRecord();
         })
 
-        this.node.on(cc.Node.EventType.TOUCH_MOVE,function(event){  
-            alert('move');
-            this.stopRecord();
-        })
-
-        this.node.on(cc.Node.EventType.TOUCH_END,function(event){           
+        this.node.on(cc.Node.EventType.TOUCH_END,()=>{           
             this.stopRecord();
                    
-        },this);
+        });
     },
   
 

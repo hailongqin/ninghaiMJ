@@ -881,7 +881,8 @@ exports.start = function(){
                     }  
                 }
                 
-                Room.broacastInRoom(CONST.SERVER_AUDIO_CHAT,roomInfo.roomId,{serverId:data.serverId,playerIndex,seatIndex})
+                Room.broacastInRoom(CONST.SERVER_AUDIO_CHAT,roomInfo.roomId,
+                    {serverId:data.serverId,playerIndex,seatIndex,roomInfo})
             }) 
         })
         
