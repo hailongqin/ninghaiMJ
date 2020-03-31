@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <script src="./juery.min.js"></script>
+    <script src='https://res2.wx.qq.com/open/js/jweixin-1.6.0.js'></script>
+</head>
+
+
+
+<body>
+
+    <button onclick="record()">开始录音</button>
+    <button onclick="stoprecord()">停止录音</button>
+    <button onclick="downloadrecord()">下载录音</button>
+    <script>
+        var HOST = 'https://www.ccnet.site'
+
+    $.ajax({
+             type:'POST',
+             url: HOST+'/user/get_wx_config',
+             contentType: "application/json", //必须这样写
+             dataType:"json",
+             data: JSON.stringify({url:window.location.href}),
+             success:function(res){
+
+                var param = res.data;
+        
+                wx.config({
+                    debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+                    appId: 'wx37ae340f5b1d8bdd', // 必填，公众号的唯一标识
+                    timestamp: param.timestamp, // 必填，生成签名的时间戳
+                    nonceStr: param.noncestr, // 必填，生成签名的随机串
+                    signature: param.signature,// 必填，签名
+                    jsApiList: [
+                        'updateAppMessageShareData',
+                      'startRecord',
+                      'stopRecord',
+                      'uploadVoice',
+                      'playVoice',
+                      'downloadVoice'
+                    ] // 必填，需要使用的JS接口列表
+                });
+
+                wx.ready(function(){
+                    // wx.startRecord({
+                    //     success:function(res){
+                    //         alert(JSON.stringify(res))
+                    //     },
+                    //     fail:function(err){
+                    //         alert(JSON.stringify(err))
+                    //     },
+                    //     cancel:function(){
+                    //         alert('cancel')
+                    //     }
+                    // })
+                  
+                })
+             }
+        })
+
+        var gbserverId = ''
+            
+        function record(){
+            wx.startRecord();
+        }   
+
+        function downloadrecord(){
+            wx.downloadVoice({
+                serverId: gbserverId, // 需要下载的音频的服务器端ID，由uploadVoice接口获得
+                isShowProgressTips: 1, // 默认为1，显示进度提示
+                success: function (res) {
+                    var localId = res.localId; // 返回音频的本地ID
+                    wx.playVoice({
+                            localId // 需要播放的音频的本地ID，由stopRecord接口获得
+                    });
+                }
+                });
+        }
+
+        function stoprecord(){
+            alert('stoping')
+            wx.stopRecord({
+                success:function(res){
+                    if (res.localId){
+                        wx.uploadVoice({
+                            localId: res.localId, // 需要上传的音频的本地ID，由stopRecord接口获得
+                            isShowProgressTips: 1, // 默认为1，显示进度提示
+                            success: function (res) {
+                                gbserverId = res.serverId; // 返回音频的服务器端ID
+                            }
+                            });
+                    }
+                 
+                },
+                fail:function(err){
+                 
+                }
+            })
+        }
+
+    </script>
+
+</body>
+
+</html>
+

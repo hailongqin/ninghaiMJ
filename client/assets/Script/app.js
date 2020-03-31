@@ -468,7 +468,21 @@ cc.Class({
        })
 
        this.node.on(CONST.SERVER_AUDIO_CHAT,(data)=>{
-           this.audioChat.playAudio(data);
+           if (data.serverId){
+            wx.downloadVoice({
+                serverId: data.serverId, // 需要下载的音频的服务器端ID，由uploadVoice接口获得
+                isShowProgressTips: 1, // 默认为1，显示进度提示
+                success: function (res) {
+                    var localId = res.localId; // 返回音频的本地ID
+                    if (data.index){
+                        
+                    }
+                    wx.playVoice({
+                        localId // 需要播放的音频的本地ID，由stopRecord接口获得
+                    });
+                }
+            });
+           }
        })
 
        //群发
@@ -950,18 +964,49 @@ cc.Class({
         }, 1000);
      },
 
+     onClickChat(){
+        wx.startRecord();
+    },
+
+    stopChat(){
+        wx.stopRecord({
+            success:function(res){
+                if (res.localId){
+                    wx.uploadVoice({
+                        localId: res.localId, // 需要上传的音频的本地ID，由stopRecord接口获得
+                        isShowProgressTips: 1, // 默认为1，显示进度提示
+                        success: function (res) {
+                            if (res.serverId){
+                                var serverId = res.serverId; // 返回音频的服务器端ID
+                                cc.vv.net.send(cc.vv.CONST.CLIENT_AUDIO_CAHT,{serverId})
+                            }   
+                        }
+                        });
+                  
+                }
+            }
+        })
+    },
+
      setWxConfig(){
         cc.vv.http.sendRequest('/user/get_wx_config',{url:window.location.href},(data)=>{
             
             var param = data.data;
        
             wx.config({
-                debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+                debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
                 appId: 'wx37ae340f5b1d8bdd', // 必填，公众号的唯一标识
                 timestamp: param.timestamp, // 必填，生成签名的时间戳
                 nonceStr: param.noncestr, // 必填，生成签名的随机串
                 signature: param.signature,// 必填，签名
-                jsApiList: ['updateAppMessageShareData'] // 必填，需要使用的JS接口列表
+                jsApiList: [
+                    'updateAppMessageShareData',
+                    'startRecord',
+                    'stopRecord',
+                    'uploadVoice',
+                    'playVoice',
+                    'downloadVoice'
+                ] // 必填，需要使用的JS接口列表
             });
 
             var conf = this.gameInfo.conf;
@@ -979,6 +1024,8 @@ cc.Class({
                      
                     }
                   })
+
+                
 
             });
 

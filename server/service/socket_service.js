@@ -349,12 +349,6 @@ exports.start = function(){
                 Log.info('receive hu data is ',roomInfo)
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
-                //还要判断截胡 todo
-
-                //
-
-                
-
                 var seats = roomInfo.seats;
                 var index = Game.getIndexByUserId(seats,userId);
                 var seat = seats[index];
@@ -362,56 +356,87 @@ exports.start = function(){
 
                 if (!seat.op.canHu) return;
                 var fromTurn = seat.op.fromTurn; //0
-                
 
+                if (index !== fromTurn){ //判断jiehu
+                    var indexLists = seats.map((s,id)=>{return id});
+                    indexLists = indexLists.concat(indexLists);
+                    var start = indexLists.indexOf(fromTurn);
+                    var end = indexLists.lastIndexOf(index);
+                    var betweenList = [];
+                    for (var k = start + 1;k < end;k++){
+                        betweenList.push(indexLists[k]);
+                    }
 
-                
-              
-                console.log('hu fromTurn ',fromTurn,index)
-                if (index !== fromTurn){
-                    console.log('zimo from Turn is ',fromTurn,seats);
-                    seat.holds.unshift(pai);
-                    seats[fromTurn].folds.splice(-1,1);
-                    seats[fromTurn].fangpaocishu++;
+                    if (betweenList.length){
+                        var hasJiehU = false
+                        var waitTimer = setInterval(()=>{
+                            for (var j = 0; j < betweenList.length;j++){
+                                let seatIndex = betweenList[j];
+                                if (seats[seatIndex].op.canHu){
+                                    hasJiehU = true;
+                                    break;
+                                }
+                                if (!hasJiehU){
+                                    clearInterval(waitTimer)
+                                    if (!seat.op.canHu) return;
+                                    seat.holds.unshift(pai);
+                                    seats[fromTurn].folds.splice(-1,1);
+                                    seats[fromTurn].fangpaocishu++;
+                                    huHandle();
+                                }
+                            }
+
+                        },20)
+                    }else{
+                        seat.holds.unshift(pai);
+                        seats[fromTurn].folds.splice(-1,1);
+                        seats[fromTurn].fangpaocishu++;
+                        huHandle();
+                    }
                 }else{
                     seat.zomocishu++;
-                }
-         
-                Game.clearOperation(roomInfo);
-
-                Game.calcHuShu(roomInfo,index,fromTurn);//计算hushu
-
-                for (var item of seats){
-                    item.ready = false
+                    huHandle();
                 }
 
-                roomInfo.currentHuIndex = index;
-             
-                Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
-                if (roomInfo.count >= roomInfo.conf.jushu){
-                    roomInfo.gameStatus = CONST.GAME_STATUS_END;
-                    Room.setRoomInfoToDB(roomInfo);
-                    
-                    return;
-                }
 
-                roomInfo.gameStatusOneOver = true;
-                var timer = setTimeout(() => {
-                        Timer.deleteTimer(roomId);
-                         //自动开局的，把卸的人加上钱
-                         for (var i = 0; i < seats.length;i++){
-                             if (roomInfo.zhuangIndex === roomInfo.currentHuIndex && i !== roomInfo.zhuangIndex){
-                                 if (seats[i].xie.action){
-                                     seats[i].xie.score += Math.abs(seats[i].fromHuSeatScore)
+                function huHandle(){
+                    Game.clearOperation(roomInfo);
+
+                    Game.calcHuShu(roomInfo,index,fromTurn);//计算hushu
+    
+                    for (var item of seats){
+                        item.ready = false
+                    }
+    
+                    roomInfo.currentHuIndex = index;
+                 
+                    Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
+                    if (roomInfo.count >= roomInfo.conf.jushu){
+                        roomInfo.gameStatus = CONST.GAME_STATUS_END;
+                        Room.setRoomInfoToDB(roomInfo);
+                        
+                        return;
+                    }
+    
+                    roomInfo.gameStatusOneOver = true;
+                    var timer = setTimeout(() => {
+                            Timer.deleteTimer(roomId);
+                             //自动开局的，把卸的人加上钱
+                             for (var i = 0; i < seats.length;i++){
+                                 if (roomInfo.zhuangIndex === roomInfo.currentHuIndex && i !== roomInfo.zhuangIndex){
+                                     if (seats[i].xie.action){
+                                         seats[i].xie.score += Math.abs(seats[i].fromHuSeatScore)
+                                     }
                                  }
                              }
-                         }
-
-                        Game.begin(roomInfo);
-                    }, 10*1000);
-
-                Timer.saveTimer(roomId,timer)
-             })
+    
+                            Game.begin(roomInfo);
+                        }, 10*1000);
+    
+                    Timer.saveTimer(roomId,timer)
+                }
+         
+            })  
         })
 
         

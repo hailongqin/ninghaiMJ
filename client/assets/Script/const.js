@@ -70,6 +70,8 @@ exports.CLIENT_CHUPAI_NOTIFY = 'CLIENT_CHUPAI_NOTIFY';
 
 exports.CLIENT_DISMISS_ROOM_NOTIFY = 'CLIENT_DISMISS_ROOM_NOTIFY';
 
+exports.CLIENT_AUDIO_CAHT = 'CLIENT_AUDIO_CAHT'
+
 exports.MJ_TYPE = {
     0:{title:'幺二',baseScore:20},
     // 1:{title:'幺半四',baseScore:40},
