@@ -29,16 +29,18 @@ cc.Class({
         var seats = roomInfo.seats;
         if (this.zhuangIndex === zhuangIndex) return;
 
-        if (zhuangIndex === 0){
+        var nodeIndex = cc.vv.Common.getNodeIndex(zhuangIndex,seats);
+
+        if (nodeIndex === 0){
             this.node.angle = -90;
         }
-        if (zhuangIndex === 3){
+        if (nodeIndex === 3){
             this.node.angle = 180;
         }
-        if (zhuangIndex === 1){
+        if (nodeIndex === 1){
             this.node.angle = 0;
         }
-        if (zhuangIndex === 2){
+        if (nodeIndex === 2){
             this.node.angle = 90;
         }
         this.zhuangIndex = zhuangIndex;
