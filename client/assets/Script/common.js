@@ -55,6 +55,23 @@ cc.Class({
         return false;
     },
 
+    getMySeatIndex(seats){
+        var myUserId = cc.vv.userId;
+        var userIds = seats.map((s)=>{return s.userId});
+        var index = userIds.indexOf(myUserId);
+        return index === -1?0:index
+    },
+
+    getNodeIndexBySeatIndex(seatIndex,diff){
+        return seatIndex - diff < 0 ? 4+seatIndex -diff: seatIndex - diff
+    },
+
+    getNodeIndex(seatIndex,seats){
+      var diff = this.getMySeatIndex(seats);
+      return this.getNodeIndexBySeatIndex(seatIndex,diff);
+
+    },
+
     start () {
 
     },

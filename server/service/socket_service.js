@@ -96,7 +96,7 @@ exports.start = function(){
                 Game.notifyTip(roomInfo,'玩家'+userName+'进入房间');
                 Room.addAndUpdateRoom(roomId,roomInfo);
                 Game.sendRoomBaseInfo(roomInfo,userId);
-                socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo)
+                socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo.seats)
                 if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
                     Game.notifyCanSetReady(userId);
                 else{
@@ -251,7 +251,7 @@ exports.start = function(){
                 }
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
-                if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
+                if (roomInfo.gameStatus === CONST.GAME_STATUS_START) return;
 
                 var seats = roomInfo.seats;//坐下的人
                 var players = roomInfo.players;
@@ -349,7 +349,7 @@ exports.start = function(){
                     Log.error('socket hu get roominfo is error',err)
                     return;
                 }
-                Log.info('receive hu data is ',roomInfo)
+              //  Log.info('receive hu data is ',roomInfo)
                 if (roomInfo.gameStatus !== CONST.GAME_STATUS_START) return;
                 if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
 
@@ -361,36 +361,44 @@ exports.start = function(){
                 if (!seat.op.canHu) return;
                 var fromTurn = seat.op.fromTurn; //0
 
+                console.log(index,fromTurn);
                 if (index !== fromTurn){ //判断jiehu
                     var indexLists = seats.map((s,id)=>{return id});
                     indexLists = indexLists.concat(indexLists);
+                    console.log('indelists',indexLists)
                     var start = indexLists.indexOf(fromTurn);
                     var end = indexLists.lastIndexOf(index);
                     var betweenList = [];
                     for (var k = start + 1;k < end;k++){
                         betweenList.push(indexLists[k]);
                     }
+                    
+                    console.log('betweenlist',betweenList);
 
                     if (betweenList.length){
-                        var hasJiehU = false
-                        var waitTimer = setInterval(()=>{
-                            for (var j = 0; j < betweenList.length;j++){
-                                let seatIndex = betweenList[j];
-                                if (seats[seatIndex].op.canHu){
-                                    hasJiehU = true;
-                                    break;
+                        waitInterval(betweenList);
+                        function waitInterval(betweenList){
+                            var hasJiehU = false
+                            var waitTimer = setInterval(()=>{
+                                for (var j = 0; j < betweenList.length;j++){
+                                    let seatIndex = betweenList[j];
+                                    if (seats[seatIndex].op.canHu){
+                                        hasJiehU = true;
+                                        break;
+                                    }
+                                    if (!hasJiehU){
+                                        clearInterval(waitTimer)
+                                        if (!seat.op.canHu) return;
+                                        seat.holds.unshift(pai);
+                                        seats[fromTurn].folds.splice(-1,1);
+                                        seats[fromTurn].fangpaocishu++;
+                                        huHandle();
+                                    }
                                 }
-                                if (!hasJiehU){
-                                    clearInterval(waitTimer)
-                                    if (!seat.op.canHu) return;
-                                    seat.holds.unshift(pai);
-                                    seats[fromTurn].folds.splice(-1,1);
-                                    seats[fromTurn].fangpaocishu++;
-                                    huHandle();
-                                }
-                            }
-
-                        },20)
+    
+                            },20)
+                        }
+                       
                     }else{
                         seat.holds.unshift(pai);
                         seats[fromTurn].folds.splice(-1,1);
@@ -414,7 +422,7 @@ exports.start = function(){
     
                     roomInfo.currentHuIndex = index;
                  
-                    Game.notifyOperationAction(roomInfo,{type:'hu',roomInfo,index:index});
+                    Game.notifyOperationAction(roomInfo,{type:'hu',seats,index:index,zhuangIndex:roomInfo.zhuangIndex});
                     if (roomInfo.count >= roomInfo.conf.jushu){
                         roomInfo.gameStatus = CONST.GAME_STATUS_END;
                         Room.setRoomInfoToDB(roomInfo);

@@ -152,10 +152,16 @@ cc.Class({
           return;
       }
       this.gameInfo = {
-          isKanke:true
+          isKanke:true,
+          seats:[
+              {holds:[],folds:[],huas:[],chis:[]},
+              {holds:[],folds:[],huas:[],chis:[]},
+              {holds:[],folds:[],huas:[],chis:[]},
+              {holds:[],folds:[],huas:[],chis:[]}
+          ]
       };
       this.localAudioList = [];
-      this.initEveryNode();
+      this.clearTable();
       cc.vv.net.connect(()=>{
           this.initHander();
           var param = {userId:cc.vv.userId,roomId:cc.vv.roomInfo.roomId};
@@ -190,7 +196,6 @@ cc.Class({
             param.xie = true
         }
         cc.vv.net.send(cc.vv.CONST.CLIENT_NEXT_JU_READY,param);
-        console.log('clearTabel');
         this.clearTable();
     },
    
@@ -206,8 +211,8 @@ cc.Class({
     hideTingPaiNode(){
         this.myTingPaiNode.active = false;
     },
-    setRemainNumber(data){
-        this.remainNumberNode.children[0].getComponent(cc.Label).string = data.mjLists.length;
+    setRemainNumber(len){
+        this.remainNumberNode.children[0].getComponent(cc.Label).string = len;
     },
 
     showRemainNumberNode(){
@@ -226,18 +231,18 @@ cc.Class({
         node.active = false
     },
 
-    setHuNodePosition(index){
-        var gameInfo = this.gameInfo;
-        if(index === gameInfo.myIndex){
+    setHuNodePosition(index,seats){
+        var nodeIndex = cc.vv.Common.getNodeIndex(index,seats);
+        if(nodeIndex === 0){
             this.huShowNode.x = 0;
             this.huShowNode.y =  -this.huShowNode.parent.height*(2/6);
-        }else if(index === gameInfo.leftIndex){
+        }else if(nodeIndex === 3){
             this.huShowNode.x = -this.huShowNode.parent.width*(2/6);
             this.huShowNode.y = 0
-        }else if(index === gameInfo.rightIndex){
+        }else if(nodeIndex === 1){
             this.huShowNode.x = this.huShowNode.parent.width*(2/6);
             this.huShowNode.y = 0
-        }else if(index === gameInfo.upIndex){
+        }else if(nodeIndex === 2){
             this.huShowNode.x = 0;
             this.huShowNode.y = this.huShowNode.parent.height*(2/6);
         }
@@ -255,6 +260,13 @@ cc.Class({
           this.hideNode(this.huShowNode);
           this.huResultModalNode.getComponent('huResult').reset();
 
+          for (var i = 0; i < 4;i++){
+              var node = this.node.getChildByName(`seat${i}`);
+              hidePaiNode(node.getChildByName('holds'));
+              hidePaiNode(node.getChildByName('folds'));
+              hidePaiNode(node.getChildByName('huas'));
+              hideChiResultNode(node.getChildByName('chiresult'));
+          }
 
           function hidePaiNode(node){
             for(var i = 0; i < node.children.length; ++i){
@@ -267,88 +279,11 @@ cc.Class({
                 node.children[i].active = false;
             }
           }
-
-          var nodeStrs = ['myHoldsNode','myFoldsNode','myHuasNode','leftHoldsNode','leftFoldsNode','leftHuasNode',
-                            'rightHoldsNode','rightFoldsNode','rightHuasNode','upHoldsNode','upFoldsNode','upHuasNode'];
-
-            nodeStrs.forEach((n)=>{
-                hidePaiNode(this[n])
-            })
-
-            hideChiResultNode(this.myChiResultNode);
-            hideChiResultNode(this.leftChiResultNode);
-            hideChiResultNode(this.rightChiResultNode);  
-            hideChiResultNode(this.upChiResultNode); 
     },
 
-    initEveryNode(){
-        //保存我的节
-          //初始化自己的牌
-        var myNode = this.myNode = this.node.getChildByName('my');
-        this.myHoldsNode = myNode.getChildByName('holds');
-        this.myHuasNode = myNode.getChildByName('huas');
-        this.myFoldsNode = myNode.getChildByName('folds');
-        this.myChiResultNode = myNode.getChildByName('chiresult');
-
-
-
-        //保存左边的
-        var leftNode = this.leftNode = this.node.getChildByName('left');
-        this.leftChiResultNode = leftNode.getChildByName('chiresult');
-        this.leftHoldsNode = leftNode.getChildByName('holds');
-        this.leftHuasNode = leftNode.getChildByName('huas');
-        this.leftFoldsNode = leftNode.getChildByName('folds');
-
-
-        //保存右边的
-        var rightNode = this.rightNode = this.node.getChildByName('right');
-        this.rightChiResultNode = rightNode.getChildByName('chiresult');
-        this.rightHoldsNode = rightNode.getChildByName('holds');
-        this.rightHuasNode = rightNode.getChildByName('huas');
-        this.rightFoldsNode = rightNode.getChildByName('folds');
-
-
-        //保存上面的
-        var upNode = this.upNode = this.node.getChildByName('up');
-        this.upChiResultNode = upNode.getChildByName('chiresult');
-        this.upHoldsNode = upNode.getChildByName('holds');
-        this.upHuasNode = upNode.getChildByName('huas');
-        this.upFoldsNode = upNode.getChildByName('folds');
-
-        this.clearTable();
-      
-    },
-
-    getMyIndexFromRoomInfo(roomInfo){
-        var players = roomInfo.players;
-        var seats = roomInfo.seats;
-        var userId = cc.vv.userId;
-
-        var seatUserIds = seats.map((s)=>{return s.userId});
-        var playerUserIds = players.map((s)=>{return s.userId});
-        var myIndex = -1;
-        if (playerUserIds.indexOf(userId) !== -1){
-            if (roomInfo.gameStatus !== cc.vv.CONST.GAME_STATUS_NO_START){ //游戏已经开始了，上帝视角
-                myIndex = 0;
-                this.gameInfo.isKanke = true;
-            }else{
-                myIndex = seats.length;
-            }
-           
-        }else if (seatUserIds.indexOf(userId) !== -1){
-            myIndex = seatUserIds.indexOf(userId);
-            this.gameInfo.isKanke = false
-        }
-
-        return myIndex;
-    },
-
+   
 
     initHander(){
-
-    
-
-
        var CONST = cc.vv.CONST;
 
        this.node.on('cocos_inner_chupai_dispatch',(event)=>{
@@ -388,8 +323,8 @@ cc.Class({
        this.node.on(CONST.SERVER_GAME_OP_ACTION_NOTIFY,(data)=>{
             if (data.type === 'hu'){
                 cc.vv.audio.playSFX('hu')
-                this.setHuNodePosition(data.index);
-                this.statusNode.getComponent('status').setScoreData(data.roomInfo,this.gameInfo.myIndex);
+                this.setHuNodePosition(data.index,data.seats);
+                this.statusNode.getComponent('status').setScoreData(data.seats);
                 setTimeout(() => {
                     this.showResultModal(data);
                 }, 3000);
@@ -410,9 +345,8 @@ cc.Class({
        })
 
        // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次 //群发
-       this.node.on(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,(data)=>{
-            var myIndex =  this.getMyIndexFromRoomInfo(data);
-            this.statusNode.getComponent('status').setStatusData(myIndex,data);
+       this.node.on(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,(seats)=>{
+            this.statusNode.getComponent('status').setStatusData(seats);
        })
 
         //进来的时候，接受是否可以准备了 //单发
@@ -421,16 +355,14 @@ cc.Class({
        })
 
         //刚进来用户准备 //群发
-       this.node.on(CONST.SERVER_ROOM_NEW_USER_SET_READY,(data)=>{
-        var myIndex =  this.getMyIndexFromRoomInfo(data.roomInfo);
-        this.statusNode.getComponent('status').setUserInfo(data.index,myIndex,data.roomInfo.seats);
-        this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
+       this.node.on(CONST.SERVER_ROOM_NEW_USER_SET_READY,(seats)=>{
+        this.statusNode.getComponent('status').setStatusData(seats);
+        this.statusNode.getComponent('status').setUserReadyStatus(seats)
        })
 
         //游戏结束后准备 //群发
        this.node.on(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,(data)=>{
-        var myIndex =  this.getMyIndexFromRoomInfo(data.roomInfo);
-        this.statusNode.getComponent('status').setUserReadyStatus(data.index,myIndex,data.roomInfo)
+        this.statusNode.getComponent('status').setUserReadyStatus(data.index,data.seats)
        })
        
 
@@ -445,7 +377,7 @@ cc.Class({
          var seats = data.seats;
          this.fengNode.getComponent('feng').setTurn(data)
         this.setTables(seats);
-        this.setRemainNumber(data)
+        this.setRemainNumber(data.remainNum)
        })
 
        this.node.on(CONST.SERVER_GAME_CLEAR_OP_NOTIFY,(data)=>{
@@ -542,61 +474,28 @@ cc.Class({
         this.node.on(CONST.SERVER_GAME_START_NOTIFY,(data) => {
             this.hideAllReadyBtn();
             this.statusNode.getComponent('status').clearAllReadySign();
-            var userId = cc.vv.userId;
+        
             var seats = data.seats;
          
             if (data.count !== 1){
                 this.clearTable();
+            };
+            
+            var userIds = seats.map((s)=>{
+                return s.userId
+            })
+            if (userIds.indexOf(cc.vv.userId) !== -1){
+                this.gameInfo.isKanke = false;
             }
-            var myIndex = this.getMyIndexFromRoomInfo(data);
-
-           this.gameInfo = {
-               ...this.gameInfo,
-               myFolds:[],
-               myHolds:[],
-               myHuas:[],
-               myChiResult:[],
-               leftFolds:[],
-               leftHolds:[],
-               leftHuas:[],
-               leftChiResult:[],
-               rightFolds:[],
-               rightHolds:[],
-               rightHuas:[],
-               rightChiResult:[],
-               upFolds:[],
-               upHolds:[],
-               upHuas:[],
-               upChiResult:[],
-
-               zhuangIndex:data.zhuangIndex,
-               turn:data.turn,
-               op:{},
-
-               roomId:data.roomId,
-               myIndex:myIndex,
-               gameStatus:data.gameStatus
-           };
-            for (var i = 0; i < seats.length;i++){
-                this.statusNode.getComponent('status').setXieIcon(i,myIndex,seats);
-                if (cc.vv.Common.checkIsMySelfIndex(myIndex,i)){
-                    this.gameInfo.myIndex = i;
-                }else if ( cc.vv.Common.checkIsLeftIndex(myIndex,i,seats)){ //左边的牌
-                    this.gameInfo.leftIndex = i;
-                }else if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)){ //右边的牌
-                    this.gameInfo.rightIndex = i;
-                }else if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats)){ //对面的牌
-                    this.gameInfo.upIndex = i;
-                } 
-            }
-
-            this.statusNode.getComponent('status').setScoreData(data,myIndex);
-            this.fengNode.getComponent('feng').setFengDirection(myIndex,data);
+            this.gameInfo.gameStatus = data.gameStatus;
+           
+            this.statusNode.getComponent('status').setScoreData(seats);
+            this.fengNode.getComponent('feng').setFengDirection(data);
             this.fengNode.getComponent('feng').setTurn(data);
-            this.setZhuangIconPosition(data.zhuangIndex)
+            this.setZhuangIconPosition(data.zhuangIndex,data.seats)
             this.setTables(seats);
             this.showRemainNumberNode();
-            this.setRemainNumber(data);
+            this.setRemainNumber(data.mjLists.length);
 
             this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(data.conf.jushu - data.count)+'局';
         })
@@ -604,18 +503,10 @@ cc.Class({
        
     },
 
-    setZhuangIconPosition(index){
-        var gameInfo = this.gameInfo;
+    setZhuangIconPosition(index,seats){
         this.hideAllZhuangIcon();
-        if (index === gameInfo.myIndex){
-            this.zhuangIconNode.children[0].active = true;
-        }else if (index === gameInfo.leftIndex){
-            this.zhuangIconNode.children[3].active = true;
-        }else if (index === gameInfo.rightIndex){
-            this.zhuangIconNode.children[1].active = true;
-        }else if (index === gameInfo.upIndex){
-            this.zhuangIconNode.children[2].active = true;
-        }
+        var nodeIndex = cc.vv.Common.getNodeIndex(index,seats);
+        this.zhuangIconNode.children[nodeIndex].active = true;
     },
 
     onClickReady(){
@@ -628,8 +519,8 @@ cc.Class({
     },
 
     showResultModal(data){
-        var roomInfo = data.roomInfo;
-        var seats = roomInfo.seats;
+        
+        var seats = data.seats;
         var i = 0;
         
         var xieBtn = this.huResultModalNode.getChildByName('xiebtn');
@@ -653,15 +544,15 @@ cc.Class({
             var scoreNode = node.getChildByName('score');
             var xieScore = node.getChildByName('xie');
 
-            if (!this.gameInfo.isKanke && i === this.gameInfo.myIndex){
-                if (data.index === i || data.index !== roomInfo.zhuangIndex){
+            if (!this.gameInfo.isKanke){
+                if (data.index === i || data.index !== data.zhuangIndex){
                     this.showNode(readyBtn)
-                }else{
-                    if (data.index === roomInfo.zhuangIndex){
-                        this.showNode(xieBtn);
-                        this.showNode(buxiebtn)
-                    }
                 }
+                if (data.index === data.zhuangIndex && i !== data.index){
+                    this.showNode(xieBtn);
+                    this.showNode(buxiebtn)
+                }
+                
             }
           
 
@@ -695,16 +586,18 @@ cc.Class({
 
 
     setTables(seats){
+        var diff = cc.vv.Common.getMySeatIndex(seats);
         for (var i = 0; i < seats.length;i++){
             var seat = seats[i]
             var holds = seat.holds;
             var folds = seat.folds;
             var huas = seat.huas;
             var chis = seat.chis;
-            var holdsNode = this.getHoldsNodeByIndex(i);
-            var huasNode = this.getHuasNodeByIndex(i);
-            var foldsNode = this.getFoldsNodeByIndex(i);
-            var chiRootResultNode = this.getChiResultNodeByIndex(i);
+            var nodeIndex =  cc.vv.Common.getNodeIndexBySeatIndex(i,diff);
+            var holdsNode = this.node.getChildByName(`seat${nodeIndex}`).getChildByName('holds');
+            var huasNode = this.node.getChildByName(`seat${nodeIndex}`).getChildByName('huas');
+            var foldsNode = this.node.getChildByName(`seat${nodeIndex}`).getChildByName('folds');
+            var chiRootResultNode = this.node.getChildByName(`seat${nodeIndex}`).getChildByName('chiresult');
 
             this.setCommonHolds(holdsNode,holds,i);
             this.setCommonFolds(foldsNode,folds,i);
@@ -712,142 +605,7 @@ cc.Class({
             this.setCommonChiResults(chiRootResultNode,chis,i);
         }
     },
-
-    setCommonHuShowAction(index){
-        if (index === this.gameInfo.myIndex) this.myHuResultShowNode.active = true;
-        if (index === this.gameInfo.leftIndex) this.leftHuResultShowNode.active = true;
-        if (index === this.gameInfo.rightIndex) this.rightHuResultShowNode.active = true;
-        if (index === this.gameInfo.upIndex) this.upHuResultShowNode.active = true;
-
-    },
    
-    getHoldsNodeByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return this.myHoldsNode
-        if (index === gameInfo.leftIndex) return this.leftHoldsNode
-        if (index === gameInfo.rightIndex) return this.rightHoldsNode
-        if (index === gameInfo.upIndex) return this.upHoldsNode
-    },
-
-    getFoldsNodeByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return this.myFoldsNode
-        if (index === gameInfo.leftIndex) return this.leftFoldsNode
-        if (index === gameInfo.rightIndex) return this.rightFoldsNode
-        if (index === gameInfo.upIndex) return this.upFoldsNode
-    },
-
-    getHuasNodeByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return this.myHuasNode
-        if (index === gameInfo.leftIndex) return this.leftHuasNode
-        if (index === gameInfo.rightIndex) return this.rightHuasNode
-        if (index === gameInfo.upIndex) return this.upHuasNode
-    },
-
-    getChiResultNodeByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return this.myChiResultNode
-        if (index === gameInfo.leftIndex) return this.leftChiResultNode
-        if (index === gameInfo.rightIndex) return this.rightChiResultNode
-        if (index === gameInfo.upIndex) return this.upChiResultNode
-    },
-
-
-    getHoldsAltasByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return this.myHoldsAltas
-        if (index === gameInfo.leftIndex) return this.LeftAltas
-        if (index === gameInfo.rightIndex) return this.rightAltas
-        if (index === gameInfo.upIndex) return this.upAltas
-    },
-
-    getHoldSpriteFrameByIndex(index,pai){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return this.myHoldsAltas.getSpriteFrame('my-'+pai)
-        if (index === gameInfo.leftIndex) return this.LeftAltas.getSpriteFrame('cemian4')
-        if (index === gameInfo.rightIndex) return this.rightAltas.getSpriteFrame('cemian2');
-        if (index === gameInfo.upIndex) return this.upAltas.getSpriteFrame('cemian1')
-    },
-
-    getBottomSpriteFrameByIndex(index,pai){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return this.myBottomAltas.getSpriteFrame('my-bottom-'+pai)
-        if (index === gameInfo.leftIndex) return this.LeftAltas.getSpriteFrame('left-bottom-'+pai)
-        if (index === gameInfo.rightIndex) return this.rightAltas.getSpriteFrame('right-bottom-'+pai);
-        if (index === gameInfo.upIndex) return this.upAltas.getSpriteFrame('up-bottom-'+pai)
-    },
-
-
-    //
-    setGameInfoHoldsByIndex(holds,index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) gameInfo.myHolds = holds;
-        if (index === gameInfo.leftIndex) gameInfo.leftHolds = holds;
-        if (index === gameInfo.rightIndex) gameInfo.rightHolds = holds;
-        if (index === gameInfo.upIndex) gameInfo.upHolds = holds;
-    },
-    getGameInfoHoldsByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return gameInfo.myHolds
-        if (index === gameInfo.leftIndex) return gameInfo.leftHolds 
-        if (index === gameInfo.rightIndex) return gameInfo.rightHolds 
-        if (index === gameInfo.upIndex) return gameInfo.upHolds
-    },
-
-
-
-    //
-    setGameInfoFoldsByIndex(holds,index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) gameInfo.myFolds = holds;
-        if (index === gameInfo.leftIndex) gameInfo.leftFolds = holds;
-        if (index === gameInfo.rightIndex) gameInfo.rightFolds = holds;
-        if (index === gameInfo.upIndex) gameInfo.upFolds = holds;
-    },
-
-    getGameInfoFoldsByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return gameInfo.myFolds 
-        if (index === gameInfo.leftIndex) return gameInfo.leftFolds 
-        if (index === gameInfo.rightIndex) return gameInfo.rightFolds 
-        if (index === gameInfo.upIndex) return gameInfo.upFolds 
-    },
-
-
-    setGameInfoHuasByIndex(huas,index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) gameInfo.myHuas = huas;
-        if (index === gameInfo.leftIndex) gameInfo.lefHuas = huas;
-        if (index === gameInfo.rightIndex) gameInfo.rightHuas = huas;
-        if (index === gameInfo.upIndex) gameInfo.upHuas = huas;
-    },
-
-    getGameInfoHuasByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return gameInfo.myHuas 
-        if (index === gameInfo.leftIndex) return gameInfo.leftHuas 
-        if (index === gameInfo.rightIndex) return gameInfo.rightHuas 
-        if (index === gameInfo.upIndex) return gameInfo.upHuas 
-    },
-
-    setGameInfoChiResultsByIndex(result,index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) gameInfo.myChiResult = result;
-        if (index === gameInfo.leftIndex) gameInfo.leftChiResult = result;
-        if (index === gameInfo.rightIndex) gameInfo.rightChiResult = result;
-        if (index === gameInfo.upIndex) gameInfo.upChiResult = result;
-    },
-
-    getGameInfoChiResultsByIndex(index){
-        var gameInfo = this.gameInfo;
-        if (index === gameInfo.myIndex) return gameInfo.myChiResult 
-        if (index === gameInfo.leftIndex) return gameInfo.leftChiResult 
-        if (index === gameInfo.rightIndex) return gameInfo.rightChiResult 
-        if (index === gameInfo.upIndex) return gameInfo.upChiResult 
-    },
-
-
     setCommonHolds(holdsNode,holds,index){
        var isKanke = this.gameInfo.isKanke;
         function setPositionPai(i,pai){
@@ -858,7 +616,7 @@ cc.Class({
         var len = holds.length; //13
         if (len === 14 || len === 11 || len === 8 || len === 5 || len === 2){
             start = 0;
-            if (index === this.gameInfo.myIndex) this.hideTingPaiNode();
+            if (this.gameInfo.seats[index].userId === cc.vv.userId) this.hideTingPaiNode();
         }else{
             holdsNode.children[0].getComponent('pai').setPaiSpriteFrame(null)
             holdsNode.children[0].pai = null;
@@ -874,12 +632,11 @@ cc.Class({
             holdsNode.children[start].getComponent('pai').setPaiSpriteFrame(null);
             holdsNode.children[start].pai = null;
         }
-        this.setGameInfoHoldsByIndex(holds,index)
-
+       
     },
 
     setCommonFolds(foldsNode,folds,index){
-        var gameInfoFolds = this.getGameInfoFoldsByIndex(index);
+        var gameInfoFolds = this.gameInfo.seats[index].folds;
         var len = gameInfoFolds.length;
         if (folds.length === len) return;
         else if (folds.length < len){ //被吃了 
@@ -891,10 +648,10 @@ cc.Class({
                 foldsNode.children[i].getComponent('pai').setPaiSpriteFrame(pai);
             }
         }
-        this.setGameInfoFoldsByIndex(folds,index)
+       this.gameInfo.seats[index].folds = folds;
     },
     setCommonHuas(huasNode,huas,index,force = false){
-        var gameInfoHuas = this.getGameInfoHuasByIndex(index);
+        var gameInfoHuas = this.gameInfo.seats[index].huas;
         if (!force && huas.length === gameInfoHuas.length) return;
 
         var i = 0;
@@ -906,12 +663,12 @@ cc.Class({
         for (; i < 8;i++){
             huasNode.children[i].getComponent('pai').setPaiSpriteFrame(null);
         }
-        this.setGameInfoHuasByIndex(huas,index);
+        this.gameInfo.seats[index].huas = huas;
     },
 
 
     setCommonChiResults(chiRootResultNode,chis,index,force = false){
-        var gameInfoChiResult = this.getGameInfoChiResultsByIndex(index);
+        var gameInfoChiResult = this.gameInfo.seats[index].chis;
     
         for (var i = 0;i < chis.length;i++){
             if (!force && gameInfoChiResult[i] && gameInfoChiResult[i].type){ //这里主要为了由碰转杠
@@ -945,7 +702,7 @@ cc.Class({
         }
 
 
-        this.setGameInfoChiResultsByIndex(chis,index);
+        this.gameInfo.seats[index].chis = chis;
     },
 
     setTingPaiResult(tingMap){
@@ -984,12 +741,10 @@ cc.Class({
             var localId = local.localId;
             var playerIndex = local.playerIndex;
             var seatIndex = local.seatIndex;
-            var roomInfo = local.roomInfo;
-            var seats = roomInfo.seats;
+            var seats = local.seats;
             this.isPlayingVoice = true
             if (seatIndex !== ''){
-                var myIndex = this.getMyIndexFromRoomInfo(roomInfo);
-                this.statusNode.getComponent('status').playAuioAnimation(seatIndex,myIndex,seats)
+                this.statusNode.getComponent('status').playAuioAnimation(seatIndex,seats)
             }
 
             wx.playVoice({

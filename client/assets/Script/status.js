@@ -34,26 +34,19 @@ cc.Class({
 
     },
 
-    setStatusData(myIndex,roomInfo){
-        for (var i = 0 ; i < roomInfo.seats.length;i++){
-            this.setUserInfo(i,myIndex,roomInfo.seats);
-        }
+    setStatusData(seats){
+   
+        var diff = cc.vv.Common.getMySeatIndex(seats)  
+        this.setUserInfo(diff,seats);
     },
 
-    setScoreData(roomInfo,myIndex){
-        var seats = roomInfo.seats;
-        var nodeIndex = -1;
+    setScoreData(seats){
+        var diff = cc.vv.Common.getMySeatIndex(seats)
         for (var i = 0; i < seats.length;i++){
-            if (cc.vv.Common.checkIsMySelfIndex(myIndex,i,seats)) nodeIndex = 0;   
-            if (cc.vv.Common.checkIsLeftIndex(myIndex,i,seats))   nodeIndex = 3;       
-            if (cc.vv.Common.checkIsRightIndex(myIndex,i,seats)) nodeIndex = 1;   
-            if (cc.vv.Common.checkIsUpIndex(myIndex,i,seats))   nodeIndex = 2;   
-
-            if (nodeIndex !== -1){
-                var node = this.node.children[nodeIndex];
-                node.getChildByName('score').getComponent(cc.Label).string = seats[i].totalScore;
-                node.active = true;
-            }
+            var nodeIndex = cc.vv.Common.getNodeIndexBySeatIndex(i,diff);
+            var node = this.node.children[nodeIndex];
+            node.getChildByName('score').getComponent(cc.Label).string = seats[i].totalScore;
+            node.active = true; 
         }
        
     },
@@ -70,43 +63,36 @@ cc.Class({
         }
     },
 
-    playAuioAnimation(seatIndex,myIndex,seats){
-        var nodeIndex = -1;
-        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
-        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
-        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
-        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;      
-        if (nodeIndex !== -1){
-            var node = this.node.children[nodeIndex];
-            var voiceNode = node.getChildByName('voice');
-            for (var i = 0; i < 3;i++){
-                 voiceNode.getChildByName(`v_anim${i}`).active = false;
-            }
-            voiceNode.getChildByName(`v_anim0`).active = true;
-            var index = 0;
-            this.intervalTimer = setInterval(() => {
-                voiceNode.getChildByName(`v_anim${index}`).active = false;
-                index++;
-                if (index === 3) index = 0;
-                voiceNode.getChildByName(`v_anim${index}`).active = true;
-            }, 100);
+    playAuioAnimation(seatIndex,seats){
+        var diff = cc.vv.Common.getMySeatIndex(seats);
 
-            voiceNode.active = true;
+        var nodeIndex = cc.vv.Common.getNodeIndexBySeatIndex(seatIndex,diff); 
+
+        var node = this.node.children[nodeIndex];
+        var voiceNode = node.getChildByName('voice');
+        for (var i = 0; i < 3;i++){
+                voiceNode.getChildByName(`v_anim${i}`).active = false;
         }
+        voiceNode.getChildByName(`v_anim0`).active = true;
+        var index = 0;
+        this.intervalTimer = setInterval(() => {
+            voiceNode.getChildByName(`v_anim${index}`).active = false;
+            index++;
+            if (index === 3) index = 0;
+            voiceNode.getChildByName(`v_anim${index}`).active = true;
+        }, 100);
+
+        voiceNode.active = true;
+        
     },
 
-    setUserInfo(seatIndex,myIndex,seats){
-
-        var nodeIndex = -1;
-        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
-        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
-        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
-        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;   
-
-        console.log(nodeIndex,seatIndex,myIndex)
-        if (nodeIndex !== -1){
+    setUserInfo(diff,seats){
+        var nodeIndex = 0;
+        var i = 0;
+        for ( i = 0; i < seats.length;i++){
+            var nodeIndex = cc.vv.Common.getNodeIndexBySeatIndex(i,diff);
             var node = this.node.children[nodeIndex];
-            var userInfo = seats[seatIndex].userInfo;
+            var userInfo = seats[i].userInfo;
             if (userInfo.userName){
                 node.getChildByName('userName').getComponent(cc.Label).string = userInfo.userName
             }
@@ -115,40 +101,36 @@ cc.Class({
                     node.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
                 });
             }
+            node.getChildByName('off_line_sign').active = seats[i].onLine?false:true
+            node.active = true; 
+        }
 
-            node.getChildByName('off_line_sign').active = seats[seatIndex].onLine?false:true
-            
-            node.active = true;
+        for (;i < 4;i++){
+            var nodeIndex = cc.vv.Common.getNodeIndexBySeatIndex(i,diff);
+            this.node.children[nodeIndex].active = false;
         }
     },
 
 
-    setXieIcon(seatIndex,myIndex,seats){
-
-        var nodeIndex = -1;
-        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
-        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
-        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
-        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;   
-
-        if (node !== -1){
-            var node = this.node.children[nodeIndex];
-            node.getChildByName('xie').active = seats[seatIndex].xie && seats[seatIndex].xie.action?true:false  
-        }
+    setXieIcon(seatIndex,seats){
+     
+        var diff = cc.vv.Common.getMySeatIndex(seats);
+     
+        var nodeIndex = cc.vv.Common.getNodeIndexBySeatIndex(seatIndex,diff);
+     
+        var node = this.node.children[nodeIndex];
+        node.getChildByName('xie').active = seats[seatIndex].xie && seats[seatIndex].xie.action?true:false  
+        
     },
-    setUserReadyStatus(seatIndex,myIndex,roomInfo){
-        var nodeIndex = -1;
-        var seats = roomInfo.seats;
-        if (cc.vv.Common.checkIsMySelfIndex(myIndex,seatIndex,seats)) nodeIndex = 0;   
-        if (cc.vv.Common.checkIsLeftIndex(myIndex,seatIndex,seats))   nodeIndex = 3;       
-        if (cc.vv.Common.checkIsRightIndex(myIndex,seatIndex,seats)) nodeIndex = 1;   
-        if (cc.vv.Common.checkIsUpIndex(myIndex,seatIndex,seats))   nodeIndex = 2;   
+    setUserReadyStatus(seatIndex,seats){
+      
+        var diff = cc.vv.Common.getMySeatIndex(seats);
 
-        if (nodeIndex !== -1){
-            var node = this.node.children[nodeIndex];
-            node.getChildByName('ready_sign').active = true;
-            node.active = true;
-        }
+        var nodeIndex = cc.vv.Common.getNodeIndexBySeatIndex(seatIndex,diff);
+        var node = this.node.children[nodeIndex];
+        node.getChildByName('ready_sign').active = true;
+        node.active = true;
+        
     },
 
     clearAllReadySign(){

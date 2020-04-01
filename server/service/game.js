@@ -608,7 +608,8 @@ class Game {
             Log.error('no find roominfo in updateTable')
             return 
         }
-        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_TABLE,roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_TABLE,roomInfo.roomId,
+            {seats:roomInfo.seats,turn:roomInfo.turn,remainNumber:roomInfo.mjLists.length})
     }
 
     updateOneTable(roomInfo,userId){
@@ -658,7 +659,7 @@ class Game {
             return 
         }
         
-        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo)
+        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo.seats)
     }
 
     notifyCanSetReady(userId){

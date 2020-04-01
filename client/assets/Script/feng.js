@@ -24,20 +24,21 @@ cc.Class({
 
     },
 
-    setFengDirection(myIndex,roomInfo){
+    setFengDirection(roomInfo){
         var zhuangIndex = roomInfo.zhuangIndex;
         var seats = roomInfo.seats;
         if (this.zhuangIndex === zhuangIndex) return;
-        if (cc.vv.Common.checkIsMySelfIndex(myIndex,zhuangIndex,seats)){
+
+        if (zhuangIndex === 0){
             this.node.angle = -90;
         }
-        if (cc.vv.Common.checkIsLeftIndex(myIndex,zhuangIndex,seats)){
+        if (zhuangIndex === 3){
             this.node.angle = 180;
         }
-        if (cc.vv.Common.checkIsRightIndex(myIndex,zhuangIndex,seats)){
+        if (zhuangIndex === 1){
             this.node.angle = 0;
         }
-        if (cc.vv.Common.checkIsUpIndex(myIndex,zhuangIndex,seats)){
+        if (zhuangIndex === 2){
             this.node.angle = 90;
         }
         this.zhuangIndex = zhuangIndex;
@@ -49,7 +50,6 @@ cc.Class({
         if (!roomInfo) return;
     
         if (roomInfo.turn === this.turn) return;
-        var zhuangIndex = this.zhuangIndex;
         var seats = roomInfo.seats;
         var turn = roomInfo.turn;
         var fengIndex = seats[turn].fengIndex;
