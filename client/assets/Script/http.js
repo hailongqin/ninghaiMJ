@@ -1,11 +1,11 @@
 
-var URL = cc.vv.CONST.BASE_REQUEST_URL
+// var URL = cc.vv.CONST.BASE_REQUEST_URL
 var MD5_KEY = '#$%%#####FFGGG$!~'
 
 function sendRequest(path, data = {}, successCallback, failCallback) {
     var xhr = cc.loader.getXMLHttpRequest();
     xhr.timeout = 30000;
-    var requestURL = URL + path;
+    var requestURL = cc.vv.CONST.BASE_REQUEST_URL + path;
     xhr.open("POST", requestURL, true);
     xhr.setRequestHeader("Content-Type", "application/json");
 

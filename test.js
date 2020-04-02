@@ -120,7 +120,7 @@ setTimeout(() => {
 }, 2*1000);
 
 setTimeout(() => {
-    roomInfo.seats[0].op = {};
+    testhu(roomInfo,1,0)
 }, 4*1000);
 
 function testhu(roomInfo,userId,index){
@@ -162,16 +162,16 @@ function testhu(roomInfo,userId,index){
                             hasJiehU = true;
                             break;
                         }
-                        if (!hasJiehU){
-                            console.log('waitTimer',waitTimer,betweenList)
-                            clearInterval(waitTimer)
-                            if (!seat.op.canHu) return;
-                            seat.holds.unshift(pai);
-                            seats[fromTurn].folds.splice(-1,1);
-                            seats[fromTurn].fangpaocishu++;
-                            console.log('go hu index ',index)
-                            huHandle();
-                        }
+                    }
+                    if (!hasJiehU){
+                        console.log('waitTimer',waitTimer,betweenList)
+                        clearInterval(waitTimer)
+                        if (!seat.op.canHu) return;
+                        seat.holds.unshift(pai);
+                        seats[fromTurn].folds.splice(-1,1);
+                        seats[fromTurn].fangpaocishu++;
+                        console.log('go hu index ',index)
+                        huHandle();
                     }
 
                 },20)

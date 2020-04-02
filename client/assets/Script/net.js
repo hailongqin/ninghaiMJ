@@ -1,9 +1,11 @@
 
 var io = require('socket-io')
+var CONST = require('const');
+console.log(CONST)
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:cc.vv.CONST.BASE_REQUEST_URL,
+        ip:CONST.BASE_REQUEST_URL,
         sio:null,
         pingTimer:null,
         handlerNode:null,

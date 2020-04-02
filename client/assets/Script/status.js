@@ -24,13 +24,12 @@ cc.Class({
         //         this._bar = value;
         //     }
         // },
-
-
     },
 
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
+        this.intervalTimer = null;
 
     },
 
@@ -59,6 +58,7 @@ cc.Class({
 
         for (var i = 0; i < this.node.children.length;i++){
             var node = this.node.children[i];
+            console.log(node)
             node.getChildByName('voice').active = false;
         }
     },
@@ -80,7 +80,7 @@ cc.Class({
             index++;
             if (index === 3) index = 0;
             voiceNode.getChildByName(`v_anim${index}`).active = true;
-        }, 100);
+        }, 500);
 
         voiceNode.active = true;
         

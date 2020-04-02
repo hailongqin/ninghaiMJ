@@ -387,14 +387,14 @@ exports.start = function(){
                                         hasJiehU = true;
                                         break;
                                     }
-                                    if (!hasJiehU){
-                                        clearInterval(waitTimer)
-                                        if (!seat.op.canHu) return;
-                                        seat.holds.unshift(pai);
-                                        seats[fromTurn].folds.splice(-1,1);
-                                        seats[fromTurn].fangpaocishu++;
-                                        huHandle();
-                                    }
+                                }
+                                if (!hasJiehU){
+                                    clearInterval(waitTimer)
+                                    if (!seat.op.canHu) return;
+                                    seat.holds.unshift(pai);
+                                    seats[fromTurn].folds.splice(-1,1);
+                                    seats[fromTurn].fangpaocishu++;
+                                    huHandle();
                                 }
     
                             },20)
@@ -891,7 +891,7 @@ exports.start = function(){
                 }
                 
                 Room.broacastInRoom(CONST.SERVER_AUDIO_CHAT,roomInfo.roomId,
-                    {serverId:data.serverId,playerIndex,seatIndex,roomInfo})
+                    {serverId:data.serverId,playerIndex,seatIndex,seats})
             }) 
         })
         
