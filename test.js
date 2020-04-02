@@ -2,6 +2,8 @@
 var Util = require('./server/utils/util')
 var CONST = require('./server/utils/const')
 
+//var Game = require('./server/service/game')
+
 var roomInfo = {
     prevHuIndex:0,
     conf:{
@@ -9,7 +11,9 @@ var roomInfo = {
     },
     zhuangIndex:1,
     seats:[{
+        userId:1,
         holds:[37,37,37,14,14],
+        folds:[],
         chis:[{
             type:'chi',
             pai:3,
@@ -33,12 +37,19 @@ var roomInfo = {
         fengIndex:0,
         huShu:0,
         fanShu:1,
-        xie:{}
+        xie:{},
+        op:{
+            canHu:true,
+            fromTurn:3,
+            pai:3,
+        }
     },{
+        userId:2,
         holds:[33,33,33,34,34,34,34,21,21],
    
         chis:[{type:'peng',pai:35},{type:'gang',fromTurn:1,pai:32}],
         huas:[42],
+        folds:[],
         fromHuSeatScore:0,
         fromOtherScore:0,
         xieScore:0,
@@ -49,11 +60,42 @@ var roomInfo = {
         xie:{
             action:true,
             score:100
+        },
+        op:{
+            canHu:true,
+            fromTurn:3,
+            pai:3,
+        }
+    },
+
+    {
+        userId:3,
+        holds:[33,33,33,34,34,34,34,21,21],
+   
+        chis:[{type:'peng',pai:35},{type:'gang',fromTurn:1,pai:32}],
+        huas:[42],
+        folds:[],
+        fromHuSeatScore:0,
+        fromOtherScore:0,
+        xieScore:0,
+        totalScore:0,
+        fengIndex:1,
+        huShu:0,
+        fanShu:1,
+        xie:{
+            action:true,
+            score:100
+        },
+        op:{
+            canHu:true,
+            fromTurn:3,
+            pai:3,
         }
     },
     {
+        userId:4,
         holds:[21,21,22,22,23,24,25],
-   
+        folds:[3],
         chis:[],
         huas:[43],
         fromHuSeatScore:0,
@@ -66,96 +108,126 @@ var roomInfo = {
         xie:{
             action:true,
             score:200
-        }
+        },
+        op:{}
     }]
 }
 
-calcHuShu(roomInfo,0,0)
+testhu(roomInfo,3,2)
 
-function calcHuShu(roomInfo,index,fromTurn){
-    var conf = roomInfo.conf;
-    var type = conf.type;
+setTimeout(() => {
+    testhu(roomInfo,2,1)
+}, 2*1000);
+
+setTimeout(() => {
+    roomInfo.seats[0].op = {};
+}, 4*1000);
+
+function testhu(roomInfo,userId,index){
+
+
+    if (!Util.checkUserIsValid(roomInfo.seats,userId)) return;
+
     var seats = roomInfo.seats;
-    var zhuangIndex = roomInfo.zhuangIndex;
-    var baseScore = CONST.MJ_TYPE[type].baseScore;
-    var xieList = roomInfo.seats[index];
+    // var index = Game.getIndexByUserId(seats,userId);
+    var seat = seats[index];
+    var pai = seat.op.pai;
 
-    if (conf.type === 0){
-        var huSeat = seats[index];   
-        Util.calcuHuSeatFanshu(huSeat)
-        var huFanshu = huSeat.fanShu = huSeat.fanShu > 8?8:huSeat.fanShu
-        huSeat.totalhucishu++;
-        if (huFanshu === 8){
-            huSeat.lazicishu++
+    if (!seat.op.canHu) return;
+    var fromTurn = seat.op.fromTurn; //0
+
+    console.log(index,fromTurn);
+    if (index !== fromTurn){ //判断jiehu
+        var indexLists = seats.map((s,id)=>{return id});
+        indexLists = indexLists.concat(indexLists);
+        console.log('indelists',indexLists)
+        var start = indexLists.indexOf(fromTurn);
+        var end = indexLists.lastIndexOf(index);
+        var betweenList = [];
+        for (var k = start + 1;k < end;k++){
+            betweenList.push(indexLists[k]);
         }
-        if (huFanshu === 4){
-            huSeat.shuangtaicishu++;
-        }
-        if (huFanshu === 1){
-            huSeat.pinghucishu++;
-        }
+        
+        console.log('betweenlist',betweenList);
 
-        if (index === fromTurn){
-            huSeat.fromOtherScore = huSeat.fanShu*((seats.length - 1)*baseScore);
-        }else{
-            huSeat.fromOtherScore = huSeat.fanShu*(1*baseScore + (seats.length - 2)*(baseScore/2))
-        }
-        if (huSeat.xie && huSeat.xie.action){ //把别人卸了
-            var prevHuIndex = roomInfo.prevHuIndex;
-            huSeat.xieScore += huSeat.xie.score;
-            seats[prevHuIndex].xieScore -= huSeat.xie.score
-        }
-
-
-        //计算其他人的胡数
-       Util.caclOtherSeatFanshuAndHushu(seats,index);
-
-        //和非胡的人进行比较
-        for (var i = 0; i < seats.length;i++){
-                if (i === index) continue;
-               var xie = seats[i].xie;
-                if (xie.action && index === roomInfo.prevHuIndex){ //卸着别人
-                    seats[i].xieScore -= xie.score;
-                    seats[index].xieScore += xie.score;
-                }
-
-                if (i === fromTurn || index === fromTurn){
-                    seats[i].fromHuSeatScore -= seats[index].fanShu*baseScore
-                }else{
-                    seats[i].fromHuSeatScore -= seats[index].fanShu*(baseScore/2)
-                }
-
-            for (var j = i+1;j < seats.length;j++){
-                if (j === index) continue;
-                var diff = seats[i].huShu - seats[j].huShu
-                if (i === zhuangIndex || j === zhuangIndex){
-                    var diffZhengshu = Math.abs(diff);
-                    var unit = diff < 0?-1:1;
-                    while(diffZhengshu > 0){
-                        seats[i].fromOtherScore+=((baseScore/2)*unit);
-                        seats[j].fromOtherScore+=((baseScore/2)*(-unit));
-                        diffZhengshu -= 30;
+        if (betweenList.length){
+            waitInterval(betweenList);
+            function waitInterval(betweenList){
+                
+                var waitTimer = setInterval(()=>{
+                    var hasJiehU = false
+                    for (var j = 0; j < betweenList.length;j++){
+                        let seatIndex = betweenList[j];
+                        if (seats[seatIndex].op.canHu){
+                            hasJiehU = true;
+                            break;
+                        }
+                        if (!hasJiehU){
+                            console.log('waitTimer',waitTimer,betweenList)
+                            clearInterval(waitTimer)
+                            if (!seat.op.canHu) return;
+                            seat.holds.unshift(pai);
+                            seats[fromTurn].folds.splice(-1,1);
+                            seats[fromTurn].fangpaocishu++;
+                            console.log('go hu index ',index)
+                            huHandle();
+                        }
                     }
-                }else {
-                    var diffZhengshu = Math.abs(diff);
-                    var unit = diff < 0?-1:1;
-                    while(diffZhengshu > 0){
-                        seats[i].fromOtherScore+=((baseScore/2)*unit);
-                        seats[j].fromOtherScore+=((baseScore/2)*(-unit));
-                        diffZhengshu -= 50;
-                    }
-                }
-    
+
+                },20)
             }
+           
+        }else{
+            seat.holds.unshift(pai);
+            seats[fromTurn].folds.splice(-1,1);
+            seats[fromTurn].fangpaocishu++;
+            huHandle();
+        }
+    }else{
+        seat.zomocishu++;
+        huHandle();
+    }
+
+
+    function huHandle(){
+        for (var i = 0; i < roomInfo.seats.length;i++){
+            roomInfo.seats[i].op = {};
+        }
+        return;
+        Game.clearOperation(roomInfo);
+
+        Game.calcHuShu(roomInfo,index,fromTurn);//计算hushu
+
+        for (var item of seats){
+            item.ready = false
         }
 
-         //将分数加到总额里
-        for (var i = 0; i < seats.length;i++){
-            seats[i].totalScore += (seats[i].xieScore+seats[i].fromOtherScore+seats[i].fromHuSeatScore);
-            console.log('total current'+i,seats[i].totalScore,seats[i].xieScore,seats[i].fromOtherScore,seats[i].fromHuSeatScore)
+        roomInfo.currentHuIndex = index;
+     
+        Game.notifyOperationAction(roomInfo,{type:'hu',seats,index:index,zhuangIndex:roomInfo.zhuangIndex});
+        if (roomInfo.count >= roomInfo.conf.jushu){
+            roomInfo.gameStatus = CONST.GAME_STATUS_END;
+            Room.setRoomInfoToDB(roomInfo);
+            Game.deleteStatus(roomInfo);
+            return;
         }
-   
-}
 
-    return;
+        roomInfo.gameStatusOneOver = true;
+        var timer = setTimeout(() => {
+                Timer.deleteTimer(roomId);
+                 //自动开局的，把卸的人加上钱
+                 for (var i = 0; i < seats.length;i++){
+                     if (roomInfo.zhuangIndex === roomInfo.currentHuIndex && i !== roomInfo.zhuangIndex){
+                         if (seats[i].xie.action){
+                             seats[i].xie.score += Math.abs(seats[i].fromHuSeatScore)
+                         }
+                     }
+                 }
+
+                Game.begin(roomInfo);
+            }, 10*1000);
+
+        Timer.saveTimer(roomId,timer)
+    }
+
 }

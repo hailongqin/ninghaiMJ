@@ -16,6 +16,15 @@
 //     BIGFENGLISTS:[35,36,37]
 // }
 
+var domainList = {
+    'daily':'http://118.31.109.162',
+    'prod':'https://www.ccnet.site'
+}
+
+var env = 'prod';
+
+exports.BASE_REQUEST_URL = domainList[env]
+
 
 
 exports.ROOM_DISMISS_EXPIERED_TIME = 15*60*1000 ;//15分钟房间解散

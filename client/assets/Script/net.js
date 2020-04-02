@@ -3,7 +3,7 @@ var io = require('socket-io')
 cc.Class({
     extends: cc.Component,
     statics: {
-        ip:"www.ccnet.site",
+        ip:cc.vv.CONST.BASE_REQUEST_URL,
         sio:null,
         pingTimer:null,
         handlerNode:null,

@@ -1,5 +1,5 @@
 
-var URL = 'https://www.ccnet.site';
+var URL = cc.vv.CONST.BASE_REQUEST_URL
 var MD5_KEY = '#$%%#####FFGGG$!~'
 
 function sendRequest(path, data = {}, successCallback, failCallback) {

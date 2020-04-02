@@ -5,7 +5,7 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import { ERROR } from "./socket-io";
+
 
 var maxHoldLength = 14;
 
@@ -161,6 +161,8 @@ cc.Class({
           ]
       };
       this.localAudioList = [];
+      var leftSeatHoldsNode = this.node.getChildByName('seat3').getChildByName('holds')
+      leftSeatHoldsNode.setSiblingIndex(1);
       this.clearTable();
       cc.vv.net.connect(()=>{
           this.initHander();

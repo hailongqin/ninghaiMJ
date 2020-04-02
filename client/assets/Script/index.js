@@ -67,6 +67,8 @@ cc.Class({
      onLoad () {
        // this.configWxApi();
         cc.vv = {};
+        cc.vv.CONST = require('const');
+    
         cc.vv.alertScript =  cc.find("alert").getComponent("alert");
         cc.vv.setting =  cc.find("setting").getComponent("setting");
         cc.vv.audio =  cc.find("audio").getComponent("audioPlay");
@@ -85,8 +87,7 @@ cc.Class({
         cc.vv.Common = new Common();
         cc.vv.User = require('user');
 
-        cc.vv.CONST = require('const');
-        console.log(cc.vv.CONST)
+
 
         var param = this.urlParse();
         console.log('url param is ',param,cc.vv.storage.getStorage('aaa'));

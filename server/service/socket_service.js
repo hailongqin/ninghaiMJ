@@ -378,8 +378,9 @@ exports.start = function(){
                     if (betweenList.length){
                         waitInterval(betweenList);
                         function waitInterval(betweenList){
-                            var hasJiehU = false
+                  
                             var waitTimer = setInterval(()=>{
+                                var hasJiehU = false
                                 for (var j = 0; j < betweenList.length;j++){
                                     let seatIndex = betweenList[j];
                                     if (seats[seatIndex].op.canHu){
@@ -923,7 +924,7 @@ exports.start = function(){
                         var seats = roomInfo.seats;
                         seats[index].onLine = false;
                         
-                    }else  if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
+                    }else if(roomInfo.gameStatus === CONST.GAME_STATUS_NO_START){
                         roomInfo.seats.splice(index,1);
                     }
                        
