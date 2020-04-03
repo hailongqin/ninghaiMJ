@@ -80,7 +80,7 @@ cc.Class({
             index++;
             if (index === 3) index = 0;
             voiceNode.getChildByName(`v_anim${index}`).active = true;
-        }, 500);
+        }, 300);
 
         voiceNode.active = true;
         

@@ -55,7 +55,7 @@ cc.Class({
          this.userInfoNode.getChildByName('userName').getComponent(cc.Label).string = userInfo.userName
      }
      if (userInfo.header){
-         cc.loader.load({url: userInfo.header+'?file=a.png', type: 'png'}, function (err, tex) {        
+         cc.loader.load({url: userInfo.header+'?file=a.png', type: 'png'},  (err, tex) => {        
             this.userInfoNode.getChildByName('header').getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
          });
      }

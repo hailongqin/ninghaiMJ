@@ -659,7 +659,7 @@ class Game {
             return 
         }
         
-        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo.roomId,roomInfo.seats)
+        Room.broacastInRoom(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo.roomId,{seats:roomInfo.seats,players:roomInfo.players})
     }
 
     notifyCanSetReady(userId){

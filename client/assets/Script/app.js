@@ -112,6 +112,10 @@ cc.Class({
             default:null,
             type:cc.Node,
         },
+        playerNode:{
+            default:null,
+            type:cc.Node
+        },
 
         gameInfo:null,
         isPlayingVoice:null
@@ -234,6 +238,31 @@ cc.Class({
         node.active = false
     },
 
+    setNodeHeader(node,url){
+        cc.loader.load({url: url+'?file=a.png', type: 'png'}, function (err, tex) {        
+            node.getComponent(cc.Sprite).spriteFrame=new cc.SpriteFrame(tex)
+         });
+    },
+
+    setPlayerData(players){
+        var statusNode = this.playerNode.getChildByName('status');
+        for (var i = 0; i < players.length;i++){
+            if (i > 3) break;
+            var userInfo = players[i].userInfo;
+            statusNode.children[i].getChildByName('userName').getComponent(cc.Label).string = userInfo.userName;
+            this.setNodeHeader( statusNode.children[i].getChildByName('header'),userInfo.header)
+        }
+
+        for (;i < 4;i++){
+            statusNode.children[i].active = false;
+        }
+    },
+
+    clickPlayer(){
+        var statusNode = this.playerNode.getChildByName('status');
+        statusNode.active = !statusNode.active;
+    },
+
     setHuNodePosition(index,seats){
         var nodeIndex = cc.vv.Common.getNodeIndex(index,seats);
         if(nodeIndex === 0){
@@ -348,8 +377,9 @@ cc.Class({
        })
 
        // 未开始的时候，更新各个用户的状态,就刚进来的时候初始化更新一次 //群发
-       this.node.on(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,(seats)=>{
-            this.statusNode.getComponent('status').setStatusData(seats);
+       this.node.on(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,(data)=>{
+            this.statusNode.getComponent('status').setStatusData(data.seats);
+            this.setPlayerData(data.players)
        })
 
         //进来的时候，接受是否可以准备了 //单发
@@ -737,26 +767,49 @@ cc.Class({
         }, 1000);
      },
 
+     clearPlayerAudioAnimation(){
+        if (this.playerAudioTimer){
+            clearInterval(this.playerAudioTimer);
+            this.playerAudioTimer = null;
+        }
+        var voiceNode = this.playerNode.getChildByName('voice');
+
+        for (var i = 0; i < voiceNode.children.length;i++){
+            voiceNode.children[i].active = false;
+        }
+     },
+
+     showPlayerAudioAnimation(){
+         var voiceNode = this.playerNode.getChildByName('voice');
+         var index = 0;
+        this.playerAudioTimer = setInterval(() => {
+            voiceNode.getChildByName(`v_anim${index}`).active = false;
+            index++;
+            if (index === 3) index = 0;
+            voiceNode.getChildByName(`v_anim${index}`).active = true;
+        }, 300);
+        voiceNode.active = true;
+     },
+
      playAudioChat(){
-         console.log('localAudioList',this.localAudioList)
         if (this.localAudioList.length){
-            console.log(1111)
             this.statusNode.getComponent('status').clearAudioTimer();
+            this.clearPlayerAudioAnimation();
             console.log(222)
             var local = this.localAudioList.splice(0,1);
             local = local[0]
-            console.log('local',local,this.localAudioList)
             var localId = local.localId;
             var playerIndex = local.playerIndex;
             var seatIndex = local.seatIndex;
             var seats = local.seats;
             this.isPlayingVoice = true
-            console.log(333)
+            console.log(local)
             if (seatIndex !== ''){
-                console.log(444)
                 this.statusNode.getComponent('status').playAuioAnimation(seatIndex,seats)
             }
-            console.log(555)
+            if (playerIndex !== ''){
+                this.showPlayerAudioAnimation();
+            }
             wx.playVoice({
                 localId, // 需要播放的音频的本地ID，由stopRecord接口获得
                 fail:(err)=>{
@@ -766,6 +819,7 @@ cc.Class({
             });
         }else{
             this.statusNode.getComponent('status').clearAudioTimer();
+            this.clearPlayerAudioAnimation();
             this.isPlayingVoice = false;
         }
      },

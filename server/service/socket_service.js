@@ -96,7 +96,7 @@ exports.start = function(){
                 Game.notifyTip(roomInfo,'玩家'+userName+'进入房间');
                 Room.addAndUpdateRoom(roomId,roomInfo);
                 Game.sendRoomBaseInfo(roomInfo,userId);
-                socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,roomInfo.seats)
+                socket.emit(CONST.SERVER_GAME_UPDATE_PEOPLE_STATUS,{seats:roomInfo.seats,players:roomInfo.players})
                 if (roomInfo.gameStatus === CONST.GAME_STATUS_NO_START && seats.length !== roomInfo.conf.userCount)
                     Game.notifyCanSetReady(userId);
                 else{

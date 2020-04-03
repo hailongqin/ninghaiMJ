@@ -184,9 +184,9 @@ router.post('/user_login_by_userId',function(req,res,next){
         Redis.getRedis(`game_status_${body.userId}`,(value) => {
             console.log('get game_status is ',value)
             if (value){
-                res.json({code:0,userName:ret.userName,roomId:value})
+                res.json({code:0,userName:ret.userName,roomId:value,header:ret.header})
             }else{
-                res.json({code:0,userName:ret.userName})
+                res.json({code:0,userName:ret.userName,header:ret.header})
             }
         })
 
