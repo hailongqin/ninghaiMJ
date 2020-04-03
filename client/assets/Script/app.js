@@ -434,6 +434,15 @@ cc.Class({
            this.headerNode.getChildByName('remainJushu').getComponent(cc.Label).string = '剩余'+(conf.jushu - currentCount)+'局';
        })
 
+       this.node.on(CONST.SERVER_ROOM_STATUS_NOTIFY,(data)=>{
+           console.log('SERVER_ROOM_STATUS_NOTIFY',data)
+           if (data === CONST.ROOM_STATUS_DISMISS){
+               cc.vv.alertScript.alert('房间已解散',()=>{
+                cc.director.loadScene(this.hallSecen.name);
+               })
+           }
+       })
+
        this.node.on(CONST.SERVER_AUDIO_CHAT,(data)=>{
            if (data.serverId){
             wx.downloadVoice({

@@ -488,14 +488,7 @@ class Game {
        return false
     }
 
-    sendRoomStatus(roomId,status){
-        if (!roomId || !status){
-            Log.error('no userid')
-            return;
-        }
-        
-        Room.broacastInRoom(CONST.SERVER_ROOM_STATUS_NOTIFY,roomId,status)
-    }
+
 
     // 发送游戏状态
     sendGameEnd(roomInfo){

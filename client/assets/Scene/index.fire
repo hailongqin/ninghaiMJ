@@ -602,7 +602,7 @@
     },
     "component": "",
     "_componentId": "27253ohxCFFRYosJgoiuCag",
-    "handler": "onClose",
+    "handler": "onConfirmClick",
     "customEventData": ""
   },
   {

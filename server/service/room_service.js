@@ -148,7 +148,7 @@ router.post('/check_room_exit', function(req, res, next){
         }
 
         if (ret){
-            res.json({code:0,status:ret.roomStatus,conf:ret.conf})
+            res.json({code:0,roomStatus:ret.roomStatus,conf:ret.conf})
         }else{
             res.json({code:-1,message:"房间不存在"})
         }

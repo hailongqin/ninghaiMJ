@@ -40,9 +40,9 @@ exports.start = function(){
                 }
 
                 User.bindUserAndSocket(userId,socket);
-                    
+                
                 if (roomInfo.roomStatus === CONST.ROOM_STATUS_DISMISS){
-                    Game.sendRoomStatus(roomId, CONST.ROOM_STATUS_DISMISS)
+                    socket.emit(CONST.SERVER_ROOM_STATUS_NOTIFY, CONST.ROOM_STATUS_DISMISS)
                     return
                 }
 

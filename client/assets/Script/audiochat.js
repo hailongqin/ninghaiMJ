@@ -47,42 +47,47 @@ cc.Class({
     },
 
     startRecord(){
-        var timer = 10;
-        var vNode = this.voiceNode.getChildByName('v');
-        var timeLabel = this.voiceNode.getChildByName('time').getComponent(cc.Label);
-        timeLabel.string = timer+'s';
-        for (var i = 0; i < vNode.children.length;i++){
-            vNode.children[i].active = false;
-        }
-        vNode.children[0].active = true;
-
-        var index = 0;
-
-        this.intervalHandle = setInterval(()=>{
-            vNode.children[index].active = false;
-            index++;
-            if (index === vNode.children.length) index = 0;
-            vNode.children[index].active = true;
-            if (index % 2 === 0){
-                timer--;
-                if (timer <= 0){
-                    this.stopRecord();
-                }else{
-                    timeLabel.string = timer+'s';
+        wx.startRecord({
+            success:()=>{
+                var timer = 10;
+                var vNode = this.voiceNode.getChildByName('v');
+                var timeLabel = this.voiceNode.getChildByName('time').getComponent(cc.Label);
+                timeLabel.string = timer+'s';
+                for (var i = 0; i < vNode.children.length;i++){
+                    vNode.children[i].active = false;
                 }
+                vNode.children[0].active = true;
+        
+                var index = 0;
+        
+                this.intervalHandle = setInterval(()=>{
+                    vNode.children[index].active = false;
+                    index++;
+                    if (index === vNode.children.length) index = 0;
+                    vNode.children[index].active = true;
+                    if (index % 2 === 0){
+                        timer--;
+                        if (timer <= 0){
+                            this.stopRecord();
+                        }else{
+                            timeLabel.string = timer+'s';
+                        }
+                    }
+                },500)
+                this.voiceNode.active = true;
+                navigator.vibrate = navigator.vibrate ||
+                            navigator.webkitVibrate ||
+                            navigator.mozVibrate ||
+                            navigator.msVibrate;
+         
+                        if(navigator.vibrate) {
+                            navigator.vibrate(30);
+                        }
             }
-        },500)
-        this.voiceNode.active = true;
-        navigator.vibrate = navigator.vibrate ||
-					navigator.webkitVibrate ||
-					navigator.mozVibrate ||
-					navigator.msVibrate;
- 
-				if(navigator.vibrate) {
-					navigator.vibrate(30);
-				}
+        });
+       
 
-        wx.startRecord();
+      
     },
 
     update(dt){
