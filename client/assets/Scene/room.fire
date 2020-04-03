@@ -85802,7 +85802,7 @@
         "__id__": 2369
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [],
     "_prefab": null,
     "_opacity": 255,
@@ -85827,8 +85827,8 @@
       "__type__": "TypedArray",
       "ctor": "Float64Array",
       "array": [
-        -10.159,
-        -10.715,
+        -29.159,
+        -9.715,
         0,
         0,
         0,
