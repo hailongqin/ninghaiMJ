@@ -834,7 +834,7 @@ cc.Class({
      },
 
      setWxConfig(){
-        cc.vv.http.sendRequest('/user/get_wx_config',{url:window.location.href},(data)=>{
+        cc.vv.http.sendRequest('/user/get_wx_config',{url:window.location.href,roomInfo:cc.vv.roomInfo},(data)=>{
             
             var param = data.data;
 
@@ -858,7 +858,6 @@ cc.Class({
                 ] // 必填，需要使用的JS接口列表
             });
 
-       
             var type = conf.type;
             var desc = `${cc.vv.CONST.MJ_TYPE[type].title} ${conf.userCount}人 ${conf.jushu}局 速来`;
             var url = `https://www.ccnet.site?roomId=${roomInfo.roomId}`

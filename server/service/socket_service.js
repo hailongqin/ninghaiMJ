@@ -264,6 +264,7 @@ exports.start = function(){
     
                     players.push(seat);
                     Game.updatePepoleStatus(roomInfo);
+                    Game.notifyCanSetReady(userId);
                 }
             })
         })

@@ -39,7 +39,7 @@ cc.Class({
         this.holdTimeEclipse = 0;
         this.holdClick = false;
         this.intervalHandle = null;
-        this.initHandle();
+        this.lock = false;
      },
 
     start () {
@@ -47,6 +47,11 @@ cc.Class({
     },
 
     startRecord(){
+        if (this.lock){
+            this.stopRecord();
+            return; //锁住
+        } 
+        this.lock = true;
         wx.startRecord({
             success:()=>{
                 var timer = 10;
@@ -83,6 +88,9 @@ cc.Class({
                         if(navigator.vibrate) {
                             navigator.vibrate(30);
                         }
+            },
+            fail:()=>{
+                this.lock = false;
             }
         });
        
@@ -91,42 +99,22 @@ cc.Class({
     },
 
     update(dt){
-        if(this.holdClick){
-            this.holdTimeEclipse++;
-            if(this.holdTimeEclipse>30 && !this.intervalHandle){
-                this.startRecord();
-            }
-        }
+      
     },
 
     stopRecord(){
-        this.holdClick=false;
         if (this.intervalHandle){
             this.stopChat();
             clearInterval(this.intervalHandle);
             this.intervalHandle = null;
         }
         //开始记录时间
-     
-        this.holdTimeEclipse=0;
         this.voiceNode.active = false;
+        this.lock = false;
     },
 
     initHandle(){
-        this.node.on(cc.Node.EventType.TOUCH_START,()=>{
-            this.holdClick = true;
-            this.holdTimeEclipse = 0;
-        })
-
-        this.node.on(cc.Node.EventType.TOUCH_CANCEL,()=>{  
-            console.log('cancel')
-            this.stopRecord();
-        })
-
-        this.node.on(cc.Node.EventType.TOUCH_END,()=>{           
-            this.stopRecord();
-                   
-        });
+        
     },
   
 
