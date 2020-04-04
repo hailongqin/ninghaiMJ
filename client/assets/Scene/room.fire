@@ -28506,7 +28506,7 @@
         "__id__": 865
       }
     ],
-    "_active": false,
+    "_active": true,
     "_components": [],
     "_prefab": null,
     "_opacity": 255,

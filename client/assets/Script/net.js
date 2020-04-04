@@ -22,7 +22,7 @@ cc.Class({
 
             var self = this;
             var opts = {
-                'reconnection':false,
+                'reconnection':true,
                 'force new connection': true,
                 'transports':['websocket', 'polling']
             }

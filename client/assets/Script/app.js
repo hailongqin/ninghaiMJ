@@ -588,13 +588,16 @@ cc.Class({
             var xieScore = node.getChildByName('xie');
 
             if (!this.gameInfo.isKanke){
-                if (data.index === i || data.index !== data.zhuangIndex){
-                    this.showNode(readyBtn)
+                if (seat.userId === cc.vv.userId){
+                    if (data.index === i || data.index !== data.zhuangIndex){ //胡的人或者不是庄胡
+                        this.showNode(readyBtn)
+                    }
+                    if (data.index === data.zhuangIndex && i !== data.index){
+                        this.showNode(xieBtn);
+                        this.showNode(buxiebtn)
+                    }
                 }
-                if (data.index === data.zhuangIndex && i !== data.index){
-                    this.showNode(xieBtn);
-                    this.showNode(buxiebtn)
-                }
+                
                 
             }
           
@@ -804,24 +807,30 @@ cc.Class({
         if (this.localAudioList.length){
             this.statusNode.getComponent('status').clearAudioTimer();
             this.clearPlayerAudioAnimation();
-            console.log(222)
             var local = this.localAudioList.splice(0,1);
-            local = local[0]
+            local = local[0];
             var localId = local.localId;
+
             var playerIndex = local.playerIndex;
             var seatIndex = local.seatIndex;
             var seats = local.seats;
             this.isPlayingVoice = true
-            console.log(local)
-            if (seatIndex !== ''){
-                this.statusNode.getComponent('status').playAuioAnimation(seatIndex,seats)
-            }
-            if (playerIndex !== ''){
-                this.showPlayerAudioAnimation();
-            }
+
             wx.playVoice({
                 localId, // 需要播放的音频的本地ID，由stopRecord接口获得
+                success:()=>{
+                    
+                    console.log(local)
+                    if (seatIndex !== ''){
+                        this.statusNode.getComponent('status').playAuioAnimation(seatIndex,seats)
+                    }
+                    if (playerIndex !== ''){
+                        this.showPlayerAudioAnimation();
+                    }
+                    alert('play success')
+                },
                 fail:(err)=>{
+                    alert('playfailed')
                     console.log('ppp',err)
                     this.playAudioChat();
                 }
@@ -875,10 +884,11 @@ cc.Class({
 
             wx.onVoicePlayEnd({
                 success: (res) => {
+                    alert('play end')
                     this.playAudioChat();
                 },
                 fail:(err)=>{
-                    console.log('error')
+                    alert('play edn failed')
                     this.playAudioChat();
                 },
                
