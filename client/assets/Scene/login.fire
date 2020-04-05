@@ -507,7 +507,7 @@
       "__id__": 2
     },
     "component": "",
-    "_componentId": "e7b83TD1R5ObL+Dz5iVoD2F",
+    "_componentId": "b45c8aL+XxEjo1lSJ4EEn8e",
     "handler": "onClickUserLogin",
     "customEventData": ""
   },
@@ -556,7 +556,7 @@
     "_id": "29zXboiXFBKoIV4PQ2liTe"
   },
   {
-    "__type__": "e7b83TD1R5ObL+Dz5iVoD2F",
+    "__type__": "b45c8aL+XxEjo1lSJ4EEn8e",
     "_name": "",
     "_objFlags": 0,
     "node": {
@@ -566,6 +566,6 @@
     "hallScen": {
       "__uuid__": "96e3c3b4-d2f0-4136-a799-9eacee9e543b"
     },
-    "_id": "8exLISq+9P0JP35XDtVgbK"
+    "_id": "51LHraiNdFLaGrcaFeaQJj"
   }
 ]

@@ -27,7 +27,7 @@ cc.Class({
 
         content:{
             default:null,
-            type:cc.Label
+            type:cc.Node
         },
         confirmCallback:null,
         cancelCallback:null,
@@ -42,7 +42,7 @@ cc.Class({
 
     alert(content,confirmCallback = null,cancelCallback){
         this.node.active = true;
-        this.content.string = content;
+        this.content.getComponent(cc.Label).string = content;
         this.confirmCallback = confirmCallback;
         this.cancelCallback = cancelCallback;
     },
