@@ -909,7 +909,31 @@ cc.Class({
     start () {
       
     },
+    changeURLPar( par, par_value) {
+        var destiny = window.location.href;
+        var pattern = par + '=([^&]*)';
+        var replaceText = par + '=' + par_value;
+        if (destiny.match(pattern)) {
+            var tmp = '/\\' + par + '=[^&]*/';
+            tmp = destiny.replace(eval(tmp), replaceText);
+            return (tmp);
+        }
+        else {
+            if (destiny.match('[\?]')) {
+                return destiny + '&' + replaceText;
+            }
+            else {
+                return destiny + '?' + replaceText;
+            }
+        }
+        return destiny 
+    },
     onLoad() {
+        if (cc.vv.roomInfo && cc.vv.roomInfo.roomId){
+           var ret =  changeURLPar('roomId',cc.vv.roomInfo.roomId);
+           window.location.href = ret;
+        }
+
         this.init();
         setTimeout(() => {
             this.setWxConfig();

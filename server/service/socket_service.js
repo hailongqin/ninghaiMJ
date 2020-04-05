@@ -945,7 +945,7 @@ exports.start = function(){
 
                 Game.notifyTip(roomInfo,'玩家'+userName+'离开房间')
 
-                console.log('disconneted',roomInfo)
+                console.log('disconneted')
               
 
             })
@@ -953,6 +953,11 @@ exports.start = function(){
   
 
 
+        })
+
+        socket.on('reconnect',()=>{
+            var userId = socket.userId;
+            console.log('reconnection',userId)
         })
 
         socket.on(CONST.CLIENT_LIFE_CYCLE,(data)=>{

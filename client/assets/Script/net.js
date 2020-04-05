@@ -22,7 +22,7 @@ cc.Class({
 
             var self = this;
             var opts = {
-                'reconnection':false,
+                'reconnection':true,
                 'force new connection': true,
                 'transports':['websocket', 'polling']
             }
@@ -30,6 +30,7 @@ cc.Class({
             this.sio = io.connect(this.ip,opts);
             this.sio.on('reconnect',function(){
                 console.log('reconnection');
+                fnConnect(data);
             });
             this.sio.on('connect',(data)=>{
                 console.log('connect')
