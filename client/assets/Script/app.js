@@ -911,9 +911,9 @@ cc.Class({
     },
     onLoad() {
         this.init();
-        setTimeout(() => {
-            this.setWxConfig();
-        }, 1000);
+        // setTimeout(() => {
+        //     this.setWxConfig();
+        // }, 1000);
      },
 
     onDisable(){

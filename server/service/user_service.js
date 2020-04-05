@@ -366,6 +366,51 @@ router.post('/wechat_auth',function(req,res,next){
     return 
 })
 
+router.post('/guest_login',function(req,res,next){
+    createUser();
+    function createUser(){
+        var userId = Util.generateUserId();
+        if (creatingUser[userId]){
+            createUser()
+            return;
+        }
+        creatingUser[userId] = true;
+
+        userModel.findOne({userId:userId})
+        .select("-_id")
+        .exec((err,ret)=> {
+            if (err){
+                res.json({code:-2,message:'读取数据库错误'})
+                delete creatingUser[userId]
+                return
+            }
+
+            if (ret && ret.length){
+                delete creatingUser[userId];
+                createUser()
+                return
+            }
+
+            var condition = {
+                userId,
+                userName:userId
+            }
+            userModel.create(condition,  (err, doc) => {
+                if (err) {
+                    delete creatingUser[userId]
+                    res.json({code:-2,message:"插入数据错误"});
+                } else {
+                    delete creatingUser[userId]
+                    res.json({code:0,userId,userName:userId})
+                }
+            })
+
+        })
+
+
+    }
+})
+
 router.post('/get_wx_config',function(req,res,next){
 
     var body = req.body;
