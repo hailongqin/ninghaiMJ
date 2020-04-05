@@ -954,6 +954,12 @@ exports.start = function(){
 
 
         })
+
+        socket.on(CONST.CLIENT_LIFE_CYCLE,(data)=>{
+            var userId = data.userId;
+
+            console.log('生命周期',userId,data)
+        })
     })
 
     server.listen(conf.SOCKET_PORT);

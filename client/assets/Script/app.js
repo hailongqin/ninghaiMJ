@@ -772,12 +772,7 @@ cc.Class({
             this.showTingPaiNode();
         }
     },
-     onLoad () {
-        this.init();
-        setTimeout(() => {
-            this.setWxConfig();
-        }, 1000);
-     },
+     
 
      clearPlayerAudioAnimation(){
         if (this.playerAudioTimer){
@@ -827,10 +822,10 @@ cc.Class({
                     if (playerIndex !== ''){
                         this.showPlayerAudioAnimation();
                     }
-                    alert('play success')
+                   // alert('play success')
                 },
                 fail:(err)=>{
-                    alert('playfailed')
+                  //  alert('playfailed')
                     console.log('ppp',err)
                     this.playAudioChat();
                 }
@@ -884,11 +879,11 @@ cc.Class({
 
             wx.onVoicePlayEnd({
                 success: (res) => {
-                    alert('play end')
+                  //  alert('play end')
                     this.playAudioChat();
                 },
                 fail:(err)=>{
-                    alert('play edn failed')
+                  //  alert('play edn failed')
                     this.playAudioChat();
                 },
                
@@ -905,6 +900,8 @@ cc.Class({
 
      onDestroy(){
         console.log('ondestroy');
+        cc.vv.net.send(cc.vv.CONST.CLIENT_LIFE_CYCLE,'ondestroy')
+
         cc.vv.net.close();
         cc.vv.roomInfo = null;
      },
@@ -912,6 +909,19 @@ cc.Class({
     start () {
       
     },
+    onLoad() {
+        this.init();
+        setTimeout(() => {
+            this.setWxConfig();
+        }, 1000);
+     },
+
+    onDisable(){
+        cc.vv.net.send(cc.vv.CONST.CLIENT_LIFE_CYCLE,'ondisable')
+    },
+    onEnable(){
+        cc.vv.net.send(cc.vv.CONST.CLIENT_LIFE_CYCLE,JSON.stringify(this.roomInfo))
+    }
 
     // update (dt) {},
 });

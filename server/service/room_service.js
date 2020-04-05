@@ -135,6 +135,7 @@ router.post('/check_room_exit', function(req, res, next){
 
     // if (!Crypto.checkSign(body)) return;
 
+    console.log('check room exsit ',roomId)
 
     roomModel.findOne({
         roomId,
