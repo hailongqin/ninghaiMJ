@@ -82,7 +82,7 @@ function urlParse(){
       } 
   }
   return params;
-},
+}
 
   exports.throttle = throttle;
 

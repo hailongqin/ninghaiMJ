@@ -910,28 +910,36 @@ cc.Class({
       
     },
     changeURLPar( par, par_value) {
+        console.log(par,par_value)
         var destiny = window.location.href;
         var pattern = par + '=([^&]*)';
         var replaceText = par + '=' + par_value;
         if (destiny.match(pattern)) {
-            var tmp = '/\\' + par + '=[^&]*/';
+            var tmp = '/' + par + '=[^&]*/';
+            console.log('replaceText',eval(tmp),replaceText)
             tmp = destiny.replace(eval(tmp), replaceText);
+            console.log(111,tmp)
             return (tmp);
         }
         else {
             if (destiny.match('[\?]')) {
+                console.log(222,destiny + '&' + replaceText)
                 return destiny + '&' + replaceText;
             }
             else {
+                console.log(333,destiny + '?' + replaceText)
+
                 return destiny + '?' + replaceText;
             }
         }
-        return destiny 
+   
     },
     onLoad() {
         if (cc.vv.roomInfo && cc.vv.roomInfo.roomId){
-           var ret =  changeURLPar('roomId',cc.vv.roomInfo.roomId);
-           window.location.href = ret;
+            console.log('cc.vv.roomInfo.roomId',cc.vv.roomInfo.roomId)
+           var url =  this.changeURLPar('roomId',cc.vv.roomInfo.roomId);
+           console.log('app room rewrite url',url)
+           window.history.pushState(null, null, url)
         }
 
         this.init();
