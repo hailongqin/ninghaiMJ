@@ -226,7 +226,7 @@ exports.start = function(){
                         break;
                     }
                 }
-                Room.broacastInRoom(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,roomInfo.roomId,{index:index,roomInfo})
+                Room.broacastInRoom(CONST.SERVER_GAME_USER_NEXT_JU_HAS_READY,roomInfo.roomId,{index:index,seats:roomInfo.seats})
                 Log.info(Timer.timeList);
                 if (allReady){
                     Timer.deleteTimer(roomId);
